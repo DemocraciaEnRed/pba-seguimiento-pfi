@@ -16,6 +16,8 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': '/resources/js',
+            // App mounts with `el` on Blade markup, so use the compiler-included build.
+            vue: 'vue/dist/vue.esm.js',
         },
         extensions: ['.mjs', '.js', '.json', '.vue'],
     },
