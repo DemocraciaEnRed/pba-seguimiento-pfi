@@ -4,13 +4,13 @@ This plan is for upgrading Participes from Laravel 8 to Laravel 13 using the loc
 
 ## Current Baseline
 
-- Current framework: `laravel/framework:^11.0`.
+- Current framework: `laravel/framework:^12.0`.
 - Current PHP constraint: `^8.2.0`.
 - Frontend build: Laravel Mix 5, Webpack, Vue 2.7, Bootstrap 4.
 - Branch: `upgrade/laravel-13.x`.
 - Existing migration notes: `MIGRATION.md` documents the previous Laravel 7 to 8 upgrade.
 
-Status note: Phase 1 (Laravel 8 to 9), Phase 2 (Laravel 9 to 10), and Phase 3 (Laravel 10 to 11) have been implemented in this branch and passed baseline validation.
+Status note: Phase 1 (Laravel 8 to 9), Phase 2 (Laravel 9 to 10), Phase 3 (Laravel 10 to 11), and Phase 4 (Laravel 11 to 12) have been implemented in this branch and passed baseline validation.
 
 ## Strategy
 
@@ -197,6 +197,11 @@ Validation focus:
 - Date-heavy public pages and reports.
 - Image upload validation.
 - Any code using schema table inspection.
+
+Implementation status:
+
+- Completed in this branch, including Laravel 12 and PHPUnit 11 dependency updates and validation.
+- Additional Phase 4 checks: no `HasUuids` / `HasVersion7Uuids` usages found, no `mergeIfMissing` usages found, and one image validation rule confirmed (`required|image|max:8000`) which remains appropriate unless SVG uploads are required.
 
 ## Phase 5: Laravel 12 to 13
 
