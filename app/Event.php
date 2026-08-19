@@ -14,11 +14,8 @@ class Event extends Model
   public $incrementing = true; // if IDs are auto-incrementing.
   public $timestamps = true; // if the model should be timestamped.
 
-  protected $dates = [
-    'date',
-  ];
-
   protected $casts = [
+    'date' => 'datetime',
     'urls' => 'array',
   ];
 

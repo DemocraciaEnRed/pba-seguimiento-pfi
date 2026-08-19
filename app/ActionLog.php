@@ -10,8 +10,8 @@ class ActionLog extends Model
     public $incrementing = true; // if IDs are auto-incrementing.
     public $timestamps = false; // if the model should be timestamped.
 
-    protected $dates = [
-        'record_datetime',
+    protected $casts = [
+        'record_datetime' => 'datetime',
     ];
 
 

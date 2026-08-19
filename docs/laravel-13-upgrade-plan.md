@@ -4,13 +4,13 @@ This plan is for upgrading Participes from Laravel 8 to Laravel 13 using the loc
 
 ## Current Baseline
 
-- Current framework: `laravel/framework:^9.0`.
-- Current PHP constraint: `^8.0.2`.
+- Current framework: `laravel/framework:^10.0`.
+- Current PHP constraint: `^8.1.0`.
 - Frontend build: Laravel Mix 5, Webpack, Vue 2.7, Bootstrap 4.
 - Branch: `upgrade/laravel-13.x`.
 - Existing migration notes: `MIGRATION.md` documents the previous Laravel 7 to 8 upgrade.
 
-Status note: Phase 1 (Laravel 8 to 9) has been implemented in this branch and passed baseline validation.
+Status note: Phase 1 (Laravel 8 to 9) and Phase 2 (Laravel 9 to 10) have been implemented in this branch and passed baseline validation.
 
 ## Strategy
 
@@ -143,6 +143,10 @@ Validation focus:
 - Logging to the `action_logs` table.
 - Date serialization and filtering around events, milestones, reports, and action logs.
 - Admin and panel exports.
+
+Implementation status:
+
+- Completed in this branch, including `$dates` to `$casts` refactors, Laravel 10 dependency updates, and PHPUnit 10 alignment for the Laravel test runner.
 
 ## Phase 3: Laravel 10 to 11
 
