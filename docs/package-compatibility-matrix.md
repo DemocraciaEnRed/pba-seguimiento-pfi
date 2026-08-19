@@ -41,6 +41,8 @@ Use this as the working inventory while upgrading from Laravel 8 to Laravel 13. 
 
 Start with the Laravel 9 dependency set only:
 
+Prerequisite: the PHP 8.x CLI used by Composer must have `ext-zip` enabled. PhpSpreadsheet, pulled by `maatwebsite/excel`, requires it.
+
 ```bash
 composer remove fideloper/proxy fruitcake/laravel-cors --no-update
 composer remove facade/ignition --dev --no-update

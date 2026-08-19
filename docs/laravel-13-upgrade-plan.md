@@ -4,11 +4,13 @@ This plan is for upgrading Participes from Laravel 8 to Laravel 13 using the loc
 
 ## Current Baseline
 
-- Current framework: `laravel/framework:^8.0`.
-- Current PHP constraint: `^7.3|^8.0`.
+- Current framework: `laravel/framework:^9.0`.
+- Current PHP constraint: `^8.0.2`.
 - Frontend build: Laravel Mix 5, Webpack, Vue 2.7, Bootstrap 4.
 - Branch: `upgrade/laravel-13.x`.
 - Existing migration notes: `MIGRATION.md` documents the previous Laravel 7 to 8 upgrade.
+
+Status note: Phase 1 (Laravel 8 to 9) has been implemented in this branch and passed baseline validation.
 
 ## Strategy
 
@@ -106,6 +108,10 @@ Validation focus:
 - Mail notifications.
 - Storage / uploads.
 - CORS behavior for API routes.
+
+Implementation status:
+
+- Completed in this branch, including dependency updates and middleware migration from removed `fideloper/proxy` and `fruitcake/laravel-cors` classes.
 
 ## Phase 2: Laravel 9 to 10
 
