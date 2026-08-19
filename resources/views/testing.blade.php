@@ -12,12 +12,11 @@
   @yield('metatags')
 
   <!-- Styles -->
-  <link href="{{ asset('css/app.css') }}" rel="stylesheet">
   @yield('stylesheets')
   @yield('headscripts')
 
   <!-- Scripts -->
-  <script src="{{ asset('js/app.js') }}" defer></script>
+  @vite(['resources/js/app.js'])
   <script src="https://kit.fontawesome.com/8da8f66b21.js" crossorigin="anonymous"></script>
 </head>
 

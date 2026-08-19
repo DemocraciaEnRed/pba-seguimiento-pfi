@@ -1,0 +1,37 @@
+{
+  "_Stats-BWLtu0v9.js": {
+    "file": "assets/Stats-BWLtu0v9.js",
+    "name": "Stats",
+    "css": [
+      "assets/Stats-D1svCEoV.css"
+    ]
+  },
+  "_Stats-D1svCEoV.css": {
+    "file": "assets/Stats-D1svCEoV.css",
+    "src": "_Stats-D1svCEoV.css"
+  },
+  "resources/js/admin-app.js": {
+    "file": "assets/admin-app-BiCAG_0w.js",
+    "name": "admin-app",
+    "src": "resources/js/admin-app.js",
+    "isEntry": true,
+    "imports": [
+      "_Stats-BWLtu0v9.js"
+    ],
+    "css": [
+      "assets/admin-app-CMkJmv-m.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BVtDXqq_.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_Stats-BWLtu0v9.js"
+    ],
+    "css": [
+      "assets/app-xwzsVWGh.css"
+    ]
+  }
+}

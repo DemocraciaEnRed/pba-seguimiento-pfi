@@ -4,13 +4,33 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-require('./bootstrap');
+import '../sass/app.scss';
+import './bootstrap';
+import Vue from 'vue';
 import http from './axios'
 import globals from './globals'
 import VueScrollactive from 'vue-scrollactive';
 import Toasted from 'vue-toasted';
 
-window.Vue = require('vue');
+import NotificationItem from './components/NotificationItem.vue';
+import FormNewReport from './components/FormNewReport.vue';
+import AdminSearchUserNewAdmin from './components/AdminSearchUserNewAdmin.vue';
+import ObjectiveSearchUserAddTeam from './components/ObjectiveSearchUserAddTeam.vue';
+import Paginator from './components/utils/Paginator.vue';
+import ErrorAlert from './components/utils/ErrorAlert.vue';
+import InputIcon from './components/inputs/InputIcon.vue';
+import InputTag from './components/inputs/InputTag.vue';
+import InputUrls from './components/inputs/InputUrls.vue';
+import InputFile from './components/inputs/InputFile.vue';
+import InputAddMilestonesCreateGoal from './components/inputs/InputAddMilestonesCreateGoal.vue';
+import TextEditor from './components/inputs/TextEditor.vue';
+import ReportComments from './components/comments/ReportComments.vue';
+import SetMapDefault from './components/maps/SetMapDefault.vue';
+import DrawMap from './components/maps/DrawMap.vue';
+import MapReports from './components/maps/MapReports.vue';
+import PortalObjectiveStats from './components/portal/objective/Stats.vue';
+
+window.Vue = Vue;
 
 Vue.use(VueScrollactive);
 Vue.use(Toasted, {
@@ -25,35 +45,24 @@ Vue.use(Toasted, {
         }
     }
 })
-/**
- * The following block of code may be used to automatically register your
- * Vue components. It will recursively scan this directory for the Vue
- * components and automatically register them with their "basename".
- *
- * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
- */
 
-// const files = require.context('./', true, /\.vue$/i)
-// files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
-
-Vue.component('notification-item', require('./components/NotificationItem.vue').default);
-Vue.component('form-new-report', require('./components/FormNewReport.vue').default);
-Vue.component('admin-search-user-new-admin', require('./components/AdminSearchUserNewAdmin.vue').default);
-Vue.component('objective-search-user-add-team', require('./components/ObjectiveSearchUserAddTeam.vue').default);
-Vue.component('paginator', require('./components/utils/Paginator.vue').default);
-Vue.component('error-alert', require('./components/utils/ErrorAlert.vue').default);
-Vue.component('input-icon', require('./components/inputs/InputIcon.vue').default);
-Vue.component('input-tags', require('./components/inputs/InputTag.vue').default);
-Vue.component('input-urls', require('./components/inputs/InputUrls.vue').default);
-Vue.component('input-file', require('./components/inputs/InputFile.vue').default);
-Vue.component('input-add-milestones-create-goal', require('./components/inputs/InputAddMilestonesCreateGoal.vue').default);
-Vue.component('text-editor', require('./components/inputs/TextEditor.vue').default);
-Vue.component('report-comments', require('./components/comments/ReportComments.vue').default);
-// Vue.component('mapita', require('./components/maps/Mapita.vue').default);
-Vue.component('set-map-default', require('./components/maps/SetMapDefault.vue').default);
-Vue.component('draw-map', require('./components/maps/DrawMap.vue').default);
-Vue.component('map-reports', require('./components/maps/MapReports.vue').default);
-Vue.component('portal-objective-stats', require('./components/portal/objective/Stats.vue').default);
+Vue.component('notification-item', NotificationItem);
+Vue.component('form-new-report', FormNewReport);
+Vue.component('admin-search-user-new-admin', AdminSearchUserNewAdmin);
+Vue.component('objective-search-user-add-team', ObjectiveSearchUserAddTeam);
+Vue.component('paginator', Paginator);
+Vue.component('error-alert', ErrorAlert);
+Vue.component('input-icon', InputIcon);
+Vue.component('input-tags', InputTag);
+Vue.component('input-urls', InputUrls);
+Vue.component('input-file', InputFile);
+Vue.component('input-add-milestones-create-goal', InputAddMilestonesCreateGoal);
+Vue.component('text-editor', TextEditor);
+Vue.component('report-comments', ReportComments);
+Vue.component('set-map-default', SetMapDefault);
+Vue.component('draw-map', DrawMap);
+Vue.component('map-reports', MapReports);
+Vue.component('portal-objective-stats', PortalObjectiveStats);
 
 Vue.prototype.$http = http
 
