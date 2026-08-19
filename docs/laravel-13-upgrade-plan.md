@@ -4,13 +4,13 @@ This plan is for upgrading Participes from Laravel 8 to Laravel 13 using the loc
 
 ## Current Baseline
 
-- Current framework: `laravel/framework:^12.0`.
+- Current framework: `laravel/framework:^13.0`.
 - Current PHP constraint: `^8.2.0`.
 - Frontend build: Laravel Mix 5, Webpack, Vue 2.7, Bootstrap 4.
 - Branch: `upgrade/laravel-13.x`.
 - Existing migration notes: `MIGRATION.md` documents the previous Laravel 7 to 8 upgrade.
 
-Status note: Phase 1 (Laravel 8 to 9), Phase 2 (Laravel 9 to 10), Phase 3 (Laravel 10 to 11), and Phase 4 (Laravel 11 to 12) have been implemented in this branch and passed baseline validation.
+Status note: Phase 1 (Laravel 8 to 9), Phase 2 (Laravel 9 to 10), Phase 3 (Laravel 10 to 11), Phase 4 (Laravel 11 to 12), and Phase 5 (Laravel 12 to 13) have been implemented in this branch and passed baseline validation.
 
 ## Strategy
 
@@ -228,6 +228,12 @@ Validation focus:
 - Cache hit/miss behavior across deploy.
 - CSRF-protected forms in admin and report panels.
 - MySQL write paths and deletes.
+
+Implementation status:
+
+- Completed in this branch, including Laravel 13, Tinker 3, and PHPUnit 12 updates.
+- Phase blocker resolved: removed `barryvdh/laravel-debugbar` (not Laravel 13-compatible in current stable range) and removed its manual provider/alias wiring from `config/app.php`.
+- Added explicit cache hardening in `config/cache.php` with `'serializable_classes' => false`.
 
 ## Package Risk Inventory
 
