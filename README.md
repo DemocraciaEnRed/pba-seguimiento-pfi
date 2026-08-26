@@ -20,7 +20,7 @@ First, make sure you have installed:
 
 - PHP +8.2 (8.4 recommended)
 - MySQL
-- Node + NPM (For local development and building)
+- Node 18.19.0 + NPM (For local development and building)
 
 You can use composer to install the dependencies.
 
@@ -43,7 +43,7 @@ Clone the Repo.
 Open a terminal in the root of the project:
 
 ```
-$ composer install
+$ php7.4 $(which composer) install
 ```
 
 With the `$ composer install` a `.env` file should've been created. 
@@ -56,7 +56,7 @@ So Look and configure the following env variables (others vars, dont worry)
 
 APP_NAME=Partícipes
 APP_ENV=local
-APP_KEY= # Run php artisan key:generate and use the output!
+APP_KEY= # Run php7.4 artisan key:generate and use the output!
 APP_DEBUG=true
 APP_URL=http://localhost
 
@@ -174,7 +174,7 @@ REDIS_QUEUE=mailer,default
 Now in another terminal, run the following in the root directory:
 
 ```
-$ php artisan queue:work redis --queue=mailer,default
+$ php7.4 artisan queue:work redis --queue=mailer,default
 ```
 
 Here, one process will work both queues at the same time.
@@ -182,11 +182,11 @@ If you prefer to have two different processes for each job queue, you can open t
 
 ```
 // Terminal 1
-$ php artisan queue:work redis --queue=mailer
+$ php7.4 artisan queue:work redis --queue=mailer
 ```
 ```
 // Terminal 2
-$ php artisan queue:work redis --queue=default
+$ php7.4 artisan queue:work redis --queue=default
 ```
 
 ## Files - Storage Link
@@ -194,7 +194,7 @@ $ php artisan queue:work redis --queue=default
 Run the following command
 
 ```
-php artisan storage:link
+php7.4 artisan storage:link
 ```
 
 ## Run PHP Server
