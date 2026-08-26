@@ -17,14 +17,11 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" />
-    <link href="{{ mix('css/app.css') }}" rel="stylesheet">
     @yield('stylesheets')
 
     <!-- Scripts -->
     @yield('headscripts')
-    <script src="{{ mix('js/vendor.js') }}" defer></script>
-    <script src="{{ mix('js/manifest.js') }}" defer></script>
-    <script src="{{ mix('js/admin-app.js') }}" defer></script>
+    @vite(['resources/js/admin-app.js'])
     @if (app_setting('app_google_analytics_4_id'))
        @include('layouts.googleAnalytics')
     @endif

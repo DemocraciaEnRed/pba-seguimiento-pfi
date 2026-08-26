@@ -4,13 +4,35 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-require('./bootstrap');
+import '../sass/app.scss';
+import './bootstrap';
+import Vue from 'vue';
 import http from './axios'
 import globals from './globals'
 import VueScrollactive from 'vue-scrollactive';
 import Toasted from 'vue-toasted';
 
-window.Vue = require('vue');
+import NotificationItem from './components/NotificationItem.vue';
+import Paginator from './components/utils/Paginator.vue';
+import ErrorAlert from './components/utils/ErrorAlert.vue';
+import InputFile from './components/inputs/InputFile.vue';
+import InputUserAvatar from './components/inputs/InputUserAvatar.vue';
+import ReportsCarrousel from './components/portal/home/ReportsCarrousel.vue';
+import HomeStats from './components/portal/home/Stats.vue';
+import HomeCategories from './components/portal/home/Categories.vue';
+import ReportComments from './components/comments/ReportComments.vue';
+import PortalReportMap from './components/portal/report/Map.vue';
+import PortalObjectiveStats from './components/portal/objective/Stats.vue';
+import LastObjectives from './components/portal/home/LastObjectives.vue';
+import OrganizationCarrousel from './components/portal/objective/OrganizationCarrousel.vue';
+import MapReports from './components/maps/MapReports.vue';
+import Collapse from './components/utils/Collapse.vue';
+import ReportsList from './components/report/ReportsList.vue';
+import Album from './components/report/Album.vue';
+import SearchObjectives from './components/portal/catalogs/objectives/Search.vue';
+import SearchReports from './components/portal/catalogs/reports/Search.vue';
+
+window.Vue = Vue;
 
 Vue.use(VueScrollactive);
 Vue.use(Toasted, {
@@ -25,37 +47,26 @@ Vue.use(Toasted, {
         }
     }
 })
-/**
- * The following block of code may be used to automatically register your
- * Vue components. It will recursively scan this directory for the Vue
- * components and automatically register them with their "basename".
- *
- * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
- */
 
-// const files = require.context('./', true, /\.vue$/i)
-// files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
-
-Vue.component('notification-item', require('./components/NotificationItem.vue').default);
-Vue.component('paginator', require('./components/utils/Paginator.vue').default);
-Vue.component('error-alert', require('./components/utils/ErrorAlert.vue').default);
-Vue.component('input-file', require('./components/inputs/InputFile.vue').default);
-Vue.component('input-user-avatar', require('./components/inputs/InputUserAvatar.vue').default);
-Vue.component('portal-home-reports-carrousel', require('./components/portal/home/ReportsCarrousel.vue').default);
-Vue.component('portal-home-stats', require('./components/portal/home/Stats.vue').default);
-Vue.component('portal-home-categories', require('./components/portal/home/Categories.vue').default);
-Vue.component('report-comments', require('./components/comments/ReportComments.vue').default);
-Vue.component('portal-report-map', require('./components/portal/report/Map.vue').default);
-Vue.component('portal-objective-stats', require('./components/portal/objective/Stats.vue').default);
-Vue.component('portal-last-objectives', require('./components/portal/home/LastObjectives.vue').default);
-Vue.component('objective-organizations-carrousel', require('./components/portal/objective/OrganizationCarrousel.vue').default);
-Vue.component('map-reports', require('./components/maps/MapReports.vue').default);
-Vue.component('collapse', require('./components/utils/Collapse.vue').default);
-Vue.component('report-list', require('./components/report/ReportsList.vue').default);
-Vue.component('report-album', require('./components/report/Album.vue').default);
-Vue.component('search-objectives', require('./components/portal/catalogs/objectives/Search.vue').default);
-Vue.component('search-reports', require('./components/portal/catalogs/reports/Search.vue').default);
-
+Vue.component('notification-item', NotificationItem);
+Vue.component('paginator', Paginator);
+Vue.component('error-alert', ErrorAlert);
+Vue.component('input-file', InputFile);
+Vue.component('input-user-avatar', InputUserAvatar);
+Vue.component('portal-home-reports-carrousel', ReportsCarrousel);
+Vue.component('portal-home-stats', HomeStats);
+Vue.component('portal-home-categories', HomeCategories);
+Vue.component('report-comments', ReportComments);
+Vue.component('portal-report-map', PortalReportMap);
+Vue.component('portal-objective-stats', PortalObjectiveStats);
+Vue.component('portal-last-objectives', LastObjectives);
+Vue.component('objective-organizations-carrousel', OrganizationCarrousel);
+Vue.component('map-reports', MapReports);
+Vue.component('collapse', Collapse);
+Vue.component('report-list', ReportsList);
+Vue.component('report-album', Album);
+Vue.component('search-objectives', SearchObjectives);
+Vue.component('search-reports', SearchReports);
 
 Vue.prototype.$http = http
 

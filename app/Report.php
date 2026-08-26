@@ -14,11 +14,8 @@ class Report extends Model
     public $timestamps = true; // if the model should be timestamped.
     protected $appends = ['type_label','status_label','previous_status_label','type_icon'];
 
-    protected $dates = [
-        'date',
-    ];
-
     protected $casts = [
+        'date' => 'datetime',
         'tags' => 'array',
         'map_center' => 'array',
         'map_geometries' => 'array'

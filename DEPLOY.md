@@ -1,29 +1,27 @@
 
 # Deploying Participes App in a LAMP environment
 
-The app is built with Laravel 8.x and uses an InnoDB database that I would recommend **MySQL 5.6+ or MariaDB**.
+The app is built with Laravel 13.x and uses an InnoDB database that I would recommend **MySQL 8.0+ or MariaDB 10.6+**.
 
-Under the assumption that we have a Ubuntu 18.04 LTS based virtual machine as a server.
+Under the assumption that we have a Ubuntu 24.04 LTS based virtual machine as a server.
 
 Resources: 
-* [Laravel 8.x - Installation](https://laravel.com/docs/8.x/installation)
-* [Laravel 8.x - Configuration](https://laravel.com/docs/8.x/configuration)
-* [Laravel 8.x - Deployment](https://laravel.com/docs/8.x/deployment)
+* [Laravel 13.x - Installation](https://laravel.com/docs/13.x/installation)
+* [Laravel 13.x - Configuration](https://laravel.com/docs/13.x/configuration)
+* [Laravel 13.x - Deployment](https://laravel.com/docs/13.x/deployment)
 
 Notes: We focused this manual in the installation of the application for a LAMP environment. Regarding Server or Webserver configurations, it is up to the deployment team.
 
-> **The Docker version of the app is not ready yet. We will update this document when it is ready. If you want to help us with this, please fork the repo and make a Pull Request, it will be very appreciated.**
-
 ##### Before starting...
 
-Laravel requiere **PHP >= 7.3**. No es muy diferente a lo que seria un deployment de Symfony u otros frameworks de PHP. En `production`, deberian ir por un **PHP-FPM** por razones de performance.
+Laravel requiere **PHP >= 8.2**. No es muy diferente a lo que seria un deployment de Symfony u otros frameworks de PHP. En `production`, deberian ir por un **PHP-FPM** por razones de performance.
 
 
 #### Requisitos:
 
-1. **PHP >= 7.3.x** y **PHP-FPM** (Recomendado para produccion). (It is confirmed it works with PHP 7.4.x)
-2. A webserver, like **Apache** o **Nginx** thatr points to the project's `/public` directory. (Doc para [nginx](https://laravel.com/docs/7.x/deployment#nginx))
-3. **MySQL 5.6+ o MariaDB** as the database engine.
+1. **PHP >= 8.2.x** y **PHP-FPM** (Recomendado para produccion). (It is confirmed it works with PHP 8.4.x)
+2. A webserver, like **Apache** o **Nginx** thatr points to the project's `/public` directory. (Doc para [nginx](https://laravel.com/docs/13.x/deployment#nginx))
+3. **MySQL 8.0+ o MariaDB 10.6+** as the database engine.
 4. **Composer** [https://getcomposer.org/](https://getcomposer.org/) for installing the project's dependencies
 5. **REDIS** [https://redis.io/](https://redis.io/), "an advanced key-value store" used in parallel with the database to queue Laravel Jobs, important for enabling email and platform notifications
 6. **SUPERVISOR** [http://supervisord.org/](http://supervisord.org/), "a process control system" that controls and monitors processes. Important for running Laravel's Queue listeners.
@@ -90,17 +88,20 @@ If the instalaion running `$ composer install` returns an error, it is probably 
 This is an example of a deployment I made and some configurations for PHP. I am not sure if all of them are needed, but I will leave them here for reference.
 
 ```bash
-ubuntu:~$ sudo apt install php-fpm php-mysql
-ubuntu:~$ sudo apt install php-mbstring php-xml php-bcmath 
-# El siguiente puede fallar... por lo menos php imagick php-zip y 
-# php-gd es requerido para una de las dependencias. Cualquier cosa composer install va a decir que falta...
-ubuntu:~$ sudo apt install php-imagick php-zip php-iconv php-simplexml php-xmlreader php-zlib php-gd 
+# Add the ondrej/php PPA to install PHP 8.4
+ubuntu:~$ sudo add-apt-repository ppa:ondrej/php
+ubuntu:~$ sudo apt update
+ubuntu:~$ sudo apt install php8.4-fpm php8.4-mysql
+ubuntu:~$ sudo apt install php8.4-mbstring php8.4-xml php8.4-bcmath php8.4-curl php8.4-intl 
+# php imagick, php-zip and php-gd are required for some dependencies.
+# If any are missing, composer install will tell you.
+ubuntu:~$ sudo apt install php8.4-imagick php8.4-zip php8.4-gd 
 ```
 
-Now we need to configure PHP. We will edit the `/etc/php/7.4/fpm/php.ini` file.
+Now we need to configure PHP. We will edit the `/etc/php/8.4/fpm/php.ini` file.
 
 ```bash
-ubuntu:/etc/php/7.4/fpm# nano php.ini
+ubuntu:/etc/php/8.4/fpm# nano php.ini
 ```
 
 We will change the following `upload_max_filesize` and `post_max_size` values:
@@ -117,8 +118,8 @@ max_execution_time = 30 ==> max_execution_time = 300
 Now we restart the services.
 
 ```
-ubuntu:/etc/php/7.4/fpm# systemctl restart php7.4-fpm
-ubuntu:/etc/php/7.4/fpm# sudo systemctl restart nginx
+ubuntu:/etc/php/8.4/fpm# systemctl restart php8.4-fpm
+ubuntu:/etc/php/8.4/fpm# sudo systemctl restart nginx
 ```
 
 ##### Redis
@@ -261,7 +262,7 @@ sudo systemctl restart nginx
 sudo systemctl status nginx
 ```
 
-According to the official documentation for Laravel 8:
+According to the official documentation for Laravel 13:
 
 *"If you are deploying your application to a server that is running Nginx, you may use the following configuration file as a starting point for configuring your web server. Most likely, this file will need to be customized depending on your server's configuration."*
 
@@ -303,7 +304,7 @@ server {
     error_page 404 /index.php;
  
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -354,9 +355,9 @@ ubuntu:/var/www/participes-app$ cp .env.example .env
 ubuntu:/var/www/participes-app$ nano .env
 ```
 
-Have in count that the values #####COMPLETAR###### are important. Any problem with the Laravel documentation you can find more information: [Laravel 8 - Configuration - Environment Configuration](https://laravel.com/docs/8.x/configuration#environment-configuration)
+Have in count that the values #####COMPLETAR###### are important. Any problem with the Laravel documentation you can find more information: [Laravel 13 - Configuration - Environment Configuration](https://laravel.com/docs/13.x/configuration#environment-configuration)
 
-> **NOTE**: APP_ENV=local and APP_DEBUG=false are the development states, for now let's leave it like that, until we verify that the platform is working and it can be changed for a production environment to APP_ENV=production and APP_DEBUG=false (APP_DEBUG=false enables the Laravel Debugbar to see some logs)
+> **NOTE**: APP_ENV=local and APP_DEBUG=false are the development states, for now let's leave it like that, until we verify that the platform is working and it can be changed for a production environment to APP_ENV=production and APP_DEBUG=false (APP_DEBUG=true enables Laravel's detailed error pages to see some logs)
 
 `.env`
 
@@ -383,8 +384,8 @@ DB_DATABASE=#####COMPLETAR######
 DB_USERNAME=#####COMPLETAR######
 DB_PASSWORD=#####COMPLETAR######
 
-BROADCAST_DRIVER=log
-CACHE_DRIVER=file
+BROADCAST_CONNECTION=log
+CACHE_STORE=file
 QUEUE_CONNECTION=redis
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
@@ -419,8 +420,9 @@ PUSHER_APP_KEY=
 PUSHER_APP_SECRET=
 PUSHER_APP_CLUSTER=mt1
 
-MIX_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
-MIX_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+MIX_PUSHER_APP_KEY and MIX_PUSHER_APP_CLUSTER are no longer used (Laravel Mix was replaced by Vite).
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
 ```
 
 With `APP_ENV=local` we can access the `/start` route from the browser to make the admin user. (In production we have to change to `APP_ENV=production`)
@@ -526,18 +528,15 @@ Generating optimized autoload files
 > Illuminate\Foundation\ComposerScripts::postAutoloadDump
 > @php artisan package:discover --ansi
 Discovered Package: anhskohbo/no-captcha
-Discovered Package: barryvdh/laravel-debugbar
-Discovered Package: facade/ignition
-Discovered Package: fideloper/proxy
-Discovered Package: fruitcake/laravel-cors
 Discovered Package: intervention/image
 Discovered Package: laravel/tinker
 Discovered Package: laravel/ui
 Discovered Package: maatwebsite/excel
 Discovered Package: nesbot/carbon
 Discovered Package: nunomaduro/collision
+Discovered Package: spatie/laravel-ignition
 Package manifest generated successfully.
-Generated optimized autoload files containing 5454 classes
+Generated optimized autoload files
 
 ubuntu:/var/www/participes-app# php artisan clear-compiled
 Compiled services and packages files removed!
@@ -607,7 +606,7 @@ In your app, by default the timezone is defined like this. Change it if you need
 
 #### DB_SPECIFIED_KEY_FIX=false
 
-If you are getting the following exception when running php artisan migration -force
+If you are getting the following exception when running `php artisan migrate --force`
 ```
 [Illuminate\Database\QueryException]
 SQLSTATE[42000]: Syntax error or access violation: 1071 Specified key was too long; max key length is 767 bytes (SQL: alter table users add unique users_email_unique(email))
@@ -656,7 +655,7 @@ To solve this, you may use the `App\Http\Middleware\TrustProxies` middleware tha
 ```php
 namespace App\Http\Middleware;
 
-use Fideloper\Proxy\TrustProxies as Middleware;
+use Illuminate\Http\Middleware\TrustProxies as Middleware;
 use Illuminate\Http\Request;
 
 class TrustProxies extends Middleware
@@ -676,10 +675,15 @@ class TrustProxies extends Middleware
      *
      * @var int
      */
-    protected $headers = Request::HEADER_X_FORWARDED_ALL;
+    protected $headers =
+        Request::HEADER_X_FORWARDED_FOR |
+        Request::HEADER_X_FORWARDED_HOST |
+        Request::HEADER_X_FORWARDED_PORT |
+        Request::HEADER_X_FORWARDED_PROTO |
+        Request::HEADER_X_FORWARDED_AWS_ELB;
 }
 ```
-> If you are using AWS Elastic Load Balancing, your `$headers` value should be `Request::HEADER_X_FORWARDED_AWS_ELB`. For more information on the constants that may be used in the `$headers `property, check out Laravel's documentation on trusting proxies.
+> The combined `$headers` value above already includes `Request::HEADER_X_FORWARDED_AWS_ELB` for AWS Elastic Load Balancing. `fideloper/proxy` is no longer required — Laravel now ships the trusted proxy middleware. For more information on the constants that may be used in the `$headers` property, check out Laravel's documentation on trusting proxies.
 
 #### Trusting All Proxies
 
@@ -688,7 +692,7 @@ If you are using Amazon AWS or another "cloud" load balancer provider, you may n
 ```php
 namespace App\Http\Middleware;
 
-use Fideloper\Proxy\TrustProxies as Middleware;
+use Illuminate\Http\Middleware\TrustProxies as Middleware;
 use Illuminate\Http\Request;
 
 class TrustProxies extends Middleware
@@ -705,7 +709,12 @@ class TrustProxies extends Middleware
      *
      * @var int
      */
-    protected $headers = Request::HEADER_X_FORWARDED_ALL;
+    protected $headers =
+        Request::HEADER_X_FORWARDED_FOR |
+        Request::HEADER_X_FORWARDED_HOST |
+        Request::HEADER_X_FORWARDED_PORT |
+        Request::HEADER_X_FORWARDED_PROTO |
+        Request::HEADER_X_FORWARDED_AWS_ELB;
 }
 ```
 
@@ -715,12 +724,12 @@ class TrustProxies extends Middleware
 
 ## Deploying in a LAMP Server
 
-Here is a step-by-step guide to deploy a Laravel 8 application on a LAMP server:
+Here is a step-by-step guide to deploy a Laravel 13 application on a LAMP server:
 
 * Install LAMP (Linux, Apache, MySQL, PHP) on your server if it is not already installed.
 * Create a new database for your Laravel application in MySQL.
-* Download the Laravel 8 application on your server.
-* Configure the Apache virtual host to point to the Laravel 8 application's public directory.
+* Download the Laravel 13 application on your server.
+* Configure the Apache virtual host to point to the Laravel 13 application's public directory.
 * Update the database credentials in the .env file in your Laravel application.
 * Run the following commands in your Laravel application directory to install dependencies and optimize the application:
 ```
@@ -732,7 +741,7 @@ php artisan optimize
 * Restart the Apache service to apply the changes.
 * Access your Laravel application through a web browser to verify that it is working properly.
 
-This is a basic guide to deploy Laravel 8 on a LAMP server. Please note that some additional steps might be required based on your specific requirements and setup.
+This is a basic guide to deploy Laravel 13 on a LAMP server. Please note that some additional steps might be required based on your specific requirements and setup.
 
 
 ### Using php-fpm
@@ -753,7 +762,7 @@ sudo apt-get install php-fpm
 * Configure php-fpm:
 
 ```bash
-sudo nano /etc/php/7.4/fpm/php.ini
+sudo nano /etc/php/8.4/fpm/php.ini
 ```
 
 * Make sure that the following line is uncommented:
@@ -773,7 +782,7 @@ sudo nano /etc/apache2/sites-available/example.com.conf
 ```perl
 
 <FilesMatch ".+\.php$">
-   SetHandler "proxy:unix:/var/run/php/php7.4-fpm.sock|fcgi://localhost"
+   SetHandler "proxy:unix:/var/run/php/php8.4-fpm.sock|fcgi://localhost"
 </FilesMatch>
 ```
 
@@ -789,7 +798,7 @@ sudo service apache2 restart
 ```
 * Restart php-fpm:
 ```bash
-sudo service php7.4-fpm restart
+sudo service php8.4-fpm restart
 ```
 This is a basic guide to set up php-fpm in Apache on an Ubuntu server. Please note that some additional steps might be required based on your specific requirements and setup.
 
@@ -799,7 +808,7 @@ This are general tips to optimize php-fpm:
 
 * Use the latest version of php-fpm, as newer versions often include performance optimizations.
 * Use a FastCGI cache, such as Nginx FastCGI cache or Varnish, to cache the output of dynamic PHP pages.
-* Tune the pm settings in the /etc/php/7.4/fpm/pool.d/www.conf file:
+* Tune the pm settings in the /etc/php/8.4/fpm/pool.d/www.conf file:
   * `pm`: set it to dynamic mode, which automatically adjusts the number of worker processes based on the server's load.
   * `pm.max_children`: set it to a value that is appropriate for your server's memory and CPU capacity.
   * `pm.start_servers`: set it to a value that is appropriate for your server's capacity.
