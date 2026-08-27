@@ -21,4 +21,13 @@ export default defineConfig({
         },
         extensions: ['.mjs', '.js', '.json', '.vue'],
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                // Bootstrap 4's SCSS relies on legacy Sass APIs; silence its deprecation noise.
+                quietDeps: true,
+                silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'abs-percent'],
+            },
+        },
+    },
 });

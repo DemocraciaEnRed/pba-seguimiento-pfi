@@ -173,21 +173,12 @@
 
   .footer-logo {
     margin-bottom: 15px;
-    max-height: 60px;
-    max-width: 110px;
+    max-height: 90px;
+    max-width: 100%;
   }
 }
-#post-footer{
-  .footer-logo {
-    margin: 0 10px 15px;
-    max-height: 60px;
-    max-width: 110px;
-  }
-  .footer-logo-eu {
-    margin: 0 10px 15px;
-    max-height: 35px;
-    max-width: 110px;
-  }
+#prefooter{
+  background-color: #f5f5f5;
 }
 
 .about-portal-header {
