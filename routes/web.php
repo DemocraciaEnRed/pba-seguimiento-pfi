@@ -34,8 +34,8 @@ Route::post('/start', [MiscController::class, 'startApp'])->name('start.form');
 Route::get('/testing', [MiscController::class, 'testing'])->name('testing');
 
 Route::group([
-    'as' => 'about.', 
-    'prefix' => 'acerca', 
+    'as' => 'about.',
+    'prefix' => 'acerca',
     ],function () {
     Route::get('/general', [HomeController::class, 'viewAboutGeneral'])->name('general');
     Route::get('/faq', [HomeController::class, 'viewAboutQuestions'])->name('faq');
@@ -43,8 +43,8 @@ Route::group([
 });
 
 Route::group([
-    'as' => 'aboutTwo.', 
-    'prefix' => 'acerca2', 
+    'as' => 'aboutTwo.',
+    'prefix' => 'acerca2',
     ],function () {
     Route::get('/general', [HomeController::class, 'viewAboutGeneralTwo'])->name('general');
     Route::get('/faq', [HomeController::class, 'viewAboutQuestionsTwo'])->name('faq');
@@ -52,8 +52,8 @@ Route::group([
 });
 
 Route::group([
-    'as' => 'events.', 
-    'prefix' => 'eventos', 
+    'as' => 'events.',
+    'prefix' => 'eventos',
     ],function () {
     Route::get('/', [EventController::class, 'showUpcomingEvents'])->name('upcoming');
     Route::get('/pasados', [EventController::class, 'showPastEvents'])->name('past');
@@ -63,8 +63,8 @@ Route::group([
 Auth::routes(['verify' => true]);
 
 Route::group([
-    'as' => 'panel.', 
-    'prefix' => 'panel', 
+    'as' => 'panel.',
+    'prefix' => 'panel',
     ],function () {
     Route::get('/', [UserPanelController::class, 'index'])->name('index');
     // Mis objetivos
@@ -92,8 +92,8 @@ Route::group([
 });
 
 Route::group([
-    'as' => 'admin.', 
-    'prefix' => 'admin', 
+    'as' => 'admin.',
+    'prefix' => 'admin',
     ],function () {
     Route::get('/', [AdminPanelController::class, 'index'])->name('index');
     Route::get('/bitacora', [AdminPanelController::class, 'viewLogs'])->name('logs');
@@ -115,6 +115,10 @@ Route::group([
     Route::put('/categorias/{categoryId}/editar', [AdminPanelController::class, 'formEditCategory'])->name('categories.edit.form');
     Route::get('/categorias/{categoryId}/eliminar', [AdminPanelController::class, 'viewDeleteCategory'])->name('categories.delete');
     Route::delete('/categorias/{categoryId}/eliminar', [AdminPanelController::class, 'formDeleteCategory'])->name('categories.delete.form');
+    // Objetivos Estrategicos
+    Route::get('/objetivos-estrategicos', [AdminPanelController::class, 'viewListStrategicObjectives'])->name('strategic-objectives');
+    Route::get('/objetivos-estrategicos/{strategicObjectiveId}/eliminar', [AdminPanelController::class, 'viewDeleteStrategicObjective'])->name('strategic-objectives.delete');
+    Route::delete('/objetivos-estrategicos/{strategicObjectiveId}/eliminar', [AdminPanelController::class, 'formDeleteStrategicObjective'])->name('strategic-objectives.delete.form');
     // Organizaciones
     Route::get('/organizaciones', [AdminPanelController::class, 'viewListOrganizations'])->name('organizations');
     Route::get('/organizaciones/nuevo', [AdminPanelController::class, 'viewCreateOrganization'])->name('organizations.create');
@@ -155,8 +159,8 @@ Route::group([
 });
 
 Route::group([
-    'as' => 'apiService.', 
-    'prefix' => 'api-service', 
+    'as' => 'apiService.',
+    'prefix' => 'api-service',
     ],function () {
     // Userss
     Route::get('/home/stats', [HomeController::class, 'fetchStats'])->name('home.stats');
@@ -193,14 +197,14 @@ Route::post('/reportes/{reportId}/testimony', [ReportController::class, 'formTog
 Route::get('/metas/{goalId}', [GoalController::class, 'index'])->name('goals.index');
 
 Route::group([
-    'as' => 'objectives.', 
-    'prefix' => 'objetivos', 
+    'as' => 'objectives.',
+    'prefix' => 'objetivos',
     ],function () {
     Route::get('/{objectiveId}', [ObjectiveController::class, 'index'])->name('index');
     // Manage
     Route::group([
-        'as' => 'manage.', 
-        'prefix' => '/{objectiveId}/administrar', 
+        'as' => 'manage.',
+        'prefix' => '/{objectiveId}/administrar',
         ],function () {
         Route::get('/', [ObjectivePanelController::class, 'index'])->name('index');
         Route::get('/editar', [ObjectivePanelController::class, 'viewEditObjective'])->name('edit');

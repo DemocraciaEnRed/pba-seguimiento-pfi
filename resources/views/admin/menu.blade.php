@@ -3,17 +3,21 @@ $currentRoute = Route::currentRouteName();
 @endphp
 
 <a href="{{ route('admin.index') }}" class="category {{ $currentRoute == 'objective.manage.goals.reports.index'  ? 'is-active' : null }}"><i class="fas fa-gauge-high fa-fw"></i>&nbsp;Inicio</a>
-<h6 class="category"><i class="fas fa-tags fa-fw"></i>&nbsp;Categorías</h6>
+<h6 class="category"><i class="fas fa-tags fa-fw"></i>&nbsp;Ejes</h6>
 <div class="menu-link">
 <a href="{{ route('admin.categories.create') }}" class="item-link {{ $currentRoute == 'admin.categories.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
 <a href="{{ route('admin.categories') }}" class="item-link {{ $currentRoute == 'admin.categories' ? 'is-active' : null }}">Listar</a>
+</div>
+<h6 class="category"><i class="fas fa-diagram-project fa-fw"></i>&nbsp;Objetivos Estratégicos</h6>
+<div class="menu-link">
+<a href="{{ route('admin.strategic-objectives') }}" class="item-link {{ $currentRoute == 'admin.strategic-objectives' ? 'is-active' : null }}">Listar</a>
 </div>
 <h6 class="category"><i class="far fa-building fa-fw"></i>&nbsp;Organizaciones</h6>
 <div class="menu-link">
 <a href="{{ route('admin.organizations.create') }}" class="item-link {{ $currentRoute == 'admin.organizations.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
 <a href="{{ route('admin.organizations') }}" class="item-link {{ $currentRoute == 'admin.organizations' ? 'is-active' : null }}">Listar</a>
 </div>
-<h6 class="category"><i class="fas fa-flag-checkered fa-fw"></i>&nbsp;Objetivos</h6>
+<h6 class="category"><i class="fas fa-flag-checkered fa-fw"></i>&nbsp;Objetivos Específicos</h6>
 <div class="menu-link">
 <a href="{{ route('admin.objectives.create') }}" class="item-link {{ $currentRoute == 'admin.objectives.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
 <a href="{{ route('admin.objectives') }}" class="item-link {{ $currentRoute == 'admin.objectives' ? 'is-active' : null }}">Listar</a>

@@ -8,6 +8,7 @@ use Image;
 use Log;
 use Notification;
 use App\Category;
+use App\StrategicObjective;
 use App\Organization;
 use App\Role;
 use App\File;
@@ -21,7 +22,9 @@ use App\ActionLog;
 use App\Faq;
 use App\Setting;
 use Carbon\Carbon;
+use DB;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ObjectivesExport;
 use App\Rules\MatchOldPassword;
@@ -66,9 +69,9 @@ class AdminPanelController extends Controller
     // ====================================
     // Admin - Categories
     // ====================================
-    
+
     public function viewListCategories(Request $request){
-      $categories = Category::all();
+      $categories = Category::orderBy('order')->get();
       return view('admin.categories.list',['categories' => $categories]);
     }
     public function viewCreateCategory(Request $request){
@@ -79,19 +82,35 @@ class AdminPanelController extends Controller
             'title' => 'required|string|max:255' ,
             'icon' => 'required|string|max:100',
             'color' => 'required|string|max:100' ,
+            'order' => 'required|integer|min:0',
+            'strategic_objectives' => 'nullable|array',
+            'strategic_objectives.*.codigo' => 'required|string|max:225',
+            'strategic_objectives.*.title' => 'required|string|max:550',
         ];
 
-        $request->validate($rules);
+        $validated = $request->validate($rules);
 
-        $category = new Category();
-        $category->title = $request->input('title');
-        $category->icon = $request->input('icon');
-        $category->color = $request->input('color');
-        $category->save();
+        DB::transaction(function () use ($validated): void {
+            $category = new Category();
+            $category->title = $validated['title'];
+            $category->icon = $validated['icon'];
+            $category->color = $validated['color'];
+            $category->order = $validated['order'];
+            $category->save();
+
+            foreach ($validated['strategic_objectives'] ?? [] as $strategicObjectiveData) {
+                $strategicObjective = new StrategicObjective();
+                $strategicObjective->codigo = $strategicObjectiveData['codigo'];
+                $strategicObjective->title = $strategicObjectiveData['title'];
+                $strategicObjective->category()->associate($category);
+                $strategicObjective->save();
+            }
+        });
+
         return redirect()->route('admin.categories')->with('success','La categoria ha sido creada correctamente');
     }
     public function viewEditCategory(Request $request, $categoryId){
-        $category = Category::findOrFail($categoryId);
+        $category = Category::with('strategicObjectives')->findOrFail($categoryId);
         return view('admin.categories.edit',['category' => $category]);
     }
     public function formEditCategory(Request $request, $categoryId){
@@ -99,21 +118,55 @@ class AdminPanelController extends Controller
             'title' => 'required|string|max:255' ,
             'icon' => 'required|string|max:100',
             'color' => 'required|string|max:100' ,
+            'order' => 'required|integer|min:0',
+            'strategic_objectives' => 'nullable|array',
+            'strategic_objectives.*.id' => 'nullable|integer|exists:strategic_objectives,id',
+            'strategic_objectives.*.codigo' => 'required|string|max:225',
+            'strategic_objectives.*.title' => 'required|string|max:550',
+            'strategic_objectives.*.delete' => 'nullable|boolean',
         ];
 
-        $request->validate($rules);
+        $validated = $request->validate($rules);
 
-        $category = Category::findorfail($categoryId);
-        $category->title = $request->input('title');
-        $category->icon = $request->input('icon');
-        $category->color = $request->input('color');
-        $category->save();
+        DB::transaction(function () use ($validated, $categoryId): void {
+            $category = Category::findOrFail($categoryId);
+            $category->title = $validated['title'];
+            $category->icon = $validated['icon'];
+            $category->color = $validated['color'];
+            $category->order = $validated['order'];
+            $category->save();
+
+            foreach ($validated['strategic_objectives'] ?? [] as $strategicObjectiveData) {
+                if (isset($strategicObjectiveData['id'])) {
+                    $strategicObjective = StrategicObjective::where('category_id', $category->id)
+                        ->findOrFail($strategicObjectiveData['id']);
+
+                    if (!empty($strategicObjectiveData['delete'])) {
+                        if ($strategicObjective->objectives()->exists()) {
+                            throw ValidationException::withMessages([
+                                'strategic_objectives' => "No se puede eliminar el objetivo estratégico '{$strategicObjective->title}' porque tiene objetivos específicos asociados.",
+                            ]);
+                        }
+
+                        $strategicObjective->delete();
+                        continue;
+                    }
+                } else {
+                    $strategicObjective = new StrategicObjective();
+                    $strategicObjective->category()->associate($category);
+                }
+
+                $strategicObjective->codigo = $strategicObjectiveData['codigo'];
+                $strategicObjective->title = $strategicObjectiveData['title'];
+                $strategicObjective->save();
+            }
+        });
 
         return redirect()->route('admin.categories')->with('success','La categoria ha sido editada correctamente');
     }
     public function viewDeleteCategory(Request $request, $categoryId){
         $category = Category::findorfail($categoryId);
-        $categories = Category::all();
+        $categories = Category::orderBy('order')->get();
         if(count($categories) == 1){
             return redirect()->route('admin.categories')->with('warning','No puede eliminar la categoria porque se requiere migrar los objetivos de la categoria que eliminara a otra categoria. Cree una nueva categoria para poder migrarlos');
         }
@@ -122,19 +175,53 @@ class AdminPanelController extends Controller
     public function formDeleteCategory(Request $request, $categoryId){
         $rules = [
             'password' =>  ['required', new MatchOldPassword],
-            'category' => 'required|numeric' ,
+            'category' => 'required|numeric|exists:categories,id|not_in:'.$categoryId,
         ];
         $request->validate($rules);
 
         $category = Category::findorfail($categoryId);
         $newCategory = Category::findorfail($request->input('category'));
-        foreach ($category->objectives as $objective) {
-            $objective->category()->associate($newCategory);
-            $objective->save();
+        foreach ($category->strategicObjectives as $strategicObjective) {
+            $strategicObjective->category()->associate($newCategory);
+            $strategicObjective->save();
         }
         $category->delete();
 
-        return redirect()->route('admin.categories')->with('success','La categoria ha sido eliminada correctamente y los objetivos han sido migrado a otra categoria');
+        return redirect()->route('admin.categories')->with('success','La categoria ha sido eliminada correctamente y los objetivos estratégicos han sido migrados a otra categoria');
+    }
+
+    // ====================================
+    // Admin - Strategic Objectives
+    // ====================================
+
+    public function viewListStrategicObjectives(Request $request){
+      $strategicObjectives = StrategicObjective::with('category')->get();
+      return view('admin.strategic-objectives.list',['strategicObjectives' => $strategicObjectives]);
+    }
+    public function viewDeleteStrategicObjective(Request $request, $strategicObjectiveId){
+        $strategicObjective = StrategicObjective::findorfail($strategicObjectiveId);
+        $strategicObjectives = StrategicObjective::where('id','!=',$strategicObjectiveId)->get();
+        if(count($strategicObjectives) == 0){
+            return redirect()->route('admin.strategic-objectives')->with('warning','No puede eliminar el objetivo estratégico porque se requiere migrar los objetivos específicos vinculados a otro objetivo estratégico. Cree un nuevo objetivo estratégico para poder migrarlos');
+        }
+        return view('admin.strategic-objectives.delete',['strategicObjective' => $strategicObjective, 'strategicObjectives' => $strategicObjectives]);
+    }
+    public function formDeleteStrategicObjective(Request $request, $strategicObjectiveId){
+        $rules = [
+            'password' =>  ['required', new MatchOldPassword],
+            'strategic_objective' => 'required|numeric|exists:strategic_objectives,id|not_in:'.$strategicObjectiveId,
+        ];
+        $request->validate($rules);
+
+        $strategicObjective = StrategicObjective::findorfail($strategicObjectiveId);
+        $newStrategicObjective = StrategicObjective::findorfail($request->input('strategic_objective'));
+        foreach ($strategicObjective->objectives as $objective) {
+            $objective->strategicObjective()->associate($newStrategicObjective);
+            $objective->save();
+        }
+        $strategicObjective->delete();
+
+        return redirect()->route('admin.strategic-objectives')->with('success','El objetivo estratégico ha sido eliminado correctamente y los objetivos específicos han sido migrados a otro objetivo estratégico');
     }
 
     // ====================================
@@ -155,7 +242,7 @@ class AdminPanelController extends Controller
             'logo' => 'image|nullable|max:1999'
         ];
         $request->validate($rules);
-        
+
         // Handle data
         $newOrganization = new Organization();
         $newOrganization->name = $request->input('name');
@@ -197,7 +284,7 @@ class AdminPanelController extends Controller
             $imageFile->thumbnail_path = $filePathThumbnail;
             $newOrganization->logo()->save($imageFile);
         }
-        
+
         return redirect()->route('admin.organizations')->with('success','La organizacion ha sido creada correctamente');
     }
     public function viewEditOrganization(Request $request, $organizationId){
@@ -211,13 +298,13 @@ class AdminPanelController extends Controller
             'logo' => 'image|nullable|max:1999'
         ];
         $request->validate($rules);
-        
+
         // Handle data
         $organization = Organization::findOrFail($organizationId);
         $organization->name = $request->input('name');
         $organization->description = $request->input('description');
         $organization->save();
-        
+
         if($request->hasFile('logo')){
             //Has logo?
             if(!is_null($organization->logo)){
@@ -294,7 +381,7 @@ class AdminPanelController extends Controller
             'content' => 'required|string',
         ];
         $request->validate($rules);
-        
+
         // Handle data
         $faq = new Faq();
         $faq->title = $request->input('title');
@@ -302,7 +389,7 @@ class AdminPanelController extends Controller
         $faq->section = $request->input('section');
         $faq->content = $request->input('content');
         $faq->save();
-        
+
         return redirect()->route('admin.faqs')->with('success','La pregunta frecuente ha sido creada correctamente');
     }
     public function viewEditFaq(Request $request, $faqId){
@@ -318,14 +405,14 @@ class AdminPanelController extends Controller
         ];
 
         $request->validate($rules);
-        
+
         $faq = Faq::findOrFail($faqId);
         $faq->title = $request->input('title');
         $faq->order = $request->input('order');
         $faq->section = $request->input('section');
         $faq->content = $request->input('content');
         $faq->save();
-       
+
         return redirect()->route('admin.faqs')->with('success','La pregunta frecuente ha sido editada correctamente');
     }
     public function viewDeleteFaq(Request $request, $faqId){
@@ -345,7 +432,7 @@ class AdminPanelController extends Controller
     // ====================================
 
     public function viewListAdministrators(Request $request){
-      $administrators = User::whereHas('roles', function ($q) { 
+      $administrators = User::whereHas('roles', function ($q) {
             $q->where('name','admin');
           })->get();
       return view('admin.administrators.list',['administrators' => $administrators]);
@@ -388,7 +475,7 @@ class AdminPanelController extends Controller
     // ====================================
 
     public function viewListObjectives(Request $request){
-      $objectives = Objective::paginate(10);
+            $objectives = Objective::with('strategicObjective.category')->paginate(10);
       return view('admin.objectives.list',['objectives' => $objectives]);
     }
 
@@ -397,16 +484,16 @@ class AdminPanelController extends Controller
     }
 
     public function viewCreateObjective(Request $request){
-        $categories = Category::all();
+        $ejes = Category::with('strategicObjectives')->orderBy('order')->get();
         $organizations = Organization::all();
-        return view('admin.objectives.create',['categories' => $categories, 'organizations' => $organizations]);
+        return view('admin.objectives.create',['ejes' => $ejes, 'organizations' => $organizations]);
     }
     public function formCreateObjective(Request $request){
 
         $rules = [
             'title' => 'required|string|max:550' ,
             'content' => 'required|string|max:2000',
-            'category' => 'required',
+            'strategic_objective' => 'required|numeric|exists:strategic_objectives,id',
             'tags' => 'array' ,
             'tags.*' => 'required|string|max:100' ,
             'organizations' => 'array' ,
@@ -414,12 +501,11 @@ class AdminPanelController extends Controller
         ];
         $request->validate($rules);
 
-        $category = Category::findOrFail($request->input('category'));
         $objective = new Objective();
         $objective->title = $request->input('title');
         $objective->content = $request->input('content');
         $objective->tags = $request->input('tags');
-        $objective->category()->associate($category);
+        $objective->strategicObjective()->associate(StrategicObjective::findOrFail($request->input('strategic_objective')));
         $objective->author()->associate($request->user());
         $objective->hidden = true;
         $objective->save();
@@ -475,7 +561,7 @@ class AdminPanelController extends Controller
             'notify' => 'nullable|string|in:true',
         ];
 
-        $request->validate($rules);  
+        $request->validate($rules);
 
         $event = new Event();
         $event->title = $request->input('title');
@@ -544,7 +630,7 @@ class AdminPanelController extends Controller
             Notification::send($usersToNotify, new NewEvent($event));
             }
         }
-        
+
         return redirect()->route('admin.events')->with('success','¡Nuevo evento creado!');
 
     }
@@ -571,7 +657,7 @@ class AdminPanelController extends Controller
             'objectives.*' => 'required|numeric' ,
             'notify' => 'nullable|string|in:true',
         ];
-        $request->validate($rules);  
+        $request->validate($rules);
 
         $event = Event::findorfail($eventId);
 
@@ -689,7 +775,7 @@ class AdminPanelController extends Controller
                 $photo->delete();
             }
         }
-        
+
         $notifySubscribers = $request->boolean('notify');
         if($notifySubscribers){
             $usersToNotify = new EloquentCollection();
@@ -702,7 +788,7 @@ class AdminPanelController extends Controller
                 Notification::send($usersToNotify, new DeleteEvent($event));
             }
         }
-        
+
         $event->objectives()->detach();
         $event->delete();
 
@@ -714,7 +800,7 @@ class AdminPanelController extends Controller
             'user_email' => $request->user()->email
             ]);
 
-        
+
         return redirect()->route('admin.events')->with('success','El evento ha sido eliminado correctamente');
     }
 
@@ -738,7 +824,7 @@ class AdminPanelController extends Controller
             // to string
             $setting->value = $request->boolean('value');
         } else {
-            $setting->value = $request->input('value'); 
+            $setting->value = $request->input('value');
         }
         $setting->name = $request->input('name');
         $setting->type = $request->input('type');
@@ -750,19 +836,19 @@ class AdminPanelController extends Controller
     public function viewEditMapSettings(Request $request)
     {
         $settings = Setting::all()->keyBy('name');
-        
+
         return view('admin.settings.map.edit',['settings' => $settings]);
     }
     public function viewEditHomepageSettings(Request $request)
     {
         $settings = Setting::all()->keyBy('name');
-        
+
         return view('admin.settings.homepage.edit',['settings' => $settings]);
     }
     public function viewEditSeoSettings(Request $request)
     {
         $settings = Setting::all()->keyBy('name');
-        
+
         return view('admin.settings.seo.edit',['settings' => $settings]);
     }
 
@@ -787,13 +873,13 @@ class AdminPanelController extends Controller
         $settingLat->save();
         $settingLong->save();
         $settingZoom->save();
-        
+
         // return redirect()->route('admin.settings')->with('success','Configuración guardada');
         // Redirect::back()->with('message','Operation Successful !');
         return redirect()->back()->with('success','Configuración guardada');
 
     }
-    
+
     public function formEditFileSetting(Request $request)
     {
         $rules = [
