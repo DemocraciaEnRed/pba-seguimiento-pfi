@@ -39,7 +39,6 @@ class MiscController extends Controller
 				'surname' => 'required|string|max:255',
 				'email' => 'required|string|email|max:255',
 				'password' => 'required|string|min:8|confirmed',
-				'demo' => 'nullable|boolean',
 			];
 
 			$request->validate($rules);
@@ -57,9 +56,7 @@ class MiscController extends Controller
 			$admin->save();
 			$admin->roles()->attach(Role::where('name', 'user')->first());
 			$admin->roles()->attach(Role::where('name', 'admin')->first());
-			if(boolval($request->input('demo'))){
-				Artisan::call("db:seed", ['--class' => "DemoSeeder"]);
-			}
+			Artisan::call("db:seed", ['--class' => "BaseDataAppSeeder"]);
 			return redirect()->route('home')->with('success','Aplicación instalada!');
 		}
 		return redirect()->route('home');
