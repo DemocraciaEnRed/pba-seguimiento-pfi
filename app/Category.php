@@ -13,7 +13,17 @@ class Category extends Model
 
     public function objectives()
     {
-        return $this->hasMany('App\Objective','category_id');
+        return $this->hasManyThrough(
+            'App\Objective',
+            'App\StrategicObjective',
+            'category_id',
+            'strategic_objective_id'
+        );
+    }
+
+    public function strategicObjectives()
+    {
+        return $this->hasMany('App\StrategicObjective','category_id');
     }
 
     public function getBackgroundColorAttribute()

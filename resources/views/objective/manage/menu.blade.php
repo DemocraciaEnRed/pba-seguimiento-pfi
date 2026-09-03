@@ -1,7 +1,7 @@
 @php
 $currentRoute = Route::currentRouteName();
 @endphp
-<p class="text-smaller text-muted mb-0">Objetivo</p>
+<p class="text-smaller text-muted mb-0">Objetivo Específico</p>
 <h6 class="font-weight-bold">
 <a href="{{route('objectives.index',['objectiveId' => $objective->id])}}">
   {{$objective->title}}
@@ -44,7 +44,7 @@ $currentRoute = Route::currentRouteName();
 @isManager($objective->id)
 <h6 class="category"><i class="fas fa-gear fa-fw"></i>&nbsp;Administrar</h6>
 <div class="menu-link">
-<a href="{{route('objectives.manage.edit', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.edit'  ? 'is-active' : null }}">Editar objetivo</a>
+<a href="{{route('objectives.manage.edit', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.edit'  ? 'is-active' : null }}">Editar objetivo específico</a>
 <a href="{{route('objectives.manage.cover', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.cover'  ? 'is-active' : null }}">Imagen de portada</a>
 <a href="{{route('objectives.manage.files', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.files'  ? 'is-active' : null }}">Repositorio de archivos</a>
 @if(app_setting('app_map_enabled'))

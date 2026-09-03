@@ -26,8 +26,31 @@
       </div>
       <div class="col-lg-3 mb-2 mb-lg-0">
         <p class="mb-lg-2"><b>Contactenos</b></p>
-        <!-- <p>{!! nl2br(e(app_setting('app_footer_contact_info'))) !!}</p> -->
-         <a href="https://x.com/test"><i class="fab fa-X-twitter"></i></a>
+        <p>{!! nl2br(e(app_setting('app_footer_contact_info'))) !!}</p>
+        <p class="mb-1"><b>Redes sociales</b></p>
+        <div class="footer-social-links" aria-label="Redes sociales">
+          <a href="https://www.facebook.com/BAProvincia/" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
+            <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
+          </a>
+          <a href="https://x.com/baprovincia" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="X" title="X">
+            <i class="fa-brands fa-x-twitter" aria-hidden="true"></i>
+          </a>
+          <a href="https://www.instagram.com/provinciaba/" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+            <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+          </a>
+          <a href="https://www.youtube.com/channel/UCRuY8kHZHaiqAAdjcgobsNw" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube">
+            <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+          </a>
+          <a href="https://t.me/GobiernoPBA" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="Telegram" title="Telegram">
+            <i class="fa-brands fa-telegram" aria-hidden="true"></i>
+          </a>
+          <a href="https://www.tiktok.com/@provinciaba" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
+            <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
+          </a>
+          <a href="https://www.twitch.tv/provinciaba" class="btn btn-primary rounded-circle" target="_blank" rel="noopener noreferrer" aria-label="Twitch" title="Twitch">
+            <i class="fa-brands fa-twitch" aria-hidden="true"></i>
+          </a>
+        </div>
       </div>
       {{-- <div class="col-lg-2 mb-0">
         <a href="https://democraciaenred.org" target="_blank"><img src="{{asset('img/der-black.svg')}}" class="footer-logo" alt="Democracia en Red"></a>

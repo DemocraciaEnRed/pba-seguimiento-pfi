@@ -3,7 +3,7 @@
 @section('panelContent')
 
 <section>
-  <h3 class="is-700">Editar objetivo</h3>
+  <h3 class="is-700">Editar objetivo específico</h3>
   <p class="lead">Completá los campos a continuación:</p>
   @if ($errors->any())
     <div class="alert alert-danger">
@@ -20,7 +20,7 @@
     El objetivo cuenta con metas. Si alguno de los campos compromete alguna información con respecto a las metas, recuerde hacer las ediciones correspondientes en las mismas.
   </div>
   @endif
-  @if (count($categories) > 0)
+  @if ($ejes->contains(fn ($eje) => $eje->strategicObjectives->isNotEmpty()))
   <form method="POST" action="{{ route('objectives.manage.edit.form',['objectiveId' => $objective->id]) }}">
     @method('PUT')
     @csrf
@@ -33,12 +33,7 @@
       <textarea name="content" class="form-control" rows="4">{{$objective->content}}</textarea>
     </div>
     <div class="form-group">
-      <label>Categoria del objetivo</label>
-      <select class="custom-select" name="category">
-        @foreach ($categories as $category)
-        <option value="{{$category->id}}" {{$category->id == $objective->category->id ? 'selected' : null}}>{{$category->title}}</option>
-        @endforeach
-      </select>
+      <input-strategic-objective :ejes='@json($ejes)' :selected="{{$objective->strategic_objective_id}}"></input-strategic-objective>
     </div>
     <div class="form-group">
       <label>Tags</label>
@@ -74,7 +69,7 @@
   </form>
   @else
   <div class="alert alert-warning" role="alert">
-    No puede crear objetivos sin categorías. Debe ir al panel de <a href="{{ route('admin.categories') }}">Categorías</a>
+    No puede editar objetivos específicos sin objetivos estratégicos. Debe ir al panel de <a href="{{ route('admin.strategic-objectives') }}">Objetivos Estratégicos</a>
   </div>
   @endif
 </section>

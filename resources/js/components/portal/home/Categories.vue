@@ -1,5 +1,5 @@
 <template>
-  
+
 </template>
 
 <template>
@@ -11,6 +11,7 @@
           <div class="category-card-carrousel card shadow-sm is-clickable" @click="goTo(`/objetivos?category=${category.id}`)">
             <div class="card-body d-flex text-center align-items-center justify-content-center flex-column">
               <p :style="`color: ${category.color}`"> <i :class="`${category.icon} fa-3x`"></i></p>
+              <h6 :style="`color: ${category.color}`" class="is-500 m-0">Eje #{{ category.order }}</h6>
               <h5 :style="`color: ${category.color}`" class="is-600 m-0">{{ category.title }}</h5>
             </div>
           </div>
@@ -20,7 +21,7 @@
         <div class="is-clickable" @click="nextSlide"><i class="fas fa-chevron-right fa-2x text-primary pl-3"></i></div>
       </div>
       <section class="p-5 text-center" v-else>
-        <i class="fas fa-circle-info"></i>&nbsp; No hay categorias cargadas en la plataforma
+        <i class="fas fa-circle-info"></i>&nbsp; No hay ejes cargados en la plataforma
       </section>
     </div>
 </template>

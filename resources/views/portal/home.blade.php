@@ -53,17 +53,17 @@
     </div>
   </div>
   @if(app_setting('app_homepage_show_categories_selector'))
-  <h4 class="is-400 mb-3">Explorá las categorias de los objetivos</h4>
+  <h4 class="is-400 mb-3">Explorá los ejes de los objetivos</h4>
   <portal-home-categories :categories='@json($categories)'></portal-home-categories>
   @endif
-  
+
 
   @if(app_setting('app_homepage_show_latest_reports') && !app_setting('app_homepage_latest_reports_at_the_end'))
   <h4 class="is-400 mb-3">Ultimos reportes publicados</h4>
   <portal-home-reports-carrousel fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC'])}}"></portal-home-reports-carrousel>
   <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver más reportes <i class="fas fa-arrow-right"></i></a></p>
   @endif
-  <h4 class="is-400 mb-3">Ultimos objetivos actualizados</h4> 
+  <h4 class="is-400 mb-3">Ultimos objetivos actualizados</h4>
   <portal-last-objectives fetch-url="{{route('apiService.objectives',['order_by'=>'updated_at,DESC','with'=>'objective_latest_goals,objective_latest_reports,objective_stats,','size' => 5])}}"></portal-last-objectives>
   <p class="mb-4 text-right"><a href="{{route('objectives')}}" class="btn btn-outline-primary">Ver más objetivos <i class="fas fa-arrow-right"></i></a></p>
   @if(app_setting('app_homepage_show_latest_reports') && app_setting('app_homepage_latest_reports_at_the_end'))

@@ -3,7 +3,7 @@
 @section('panelContent')
 
 <section>
-  <h3 class="is-700">Mis objetivos</h1>
+  <h3 class="is-700">Mis objetivos específicos</h1>
   <p class="lead">Estos son los objetivos de los cuales formas parte del equipo.</p>
   @if(!Auth::user()->hasVerifiedEmail())
   <div class="alert alert-warning">
@@ -23,7 +23,7 @@
             <h4 class="is-700 my-1">
               <a href="{{route('objectives.manage.index',['objectiveId' => $objective->id])}}" class="text-dark">{{$objective->title}}</a>
             </h4>
-            <p class="text-muted text-smaller my-1">{{Str::limit($objective->content, 200, $end=' [...]')}}</p> 
+            <p class="text-muted text-smaller my-1">{{Str::limit($objective->content, 200, $end=' [...]')}}</p>
           </div>
           <div class="text-center">
             <span class="text-smaller text-info"><i class="fas fa-{{$objective->pivot->role == 'manager' ? 'user-shield' : 'user-edit'}}"></i> {{$objective->pivot->role == 'manager' ? 'Coordina' : 'Reporta'}}</span>

@@ -22,7 +22,7 @@
         </div>
         <input type="text" class="form-control" v-model="iconInput" placeholder="Comience escribiendo que busca en ingles. Ej: 'building' o 'user' o 'tree'...">
       </div>
-      <small class="form-text text-muted">La plataforma utiliza <a href="https://fontawesome.com/icons?d=gallery&m=free">Font Awesome 5</a> para usar sus iconos. Puede ver la galeria entranado en la web.</small>
+      <small class="form-text text-muted">La plataforma utiliza <a href="https://fontawesome.com/v7/search?ic=free-collection">Font Awesome 7</a> para usar sus iconos. Puede ver la galeria entranado en la web.</small>
       <small class="form-text text-muted">{{status}}</small>
       <p class="icon-select d-inline-block my-1 mr-2 text-smaller" @click="selected = icon" v-for="(icon,i) in filteredList" :key="`icon${i}`"><i :class="`${icon} fa-fw fa-lg`"></i> {{icon}}</p>
       </div>
@@ -64,7 +64,7 @@ export default {
         this.filteredList = this.availableIcons[this.selectedType].filter((icon) => {
           return this.iconInput.toLowerCase().split(' ').every(v => icon.toLowerCase().includes(v));
         });
-        this.status = null;  
+        this.status = null;
       }
     , 500),
     toggleShowIconSearch: function(){
@@ -86,7 +86,7 @@ export default {
       if (newIconInput.length >= 3) this.searchIcon();
       else this.status = "Por favor, escriba más caracteres para la busqueda";
     }
-    
+
   }
 }
 </script>

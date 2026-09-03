@@ -32,27 +32,29 @@ class ObjectiveController extends Controller
     }
 
     public function viewList(Request $request){
-        $categories = Category::all();
+        $categories = Category::orderBy('order')->get();
         return view('portal.catalogs.objectives',[
             'categories' => $categories
         ]);
     }
 
     public function fetch(Request $request)
-    {   
+    {
         $pageSize = $request->query('size',10);
         $orderBy = $request->query('order_by');
         $hidden = $request->query('hidden',false);
         $category = $request->query('category',null);
         $title = $request->query('s',null);
-        
-        $objectives = Objective::query();
+
+        $objectives = Objective::with('strategicObjective.category');
         if(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $objectives->orderBy($orderByParams[0],$orderByParams[1]);
         }
         if(!is_null($category)){
-            $objectives->where('category_id',$category);
+            $objectives->whereHas('strategicObjective', function ($query) use ($category) {
+                $query->where('category_id', $category);
+            });
         }
         if(!is_null($title)){
             $titleExploded = explode(' ', $title);
@@ -68,9 +70,9 @@ class ObjectiveController extends Controller
     }
 
     public function fetchOne(Request $request, $objectiveId)
-    {   
+    {
         $objective = Objective::findorfail($objectiveId);
-        dd($objective);   
+        dd($objective);
     }
 
     public function fetchReports(Request $request, $objectiveId){
@@ -84,10 +86,10 @@ class ObjectiveController extends Controller
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);
         }
-        $reports->whereHas('goal',function ($q) use($request, $objectiveId) { 
+        $reports->whereHas('goal',function ($q) use($request, $objectiveId) {
             $q->where('objective_id',$objectiveId);
           });
-        
+
         if($onlyMappable){
             $reports->whereNotNull('map_long')->whereNotNull('map_lat')->whereNotNull('map_center');
         }
@@ -114,9 +116,9 @@ class ObjectiveController extends Controller
         $countGoalsOngoin = Goal::where('objective_id',$objectiveId)->where('status','ongoing')->count();
         $countGoalsDelayed = Goal::where('objective_id',$objectiveId)->where('status','delayed')->count();
         $countGoalsInactive = Goal::where('objective_id',$objectiveId)->where('status','inactive')->count();
-        $reportsTotal =$objective->reports()->count(); 
-        $filesTotal =$objective->files()->count(); 
-        $subscribersTotal =$objective->subscribers()->count(); 
+        $reportsTotal =$objective->reports()->count();
+        $filesTotal =$objective->files()->count();
+        $subscribersTotal =$objective->subscribers()->count();
 
         return response()->json([
             'message' => 'Ok',

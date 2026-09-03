@@ -16,7 +16,7 @@ class ObjectivesExport implements FromCollection, WithMapping, WithHeadings
     */
     public function collection()
     {
-        return Objective::all();
+        return Objective::with('strategicObjective.category')->get();
     }
 
     public function headings(): array
@@ -25,6 +25,8 @@ class ObjectivesExport implements FromCollection, WithMapping, WithHeadings
             'Titulo',
             'Autor',
             'Email',
+            'Eje',
+            'Objetivo Estratégico',
             'Oculto',
             'Metas',
             'Meta alcanzada',
@@ -45,13 +47,15 @@ class ObjectivesExport implements FromCollection, WithMapping, WithHeadings
         $countGoalsOngoin = Goal::where('objective_id',$objective->id)->where('status','ongoing')->count();
         $countGoalsDelayed = Goal::where('objective_id',$objective->id)->where('status','delayed')->count();
         $countGoalsInactive = Goal::where('objective_id',$objective->id)->where('status','inactive')->count();
-        $reportsTotal =$objective->reports()->count(); 
+        $reportsTotal =$objective->reports()->count();
         $subscribersTotal =$objective->subscribers()->count();
 
         return [
             $objective->title,
             $objective->author->fullname,
             $objective->author->email,
+            $objective->category->title,
+            "{$objective->strategicObjective->codigo} - {$objective->strategicObjective->title}",
             $objective->hidden ? 'Si' : 'No',
             (string) $countGoals,
             (string) $countGoalsCompleted,
@@ -64,5 +68,5 @@ class ObjectivesExport implements FromCollection, WithMapping, WithHeadings
             $objective->updated_at->format('d/m/Y H:i:s'),
         ];
     }
-    
+
 }

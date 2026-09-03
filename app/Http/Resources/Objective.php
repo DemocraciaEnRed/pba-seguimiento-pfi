@@ -22,7 +22,8 @@ class Objective extends JsonResource
         $res = [
             'id' => $this->id,
             'category' => CategoryResource::make($this->category),
-            'category_id' => $this->category_id,
+            'category_id' => $this->strategicObjective->category_id,
+            'strategic_objective_id' => $this->strategic_objective_id,
             'author_id' => $this->author_id,
             'title' => $this->title,
             'content' => $this->content,
@@ -34,7 +35,7 @@ class Objective extends JsonResource
             'updated_at' => $this->updated_at,
             'url' => route('objectives.index',['objectiveId' => $this->id])
         ];
-        
+
         $with = $request->query('with');
         if(!is_null($with)){
           $withParams = explode(',',$with);
@@ -56,6 +57,9 @@ class Objective extends JsonResource
                 $res['reports_count'] = $this->reports()->count();
                 $res['goals_count'] = $this->goals()->count();
                 $res['goals_status'] = $this->goals()->select('status',DB::raw('COUNT(*) AS total'))->groupBy('status')->get()->pluck('total','status');
+                break;
+              case 'objective_strategic_objective':
+                $res['strategic_objective'] = $this->strategicObjective;
                 break;
               default:
                 break;

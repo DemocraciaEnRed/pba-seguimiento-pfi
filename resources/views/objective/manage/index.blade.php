@@ -3,6 +3,10 @@
 @section('panelContent')
 
 <section>
+  <p class="text-smaller text-muted mb-2">
+    {{$objective->category->title}}
+    <i class="fas fa-angle-right fa-fw"></i> {{$objective->strategicObjective->codigo}} - {{$objective->strategicObjective->title}}
+  </p>
   <div class="d-flex align-items-start mb-3">
     <div class="mr-3 category-icon-container" style="background-color: {{$objective->category->background_color}}">
       <i class="fa-2x fa-fw {{$objective->category->icon}}" style="color: {{$objective->category->color}}"></i>

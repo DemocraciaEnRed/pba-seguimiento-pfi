@@ -7,7 +7,7 @@
             <i class="fa-lg fa-fw" :class="objective.category.icon" :style="`color: ${objective.category.color}`"></i>
           </div>
           <div class="w-100">
-            <span class="text-smallest" :style="`color:${objective.category.color}`">{{objective.category.title}}</span><br>
+            <span class="text-smallest" :style="`color:${objective.category.color}`">Eje #{{objective.category.order}} • {{objective.category.title}}</span><br>
             <span class="text-dark h5 is-700">{{objective.title}}</span>
           </div>
         </div>
@@ -39,14 +39,14 @@
                 <div class="progress-bar" :class="`bg-${goal.status}`" role="progressbar" :style="`width:${goal.progress_percentage}%`" :aria-valuenow="goal.progress_percentage" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
               <span class="goal-percentage text-smallest is-700 ml-1">{{goal.progress_percentage}}%</span>
-            </div>  
+            </div>
           </div>
           <div class="col-md-6 col-lg-4">
             <b>Últimos reportes</b>
             <div class="my-1 d-flex justify-content-between align-items-center report-container" v-for="report in objective.latest_reports" :key="`reports_${report.id}`">
               <span class="text-truncate w-100"><i class="far fa-file text-primary"></i>&nbsp;<a :href="report.url" class="text-dark w-100">&nbsp;{{report.title}}</a></span>
               <span class="report-icon text-smaller ml-1" :title="report.type_label"><i :class="`${report.type_icon} text-primary`"></i></span>
-            </div>  
+            </div>
           </div>
         </div>
         <div class="mt-4 text-right">

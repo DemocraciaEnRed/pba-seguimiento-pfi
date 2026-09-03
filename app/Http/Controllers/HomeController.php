@@ -31,7 +31,7 @@ class HomeController extends Controller
     public function index()
     {
         $countObjectives = Objective::where('hidden',false)->count();
-        $categories = Category::all();
+        $categories = Category::orderBy('order')->get();
         $countGoals = Goal::whereHas('objective', function($q) {
             $q->where('hidden', false);
         })->count();
@@ -45,7 +45,7 @@ class HomeController extends Controller
             'categories' => $categories,
         ]);
     }
-    
+
     public function viewAboutGeneral()
     {
         $faqs = Faq::select(['section','id','title'])->orderBy('order','ASC')->get()->groupBy('section')->toArray();

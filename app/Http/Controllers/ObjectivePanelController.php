@@ -10,6 +10,7 @@ use Excel;
 use Carbon\Carbon;
 use App\ActionLog;
 use App\Category;
+use App\StrategicObjective;
 use App\Community;
 use App\Organization;
 use App\Role;
@@ -55,9 +56,9 @@ class ObjectivePanelController extends Controller
 
     public function viewEditObjective(Request $request){
       $this->hasManagerPrivileges($request);
-      $categories = Category::all();
+      $ejes = Category::with('strategicObjectives')->orderBy('order')->get();
       $organizations = Organization::all();
-      return view('objective.manage.edit',['objective' => $request->objective, 'categories' => $categories, 'organizations' => $organizations]);
+      return view('objective.manage.edit',['objective' => $request->objective, 'ejes' => $ejes, 'organizations' => $organizations]);
     }
 
     public function formEditObjective(Request $request){
@@ -65,7 +66,7 @@ class ObjectivePanelController extends Controller
       $rules = [
           'title' => 'required|string|max:550' ,
           'content' => 'required|string|max:2000',
-          'category' => 'required' ,
+          'strategic_objective' => 'required|numeric|exists:strategic_objectives,id',
           'tags' => 'array' ,
           'tags.*' => 'required|string|max:100' ,
           'organizations' => 'array' ,
@@ -74,12 +75,11 @@ class ObjectivePanelController extends Controller
       ];
       $request->validate($rules);
 
-      $category = Category::findOrFail($request->input('category'));
       $objective = $request->objective;
       $objective->title = $request->input('title');
       $objective->content = $request->input('content');
       $objective->tags = $request->input('tags');
-      $objective->category()->associate($category);
+      $objective->strategicObjective()->associate(StrategicObjective::findOrFail($request->input('strategic_objective')));
       $objective->author()->associate($request->user());
       $objective->save();
       $objective->organizations()->sync($request->input('organizations'));
@@ -151,12 +151,12 @@ class ObjectivePanelController extends Controller
       return view('objective.manage.team.list', ['objective' => $request->objective]);
     }
 
-    public function viewListSubscribers(Request $request){      
+    public function viewListSubscribers(Request $request){
       $subscribers = $request->objective->subscribers()->paginate(10);
       return view('objective.manage.subscribers.list', ['objective' => $request->objective, 'subscribers' => $subscribers]);
     }
 
-    public function downloadListSubscribers(Request $request, $objectiveId){      
+    public function downloadListSubscribers(Request $request, $objectiveId){
       $this->hasManagerPrivileges($request);
       return Excel::download(new ObjectiveSubscribersExport($objectiveId), Carbon::now()->format('Ymd').'-subscriptores-objetivo-'.$objectiveId.'.xlsx');
     }
@@ -218,7 +218,7 @@ class ObjectivePanelController extends Controller
       return view('objective.manage.goals.list',['objective' => $request->objective]);
     }
 
-     public function downloadListGoals(Request $request, $objectiveId){      
+     public function downloadListGoals(Request $request, $objectiveId){
       $this->hasManagerPrivileges($request);
       return Excel::download(new ObjectiveGoalsExport($objectiveId), Carbon::now()->format('Ymd').'-metas-objetivo-'.$objectiveId.'.xlsx');
     }
@@ -258,7 +258,7 @@ class ObjectivePanelController extends Controller
       $goal->source = $request->input('source');
       $goal->objective()->associate($request->objective);
       $goal->save();
-      
+
       if($request->input('milestones')){
         foreach($request->input('milestones') as $key => $inputMilestone){
           $milestone = new Milestone();
@@ -289,7 +289,7 @@ class ObjectivePanelController extends Controller
 
     public function viewObjectiveConfiguration (Request $request, $objectiveId){
       return view('objective.manage.configuration', ['objective' => $request->objective]);
-    } 
+    }
 
     public function formObjectiveConfigurationHide (Request $request, $objectiveId){
       $rules = [
@@ -338,7 +338,7 @@ class ObjectivePanelController extends Controller
 
     public function viewObjectiveCover (Request $request){
       return view('objective.manage.cover', ['objective' => $request->objective]);
-    } 
+    }
 
     public function formObjectiveCover (Request $request){
       $this->hasManagerPrivileges($request);
@@ -402,12 +402,12 @@ class ObjectivePanelController extends Controller
       }
       // Save Logo
       return redirect()->route('objectives.manage.cover', ['objectiveId' => $request->objective->id])->with('success','Se actualizó la imagen de portada del objetivo');
-    } 
+    }
 
     public function viewObjectiveFiles (Request $request){
       $files = $request->objective->files()->paginate(10);
       return view('objective.manage.files', ['objective' => $request->objective, 'files' => $files]);
-    } 
+    }
 
     public function formObjectiveFile (Request $request){
       $this->hasManagerPrivileges($request);
@@ -440,11 +440,11 @@ class ObjectivePanelController extends Controller
         }
       }
       return redirect()->route('objectives.manage.files', ['objectiveId' => $request->objective->id])->with('success','Se agrego el archivo al repositorio del objetivo');
-    } 
+    }
 
     public function viewObjectiveMap (Request $request){
       return view('objective.manage.map', ['objective' => $request->objective]);
-    } 
+    }
 
     public function formDeleteObjective(Request $request){
       $this->hasManagerPrivileges($request);

@@ -3,7 +3,7 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Objetivos</h1>
+  <h3 class="is-700">Objetivos Específicos</h1>
   <p class="lead">Acá encontrarás el listado de objetivos que podés administrar</p>
   @if(!$objectives->isEmpty())
   <div class="my-3">
@@ -21,7 +21,7 @@
           <h4 class="is-700 my-1">
             <a href="{{route('objectives.manage.index',['objectiveId' => $objective->id])}}" class="text-dark">{{$objective->title}}</a>
           </h4>
-          <p class="text-muted text-smaller my-1">{{Str::limit($objective->content, 200, $end=' [...]')}}</p> 
+          <p class="text-muted text-smaller my-1">{{Str::limit($objective->content, 200, $end=' [...]')}}</p>
         </div>
     </div>
   </div>

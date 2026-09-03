@@ -1,15 +1,15 @@
 @php
 $currentRoute = Route::currentRouteName();
-$countUnreadNotifications = count(Auth::user()->unreadNotifications)   
+$countUnreadNotifications = count(Auth::user()->unreadNotifications)
 @endphp
 
 <a href="{{route('panel.index') }}" class="category {{ $currentRoute == 'panel.index'  ? 'is-active' : null }}"><i class="fas fa-gauge-high fa-fw"></i>&nbsp;Mi panel</a></li>
 <h6 class="category"><i class="fas fa-bell fa-fw"></i>&nbsp;Mis notificaciones</h6>
-<div class="menu-link"> 
+<div class="menu-link">
 <a href="{{route('panel.notifications.unread') }}" class="item-link {{ $currentRoute == 'panel.notifications.unread' ? 'is-active' : null }}">Pendientes <span class="badge badge-primary badge-pill align-middle {{$countUnreadNotifications > 0 ?: 'd-none'}}" >{{$countUnreadNotifications}}</span></a>
 <a href="{{route('panel.notifications') }}" class="item-link {{ $currentRoute == 'panel.notifications' ? 'is-active' : null }}">Todas</a>
 </div>
-<h6 class="category"><i class="fas fa-marker fa-fw"></i>&nbsp;Mis objetivos</h6>
+<h6 class="category"><i class="fas fa-marker fa-fw"></i>&nbsp;Mis objetivos específicos</h6>
 <div class="menu-link">
 <a href="{{route('panel.objectives') }}" class="item-link {{ $currentRoute == 'panel.objectives' ? 'is-active' : null }}">Listar</a>
 </div>

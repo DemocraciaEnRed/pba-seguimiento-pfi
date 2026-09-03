@@ -18,9 +18,14 @@ class Objective extends Model
         'tags' => 'array',
     ];
 
-    public function category()
+    public function strategicObjective()
     {
-        return $this->belongsTo('App\Category','category_id');
+        return $this->belongsTo('App\StrategicObjective', 'strategic_objective_id');
+    }
+
+    public function getCategoryAttribute()
+    {
+        return $this->strategicObjective?->category;
     }
 
     public function author()
@@ -56,7 +61,7 @@ class Objective extends Model
     {
         return $this->morphMany('App\File','fileable');
     }
-    
+
     public function events()
     {
         return $this->belongsToMany('App\Event','event_objective','objective_id','event_id');
@@ -65,7 +70,7 @@ class Objective extends Model
     public function members()
     {
         return $this->belongsToMany('App\User','objective_user','objective_id','user_id')->withPivot('role')->withTimestamps();
-    
+
     }
     public function reports()
     {

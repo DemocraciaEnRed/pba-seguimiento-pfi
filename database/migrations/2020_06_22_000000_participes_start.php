@@ -95,7 +95,7 @@ class ParticipesStart extends Migration
             $table->string('size');
             $table->string('mime');
             $table->string('path',550);
-            $table->morphs('fileable'); 
+            $table->morphs('fileable');
             $table->timestamps();
         });
         Schema::create('image_files', function (Blueprint $table) {
@@ -108,12 +108,11 @@ class ParticipesStart extends Migration
             $table->string('thumbnail_size')->nullable();
             $table->string('thumbnail_mime')->nullable();
             $table->string('thumbnail_path',550)->nullable();
-            $table->morphs('imageable'); 
+            $table->morphs('imageable');
             $table->timestamps();
         });
         Schema::create('objectives', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->constrained('categories');
             $table->foreignId('author_id')->constrained('users');
             $table->string('title',550);
             $table->text('content');
@@ -212,7 +211,7 @@ class ParticipesStart extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('comments')->onDelete('cascade');
             $table->text('content');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->nullableMorphs('commentable'); 
+            $table->nullableMorphs('commentable');
             $table->boolean('edited')->default(false);
             $table->timestamps();
             $table->softDeletes('deleted_at', 0);
