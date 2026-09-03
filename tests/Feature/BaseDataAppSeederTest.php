@@ -68,6 +68,20 @@ class BaseDataAppSeederTest extends TestCase
         }
     }
 
+    public function test_base_data_seeder_creates_a_fallback_admin_when_missing(): void
+    {
+        $this->assertSame(0, User::query()->count());
+
+        $this->seed(BaseDataAppSeeder::class);
+
+        $fallbackAdmin = User::query()->first();
+
+        $this->assertNotNull($fallbackAdmin);
+        $this->assertTrue($fallbackAdmin->hasRole('admin'));
+        $this->assertTrue($fallbackAdmin->hasRole('user'));
+        $this->assertSame(181, Objective::query()->count());
+    }
+
     private function createAdmin(): User
     {
         $admin = User::create([

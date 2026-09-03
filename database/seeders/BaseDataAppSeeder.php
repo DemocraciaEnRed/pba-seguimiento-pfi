@@ -4,9 +4,11 @@ namespace Database\Seeders;
 
 use App\Category;
 use App\Objective;
+use App\Role;
 use App\StrategicObjective;
 use App\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -220,11 +222,42 @@ class BaseDataAppSeeder extends Seeder
             ->orderBy('id')
             ->first();
 
-        if ($admin === null) {
-            throw new RuntimeException('No se encontró usuario administrador para asociar objetivos base.');
+        if ($admin !== null) {
+            return $admin;
         }
 
-        return $admin;
+        $adminRole = Role::query()->firstOrCreate(
+            ['name' => 'admin'],
+            ['description' => 'Administrator']
+        );
+
+        $userRole = Role::query()->firstOrCreate(
+            ['name' => 'user'],
+            ['description' => 'User']
+        );
+
+        $fallbackAdmin = User::query()->orderBy('id')->first();
+
+        if ($fallbackAdmin === null) {
+            $fallbackAdmin = new User();
+            $fallbackAdmin->name = 'Admin';
+            $fallbackAdmin->surname = 'Seeder';
+            $fallbackAdmin->email = 'seed-admin@local.test';
+            $fallbackAdmin->email_verified_at = now();
+            $fallbackAdmin->password = Hash::make(Str::random(40));
+            $fallbackAdmin->remember_token = Str::random(10);
+            $fallbackAdmin->save();
+        }
+
+        if (!$fallbackAdmin->roles()->where('roles.id', $adminRole->id)->exists()) {
+            $fallbackAdmin->roles()->attach($adminRole);
+        }
+
+        if (!$fallbackAdmin->roles()->where('roles.id', $userRole->id)->exists()) {
+            $fallbackAdmin->roles()->attach($userRole);
+        }
+
+        return $fallbackAdmin;
     }
 
     /**
