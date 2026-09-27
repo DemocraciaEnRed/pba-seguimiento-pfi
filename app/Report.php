@@ -18,8 +18,16 @@ class Report extends Model
         'date' => 'datetime',
         'tags' => 'array',
         'map_center' => 'array',
-        'map_geometries' => 'array'
+        'map_geometries' => 'array',
+        'previous_progress' => 'float',
+        'progress' => 'float',
+        'measured_value' => 'float',
     ];
+
+    public function period()
+    {
+        return $this->belongsTo(GoalPeriod::class, 'goal_period_id');
+    }
 
     public function objective()
     {
@@ -83,7 +91,7 @@ class Report extends Model
     {
         return $this->testimonies()->where('user_id', $userId);
     }
-    
+
     public function getTypeLabelAttribute()
     {
         switch($this->type){
@@ -95,7 +103,7 @@ class Report extends Model
                 break;
             case 'milestone':
                 return 'Hito';
-                break;    
+                break;
             default:
                 return 'Sin etiqueta';
         }

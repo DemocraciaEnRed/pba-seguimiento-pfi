@@ -6,7 +6,7 @@
 @component('mail::panel')
 # 🎯 **{{$goal->title}}**
 
-**Acerca del indicador**  
+**Acerca del indicador**
 
 {{Str::limit($goal->indicator, 200, $end=' [...]')}}
 @endcomponent
@@ -15,9 +15,14 @@
 | Acerca de | Valor |
 |:--------:|:--------:|
 | **Estado** | {{$goal->status_label }} |
-| **Valor a alcanzar** | {{$goal->indicator_goal }} |
+@if($goal->isSimple())
+| **Valor a alcanzar** | {{ indicator_number($goal->indicator_goal) }} |
 | **Unidad del indicador** | {{$goal->indicator_unit }} |
 | **Frecuencia** | {{$goal->indicator_frequency }} |
+@elseif($goal->isPeriodic())
+| **Unidad del indicador** | {{$goal->indicator_unit }} |
+| **Seguimiento** | {{ $goal->period_count }} períodos, {{ mb_strtolower($goal->period_type->label()) }} |
+@endif
 @endcomponent
 
 La nueva meta 🎯 **{{$goal->title}}** y podes entrar a ver todo acerca de ella en la web de Participes haciendo clic en el botón 👇

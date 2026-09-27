@@ -22,6 +22,7 @@ class Goal extends JsonResource
             'title' => $this->title,
             'status' => $this->status,
             'status_label' => $this->status_label,
+            'measurement_mode' => $this->measurement_mode,
             'indicator' => $this->indicator,
             'indicator_goal' => $this->indicator_goal,
             'indicator_progress' => $this->indicator_progress,

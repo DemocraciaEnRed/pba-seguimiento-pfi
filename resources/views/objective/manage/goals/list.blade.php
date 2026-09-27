@@ -9,6 +9,7 @@
   @if(!$objective->goals->isEmpty())
   <div class="my-3">
     <a href="{{route('objectives.manage.goals.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="far fa-file-excel fa-fw"></i>Descargar .xlsx</a>
+    <a href="{{route('objectives.manage.goals.indicators.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="far fa-file-excel fa-fw"></i>Indicadores por período .xlsx</a>
   </div>
   @endif
   @endisManager
@@ -17,7 +18,7 @@
     <div class="card-body d-flex justify-content-between align-items-center">
       <div class="mr-3 category-icon-container text-center">
         <i class="far fa-2x fa-fw fa-circle-dot text-{{$goal->status}}"></i>
-        <span class="text-{{$goal->status}} rounded-circle is-700 text-smallest ">{{$goal->progress_percentage}}%</span>
+        <span class="text-{{$goal->status}} rounded-circle is-700 text-smallest ">{{$goal->progress_label}}</span>
       </div>
       <div class="w-100">
         <span class="text-{{$goal->status}}">Meta {{$goal->status_label}}</span>

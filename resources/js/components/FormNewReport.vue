@@ -5,7 +5,7 @@
 			<li class="nav-item">
 				<a class="nav-link text-primary is-clickable" @click="type = 'post'" :class="type == 'post' && 'active font-weight-bold'"><i class="fas fa-bullhorn"></i>&nbsp;&nbsp;Novedad</a>
 			</li>
-			<li class="nav-item">
+			<li class="nav-item" v-if="acceptsProgress">
 				<a class="nav-link text-primary is-clickable" @click="type = 'progress'" :class="type == 'progress' && 'active font-weight-bold'"><i class="fas fa-forward-fast"></i>&nbsp;&nbsp;Avance</a>
 			</li>
 			<li class="nav-item" v-if="milestones && milestones.length > 0">
@@ -24,7 +24,8 @@
 				<div>
 					<h5 class="">Acerca del reporte de <span class="font-weight-bold">{{typeLabel}}</span></h5>
 					<span v-show="type == 'post'">Un reporte el de novedad utilizado para contar noticias generales, relacionadas a la meta. Es el reporte mas simple. <b>Importante:</b> No utilice este tipo de reporte si quiere especificar que la meta progresa en su indicador o que se completo un hito.</span>
-					<span v-show="type == 'progress'">Un reporte de avance implica un aumento en el valor del indicador. Al realizar un reporte de avance, automaticamente la meta aumenta su valor de indicador especificado en el reporte.</span>
+					<span v-show="type == 'progress' && !isPeriodic">Un reporte de avance implica un aumento en el valor del indicador. Al realizar un reporte de avance, automaticamente la meta aumenta su valor de indicador especificado en el reporte.</span>
+					<span v-show="type == 'progress' && isPeriodic">Un reporte de avance informa el valor medido del indicador en un período. Cada período admite un único reporte de avance: si ya fue informado, editá el reporte existente.</span>
 					<span v-show="type == 'milestone'">Un reporte de hito implica que se ha cumplido uno de los hitos que han sido cargados en la meta. <b>Importante:</b> El hito que se completa debe haber sido cargado en la meta previamente. No puede crear un reporte de hito sin asociar el hito que se completa</span>
 				</div>
 			</div>
@@ -66,7 +67,30 @@
 					</div>
 				</div>
 			</div>
-			<section v-if="type == 'progress'">
+			<section v-if="type == 'progress' && isPeriodic">
+				<div class="form-group" v-if="reportablePeriods.length > 0">
+					<label>Período que se informa</label>
+					<select class="custom-select" name="goal_period_id" v-model.number="selectedPeriodId">
+						<option v-for="period in reportablePeriods" :key="`period${period.id}`" :value="period.id">{{period.label}} ({{period.range}}) — {{period.state_label}}</option>
+					</select>
+					<small class="form-text text-muted">Se propone el primer período pendiente de informar.</small>
+				</div>
+				<div class="form-group" v-if="selectedPeriod">
+					<label>Valor medido en el período ({{goal.indicator_unit}})</label>
+					<input type="number" step="any" min="0" name="measured_value" class="form-control" v-model="measuredValue" required>
+					<small class="form-text text-muted">Objetivo del período: <b>{{selectedPeriod.target}} {{goal.indicator_unit}}</b></small>
+				</div>
+				<div class="alert alert-warning" v-if="reportablePeriods.length === 0">
+					<i class="fas fa-triangle-exclamation fa-fw"></i>&nbsp;No hay períodos pendientes de informar en este momento.
+				</div>
+				<div class="mb-3" v-if="reportedPeriods.length > 0">
+					<small class="text-muted">Períodos ya informados (para corregirlos, editá el reporte existente):</small>
+					<ul class="list-unstyled mb-0">
+						<li v-for="period in reportedPeriods" :key="`reported${period.id}`"><a :href="period.edit_url"><i class="fas fa-pen fa-fw"></i>&nbsp;{{period.label}} ({{period.range}})</a></li>
+					</ul>
+				</div>
+			</section>
+			<section v-if="type == 'progress' && !isPeriodic">
 				<div class="form-group">
 					<label>Avance de la meta</label>
 					<p class="text-muted">Defina cuantas unidades de {{goal.indicator_unit}} se agrega al progreso de la meta</p>
@@ -84,7 +108,7 @@
 							<div class="card">
 								<div class="card-body text-center">
 								<h4 class="card-title text-primary font-weight-bold">{{progressNow}}%</h4>
-								<h6 class="card-subtitle">Porcentaje actual de la meta</h6> 
+								<h6 class="card-subtitle">Porcentaje actual de la meta</h6>
 								</div>
 							</div>
 						</div>
@@ -92,7 +116,7 @@
 							<div class="card">
 								<div class="card-body text-center">
 								<h4 class="card-title text-info font-weight-bold">{{progressPercentage}}%</h4>
-								<h6 class="card-subtitle">Porcentaje del avance</h6> 
+								<h6 class="card-subtitle">Porcentaje del avance</h6>
 								</div>
 							</div>
 						</div>
@@ -100,7 +124,7 @@
 							<div class="card">
 								<div class="card-body text-center">
 								<h4 class="card-title text-primary font-weight-bold">{{progressTotal}}%</h4>
-								<h6 class="card-subtitle">Porcentaje nuevo de la meta</h6> 
+								<h6 class="card-subtitle">Porcentaje nuevo de la meta</h6>
 								</div>
 							</div>
 						</div>
@@ -154,7 +178,7 @@
 			<br>
 			<div class="form-group">
 				<input type="hidden" name="_token" :value="crsfToken" />
-				<button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Crear reporte</button>
+				<button type="submit" class="btn btn-primary" :disabled="type == 'progress' && isPeriodic && !selectedPeriod"><i class="fas fa-plus"></i> Crear reporte</button>
 			</div>
 		</section>
   </form>
@@ -167,7 +191,17 @@ import InputFile from "./inputs/InputFile.vue"
 import InputTag from "./inputs/InputTag.vue"
 
 export default {
-  props: ["formUrl", "crsfToken", "goal", "objective", "milestones"],
+  props: {
+		formUrl: String,
+		crsfToken: String,
+		goal: Object,
+		objective: Object,
+		milestones: Array,
+		periods: {
+			type: Array,
+			default: () => []
+		}
+	},
 	components: {
 		// TextEditor,
 		InputFile,
@@ -176,12 +210,33 @@ export default {
   data() {
     return {
 			type: null,
-			rangeInput: 0
+			rangeInput: 0,
+			selectedPeriodId: null,
+			measuredValue: null
 		};
   },
-  mounted() {},
+  mounted() {
+		if (this.reportablePeriods.length > 0) {
+			this.selectedPeriodId = this.reportablePeriods[0].id
+		}
+	},
   methods: {},
 	computed: {
+		isPeriodic: function(){
+			return this.goal.measurement_mode === 'periodic'
+		},
+		acceptsProgress: function(){
+			return this.goal.measurement_mode !== 'none'
+		},
+		reportablePeriods: function(){
+			return this.periods.filter(period => period.reportable)
+		},
+		reportedPeriods: function(){
+			return this.periods.filter(period => period.edit_url)
+		},
+		selectedPeriod: function(){
+			return this.reportablePeriods.find(period => period.id === this.selectedPeriodId) || null
+		},
 		typeLabel: function(){
 			if(!this.type) return ''
 			switch(this.type){
@@ -220,16 +275,16 @@ export default {
 		over100: function(){
 			return ((this.rangeInput + this.goal.indicator_progress) > this.goal.indicator_goal)
 		},
-		
+
 		today: function(){
 			var d = new Date(),
         month = '' + (d.getMonth() + 1),
         day = '' + d.getDate(),
         year = d.getFullYear();
 
-			if (month.length < 2) 
+			if (month.length < 2)
 					month = '0' + month;
-			if (day.length < 2) 
+			if (day.length < 2)
 					day = '0' + day;
 
 			return [year, month, day].join('-');

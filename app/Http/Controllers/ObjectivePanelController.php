@@ -23,12 +23,14 @@ use App\Milestone;
 use App\Report;
 use App\Exports\ObjectiveSubscribersExport;
 use App\Exports\ObjectiveGoalsExport;
+use App\Exports\ObjectiveIndicatorsExport;
 use App\Notifications\NewGoal;
 use App\Notifications\EditObjective;
 use App\Notifications\DeleteObjective;
 use App\Notifications\JoinObjectiveTeam;
 use App\Notifications\RemoveObjectiveTeam;
 use App\Rules\MatchOldPassword;
+use App\Services\Indicators\GoalIndicatorConfigurator;
 use Illuminate\Http\Request;
 
 class ObjectivePanelController extends Controller
@@ -38,7 +40,7 @@ class ObjectivePanelController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(private GoalIndicatorConfigurator $indicatorConfigurator)
     {
         // Forces to be authenticated.
         $this->middleware('auth');
@@ -223,9 +225,18 @@ class ObjectivePanelController extends Controller
       return Excel::download(new ObjectiveGoalsExport($objectiveId), Carbon::now()->format('Ymd').'-metas-objetivo-'.$objectiveId.'.xlsx');
     }
 
+    public function downloadGoalIndicators(Request $request, $objectiveId){
+      $this->hasManagerPrivileges($request);
+      return Excel::download(new ObjectiveIndicatorsExport((int) $objectiveId), Carbon::now()->format('Ymd').'-indicadores-objetivo-'.$objectiveId.'.xlsx');
+    }
+
     public function viewAddGoal(Request $request){
       $this->hasManagerPrivileges($request);
-      return view('objective.manage.goals.add',['objective' => $request->objective]);
+      return view('objective.manage.goals.add',[
+        'objective' => $request->objective,
+        'indicatorForm' => $this->indicatorConfigurator->formState(null),
+        'indicatorOptions' => $this->indicatorConfigurator->formOptions(),
+      ]);
     }
 
     public function formAddGoal(Request $request){
@@ -234,30 +245,20 @@ class ObjectivePanelController extends Controller
       $rules = [
         'title' => 'required|string|max:550',
         'status' => 'required|string|in:ongoing,delayed,inactive',
-        'indicator' => 'required|string|max:550',
-        'indicator_goal' => 'integer|min:1',
-        'indicator_progress' => 'integer|min:0',
-        'indicator_unit' => 'required|string|max:550',
-        'indicator_frequency' => 'nullable|string|max:550',
         'source' => 'nullable|string|max:550',
         'milestones' => 'array',
         'milestones.*' => 'required|string|max:550',
         'notify' => 'nullable|string|in:true',
       ];
 
-      $request->validate($rules);
+      $validated = $request->validate(array_merge($rules, $this->indicatorConfigurator->rules($request->all())));
 
       $goal = new Goal();
       $goal->title = $request->input('title');
       $goal->status = $request->input('status');
-      $goal->indicator = $request->input('indicator');
-      $goal->indicator_goal = $request->input('indicator_goal');
-      $goal->indicator_progress = $request->input('indicator_progress');
-      $goal->indicator_unit = $request->input('indicator_unit');
-      $goal->indicator_frequency = $request->input('indicator_frequency');
       $goal->source = $request->input('source');
       $goal->objective()->associate($request->objective);
-      $goal->save();
+      $this->indicatorConfigurator->apply($goal, $validated);
 
       if($request->input('milestones')){
         foreach($request->input('milestones') as $key => $inputMilestone){

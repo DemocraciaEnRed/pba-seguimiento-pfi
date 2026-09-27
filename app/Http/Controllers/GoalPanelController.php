@@ -16,6 +16,7 @@ use App\ImageFile;
 use App\User;
 use App\Objective;
 use App\Goal;
+use App\GoalPeriod;
 use App\Milestone;
 use App\Report;
 use App\Exports\GoalReportsExport;
@@ -25,16 +26,23 @@ use App\Notifications\NewGoal;
 use App\Notifications\EditGoal;
 use App\Notifications\DeleteGoal;
 use App\Rules\MatchOldPassword;
+use App\Services\Indicators\GoalIndicatorConfigurator;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class GoalPanelController extends Controller
 {
+    public const PERIOD_ALREADY_REPORTED_MESSAGE = 'Este período ya tiene un reporte de avance. Editá el reporte existente en lugar de crear uno nuevo.';
+
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(private GoalIndicatorConfigurator $indicatorConfigurator)
     {
         // Forces to be authenticated.
         $this->middleware('auth');
@@ -52,13 +60,43 @@ class GoalPanelController extends Controller
       return;
     }
 
-    public function viewGoal(Request $request, $objectiveId, $goalId){    
+    private function hasAdminPrivileges(Request $request): void
+    {
+      if(!$request->user()->hasRole('admin')){
+        abort(403, 'No autorizado');
+      }
+    }
+
+    private function findReportablePeriod(Goal $goal, int $periodId): GoalPeriod
+    {
+      /** @var GoalPeriod|null $period */
+      $period = $goal->periods()->with('progressReport')->find($periodId);
+
+      if(is_null($period)){
+        throw ValidationException::withMessages(['goal_period_id' => 'El período seleccionado no pertenece a esta meta.']);
+      }
+      if(!is_null($period->progressReport)){
+        throw ValidationException::withMessages(['goal_period_id' => self::PERIOD_ALREADY_REPORTED_MESSAGE]);
+      }
+      if(!$period->state()->isReportable()){
+        throw ValidationException::withMessages(['goal_period_id' => "El período no admite reportes de avance ({$period->state()->label()})."]);
+      }
+
+      return $period;
+    }
+
+    public function viewGoal(Request $request, $objectiveId, $goalId){
       return view('objective.manage.goals.view',['objective' => $request->objective, 'goal' => $request->goal]);
     }
 
     public function viewEditGoal(Request $request, $objectiveId, $goalId){
       $this->hasManagerPrivileges($request);
-      return view('objective.manage.goals.edit',['objective' => $request->objective, 'goal' => $request->goal]);
+      return view('objective.manage.goals.edit',[
+        'objective' => $request->objective,
+        'goal' => $request->goal,
+        'indicatorForm' => $this->indicatorConfigurator->formState($request->goal),
+        'indicatorOptions' => $this->indicatorConfigurator->formOptions(),
+      ]);
     }
 
     public function formEditGoal(Request $request, $objectiveId, $goalId){
@@ -67,28 +105,18 @@ class GoalPanelController extends Controller
       $rules = [
         'title' => 'required|string|max:550',
         'status' => 'required|string|in:ongoing,delayed,inactive,reached',
-        'indicator' => 'required|string|max:550',
-        'indicator_goal' => 'integer|min:1',
-        'indicator_progress' => 'integer|min:0',
-        'indicator_unit' => 'required|string|max:550',
-        'indicator_frequency' => 'nullable|string|max:550',
         'source' => 'nullable|string|max:550',
         'notify' => 'nullable|string|in:true',
       ];
 
-      $request->validate($rules);
       $goal = $request->goal;
+      $validated = $request->validate(array_merge($rules, $this->indicatorConfigurator->rules($request->all(), $goal)));
       $goal->title = $request->input('title');
       $goal->status = $request->input('status');
-      $goal->indicator = $request->input('indicator');
-      $goal->indicator_goal = $request->input('indicator_goal');
-      $goal->indicator_progress = $request->input('indicator_progress');
-      $goal->indicator_unit = $request->input('indicator_unit');
-      $goal->indicator_frequency = $request->input('indicator_frequency');
       $goal->source = $request->input('source');
-      $goal->save();
+      $this->indicatorConfigurator->apply($goal, $validated);
       $request->objective->touch();
-      
+
       Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado la meta [{$goal->title}] del objetivo [{$request->objective->title}]", [
         'objective_id' => $request->objective->id,
         'objective_title' => $request->objective->title,
@@ -138,7 +166,7 @@ class GoalPanelController extends Controller
       $milestone->title = $request->input('title');
       $milestone->goal()->associate($goal);
       $milestone->save();
-      
+
       return redirect()->route('objectives.manage.goals.milestones', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id])->with('success','El hito ha sido creado');
     }
 
@@ -163,7 +191,7 @@ class GoalPanelController extends Controller
       $milestone->title = $request->input('title');
       $milestone->order = $request->input('order');
       $milestone->save();
-      
+
       return redirect()->route('objectives.manage.goals.milestones', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id])->with('success','El hito ha sido actualizado');
     }
 
@@ -200,7 +228,7 @@ class GoalPanelController extends Controller
         ]);
 
       $milestone->delete();
-      
+
       return redirect()->route('objectives.manage.goals.milestones', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id])->with('success','El hito ha sido eliminado');
     }
 
@@ -217,20 +245,38 @@ class GoalPanelController extends Controller
 
     public function viewNewGoalReport(Request $request, $objectiveId, $goalId){
       $goal = $request->goal;
-      return view('objective.manage.goals.reports.add',['objective' => $request->objective, 'goal' => $request->goal]);
+      $periods = [];
+      if($goal->isPeriodic()){
+        $periods = $goal->periods()->with('progressReport')->get()->map(fn (GoalPeriod $period): array => [
+          'id' => $period->id,
+          'label' => $period->label(),
+          'range' => $period->rangeLabel(),
+          'target' => $period->target_value,
+          'state_label' => $period->state()->label(),
+          'reportable' => $period->state()->isReportable(),
+          'edit_url' => $period->progressReport
+            ? route('objectives.manage.goals.reports.edit', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id, 'reportId' => $period->progressReport->id])
+            : null,
+        ])->values()->all();
+      }
+      return view('objective.manage.goals.reports.add',['objective' => $request->objective, 'goal' => $request->goal, 'periods' => $periods]);
     }
 
     public function formNewGoalReport(Request $request, $objectiveId, $goalId){
-     
+      $goal = $request->goal;
+      $allowedTypes = $goal->acceptsProgressReports() ? 'post,progress,milestone' : 'post,milestone';
+
       $rules = [
         'title' => 'required|string|max:550',
-        'type' => 'required|string|in:post,progress,milestone',
+        'type' => 'required|string|in:'.$allowedTypes,
         'content' => 'required|string',
         'date' => 'required|date',
         'status' => 'nullable|string|max:550',
         'lat' => 'nullable|string',
         'long' => 'nullable|string',
-        'progress' => 'integer|min:1',
+        'progress' => 'numeric|gt:0',
+        'goal_period_id' => [Rule::requiredIf($goal->isPeriodic() && $request->input('type') === 'progress'), 'nullable', 'integer'],
+        'measured_value' => [Rule::requiredIf($goal->isPeriodic() && $request->input('type') === 'progress'), 'nullable', 'numeric', 'min:0'],
         'milestone_date' => 'nullable|date',
         'milestone' => 'integer',
         'tags' => 'array' ,
@@ -243,10 +289,15 @@ class GoalPanelController extends Controller
       ];
 
       $request->validate($rules);
-     
-      $goal = $request->goal;
+
+      $period = null;
+      if($goal->isPeriodic() && $request->input('type') === 'progress'){
+        $period = $this->findReportablePeriod($goal, (int) $request->input('goal_period_id'));
+      }
+
       $goalDirty = false;
       $milestoneDirty = false;
+      $milestone = null;
 
       $report = new Report();
       $report->title = $request->input('title');
@@ -264,14 +315,19 @@ class GoalPanelController extends Controller
         case 'post':
           break;
         case 'progress':
+          if($goal->isPeriodic()){
+            $report->period()->associate($period);
+            $report->measured_value = $request->input('measured_value');
+            break;
+          }
           $report->previous_progress = $goal->indicator_progress;
           $report->progress = $request->input('progress');
-          $goal->indicator_progress += intval($request->input('progress'));
+          $goal->indicator_progress += $request->input('progress');
           $goalDirty = true;
           break;
         case 'milestone':
           $milestone = Milestone::findorfail($request->input('milestone'));
-          
+
           if(!empty($request->input('milestone_date'))){
             $milestone->completed = $request->input('milestone_date');
           } else {
@@ -281,16 +337,22 @@ class GoalPanelController extends Controller
           $report->milestone()->associate($milestone);
           break;
       }
-      if($goalDirty){
-        $goal->save();
+      try {
+        DB::transaction(function () use ($goal, $goalDirty, $milestoneDirty, $milestone, $report, $request): void {
+          if($goalDirty){
+            $goal->save();
+          }
+          if($milestoneDirty){
+            $milestone->save();
+          }
+          $report->author()->associate($request->user());
+          $report->goal()->associate($goal);
+          $report->save();
+        });
+      } catch (UniqueConstraintViolationException) {
+        throw ValidationException::withMessages(['goal_period_id' => self::PERIOD_ALREADY_REPORTED_MESSAGE]);
       }
-      if($milestoneDirty){
-        $milestone->save();
-      }
-      $report->author()->associate($request->user());
-      $report->goal()->associate($goal);
-      $report->save();
-      
+
       if($request->hasFile('photos')){
         foreach($request->file('photos') as $photoFile){
           $photo = Image::make($photoFile);
@@ -359,19 +421,72 @@ class GoalPanelController extends Controller
       $notifySubscribers = $request->boolean('notify');
       if(!$request->objective->hidden && $notifySubscribers){
         // Goal at 100%?
-        if($request->input('type') == 'progress' && ($goal->indicator_progress >= $goal->indicator_goal)){
+        if($request->input('type') == 'progress' && $goal->isSimple() && ($goal->indicator_progress >= $goal->indicator_goal)){
           Notification::send($request->objective->subscribers, new CompletedGoal($request->objective, $goal, $report));
         } else {
         // Send normal notification
           Notification::send($request->objective->subscribers, new NewReport($request->objective, $goal, $report));
         }
       }
-      
+
       return redirect()->route('objectives.manage.goals.reports.index', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id,'reportId' => $report->id])->with('success','El reporte fue creado con exito');
     }
 
     public function viewGoalConfiguration(Request $request){
       return view('objective.manage.goals.configuration',['objective' => $request->objective, 'goal' => $request->goal]);
+    }
+
+    public function formSkipGoalPeriod(Request $request, $objectiveId, $goalId, $periodId){
+      $this->hasAdminPrivileges($request);
+      $request->validate(['skip_reason' => 'required|string|max:1000']);
+
+      $period = $request->goal->periods()->with('progressReport')->findOrFail($periodId);
+      $redirect = redirect()->route('objectives.manage.goals.index', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id]);
+
+      if(!is_null($period->progressReport)){
+        return $redirect->with('error', 'No se puede omitir un período que ya tiene un reporte de avance.');
+      }
+      if($period->isSkipped()){
+        return $redirect->with('warning', 'El período ya estaba omitido.');
+      }
+
+      $period->skipped_at = now();
+      $period->skippedBy()->associate($request->user());
+      $period->skip_reason = $request->input('skip_reason');
+      $period->save();
+
+      $this->logPeriodAction($request, $period, 'ha omitido');
+
+      return $redirect->with('success', "Se omitió el {$period->label()}");
+    }
+
+    public function formUnskipGoalPeriod(Request $request, $objectiveId, $goalId, $periodId){
+      $this->hasAdminPrivileges($request);
+
+      $period = $request->goal->periods()->findOrFail($periodId);
+      $period->skipped_at = null;
+      $period->skippedBy()->dissociate();
+      $period->skip_reason = null;
+      $period->save();
+
+      $this->logPeriodAction($request, $period, 'ha revertido la omisión de');
+
+      return redirect()->route('objectives.manage.goals.index', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id])->with('success', "Se revirtió la omisión del {$period->label()}");
+    }
+
+    private function logPeriodAction(Request $request, GoalPeriod $period, string $action): void
+    {
+      Log::channel('mysql')->info("[{$request->user()->fullname}] {$action} el [{$period->label()}] de la meta [{$request->goal->title}] del objetivo [{$request->objective->title}]", [
+        'objective_id' => $request->objective->id,
+        'objective_title' => $request->objective->title,
+        'goal_id' => $request->goal->id,
+        'goal_title' => $request->goal->title,
+        'goal_period_id' => $period->id,
+        'skip_reason' => $period->skip_reason,
+        'user_id' => $request->user()->id,
+        'user_fullname' => $request->user()->fullname,
+        'user_email' => $request->user()->email
+        ]);
     }
 
     public function formDeleteGoal(Request $request){
@@ -399,7 +514,7 @@ class GoalPanelController extends Controller
         $report->delete();
       }
       $request->goal->delete();
-      
+
       //Notify
       $notifySubscribers = $request->boolean('notify');
       if(!$request->objective->hidden && $notifySubscribers){

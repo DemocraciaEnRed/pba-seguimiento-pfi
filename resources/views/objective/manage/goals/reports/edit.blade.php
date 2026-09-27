@@ -99,10 +99,27 @@
       @endforeach
     </div>
     @endif
-    @if($report->type == 'progress')
+    @if($report->type == 'progress' && $goal->isPeriodic())
+    <div class="form-row">
+      <div class="col">
+        <div class="form-group">
+          <label>Período informado</label>
+          <input type="text" class="form-control" value="{{ $report->period?->label() }} ({{ $report->period?->rangeLabel() }})" disabled>
+          <small class="form-text text-muted">El período de un reporte de avance no se puede cambiar.</small>
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label>Valor medido en el período ({{ $goal->indicator_unit }})</label>
+          <input type="number" step="any" min="0" value="{{ old('measured_value', $report->measured_value) }}" name="measured_value" class="form-control" required>
+          <small class="form-text text-muted">Objetivo del período: {{ $report->period?->target_value ?? '—' }} {{ $goal->indicator_unit }}</small>
+        </div>
+      </div>
+    </div>
+    @elseif($report->type == 'progress')
     <div class="alert alert-warning">
       <h6 class="is-700"><i class="fas fa-triangle-exclamation"></i> Importante</h6>
-      Corrobore que, si cuenta con reportes de <i class="fas fa-forward-fast"></i> <b>avance</b> previos, y modifica el "Progreso de la meta antes del reporte" debe hacer las modificaciones pertinentes sobre reportes previos de avance, y sobre el valor de la meta en si. 
+      Corrobore que, si cuenta con reportes de <i class="fas fa-forward-fast"></i> <b>avance</b> previos, y modifica el "Progreso de la meta antes del reporte" debe hacer las modificaciones pertinentes sobre reportes previos de avance, y sobre el valor de la meta en si.
     </div>
     <div class="form-row">
       <div class="col">
@@ -111,7 +128,7 @@
           <div class="form-group">
           <input type="number" min="0" value="{{$report->previous_progress}}" name="previous_progress" class="form-control">
           <small class="form-text text-muted">Este es el valor que la meta se entcontraba previo al reporte del avante</small>
-          </div>       
+          </div>
         </div>
       </div>
       <div class="col">
@@ -142,8 +159,8 @@
     <br>
     <button type="submit" class="btn btn-primary">Editar</button>
   </form>
-  
-  
+
+
 </section>
 
 @endsection

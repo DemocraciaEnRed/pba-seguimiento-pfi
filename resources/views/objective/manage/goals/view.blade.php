@@ -4,7 +4,7 @@
   <div class="d-flex align-items-start mb-3">
     <div class="mr-3 category-icon-container text-center">
       <i class="far fa-2x fa-fw fa-circle-dot text-{{$goal->status}}"></i>
-      <span class="text-{{$goal->status}} rounded-circle is-700 text-smallest ">{{$goal->progress_percentage}}%</span>
+      <span class="text-{{$goal->status}} rounded-circle is-700 text-smallest ">{{$goal->progress_label}}</span>
     </div>
     <div class="w-100">
       <span class="text-{{$goal->status}}">Meta {{$goal->status_label}}</span>
@@ -25,40 +25,58 @@
       </div>
     </div>
  </div>
+  @if($goal->isSimple())
     <h5 class="font-weight-bold">Progreso de la meta</h6>
     <div class="progress mb-3">
-      <div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{$goal->progress_percentage}}%;" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100">{{$goal->progress_percentage}}%</div>
+      <div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{ min(100, $goal->progress_percentage ?? 0) }}%;" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100">{{$goal->progress_label}}</div>
     </div>
+  @endif
   <div class="row">
     <div class="col md-6">
           <h5 class="font-weight-bold">Indicador</h6>
-    <p>{{$goal->indicator}}</p>
+    <p>{{$goal->indicator ?: 'Meta sin indicador numérico'}}</p>
     </div>
     <div class="col md-6">
          <h5 class="font-weight-bold">Estado</h6>
           <p class="text-{{$goal->status}}"><i class="far fa-fw fa-circle-dot text-{{$goal->status}}"></i>{{$goal->status_label}}</p>
     </div>
   </div>
+  @if($goal->isSimple())
   <div class="row">
     <div class="col md-6">
       <h5 class="font-weight-bold">Valor a alcanzar</h6>
-      <p>{{$goal->indicator_goal}}</p> 
+      <p>{{ indicator_number($goal->indicator_goal) }}</p>
     </div>
     <div class="col md-6">
       <h5 class="font-weight-bold">Valor actual</h6>
-      <p>{{$goal->indicator_progress}} <small class="text-secondary">({{$goal->progress_percentage}}%)</small></p>
+      <p>{{ indicator_number($goal->indicator_progress) }} <small class="text-secondary">({{$goal->progress_label}})</small></p>
     </div>
   </div>
   <div class="row">
     <div class="col md-6">
       <h5 class="font-weight-bold">Unidad del indicador</h6>
-      <p>{{$goal->indicator_unit}}</p> 
+      <p>{{$goal->indicator_unit}}</p>
     </div>
     <div class="col md-6">
       <h5 class="font-weight-bold">Frecuencia</h6>
       <p>{{$goal->indicator_frequency ?: '- Sin Datos -'}}</p>
     </div>
   </div>
+  @elseif($goal->isPeriodic())
+  <div class="row">
+    <div class="col md-6">
+      <h5 class="font-weight-bold">Unidad del indicador</h6>
+      <p>{{$goal->indicator_unit}}</p>
+    </div>
+    <div class="col md-6">
+      <h5 class="font-weight-bold">Lectura</h6>
+      <p>{{ $goal->indicator_direction->label() }}</p>
+    </div>
+  </div>
+  <h5 class="font-weight-bold">Seguimiento por períodos</h5>
+  @include('partials.indicatorPeriods', ['goal' => $goal, 'summary' => $goal->indicatorSummary(), 'objective' => $objective, 'canSkip' => Auth::user()->hasRole('admin')])
+  <br>
+  @endif
   <h5 class="font-weight-bold">Fuente</h6>
   @if ($goal->source)
     <p>{{$goal->source}}</p>

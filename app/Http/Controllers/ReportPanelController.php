@@ -25,6 +25,7 @@ use App\Notifications\EditReport;
 use App\Notifications\DeleteReport;
 use App\Rules\MatchOldPassword;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ReportPanelController extends Controller
 {
@@ -63,15 +64,16 @@ class ReportPanelController extends Controller
     }
 
     public function formEditReport(Request $request, $objectiveId, $goalId, $reportId){
-     
+
       $rules = [
         'title' => 'required|string|max:550',
         'content' => 'required|string',
         'date' => 'required|date',
         'previous_status' => 'nullable|string|max:550',
         'status' => 'nullable|string|max:550',
-        'previous_progress' => 'integer|min:0',
-        'progress' => 'integer|min:0',
+        'previous_progress' => 'numeric|min:0',
+        'progress' => 'numeric|min:0',
+        'measured_value' => [Rule::requiredIf($request->goal->isPeriodic() && $request->report->type === 'progress'), 'nullable', 'numeric', 'min:0'],
         'milestone_date' => 'nullable|date',
         'milestone' => 'integer',
         'tags' => 'array',
@@ -80,7 +82,7 @@ class ReportPanelController extends Controller
       ];
 
       $request->validate($rules);
-     
+
       $goal = $request->goal;
       $goalDirty = false;
       $milestoneDirty = false;
@@ -98,6 +100,10 @@ class ReportPanelController extends Controller
         case 'post':
           break;
         case 'progress':
+          if($goal->isPeriodic()){
+            $report->measured_value = $request->input('measured_value');
+            break;
+          }
           $report->previous_progress = $request->input('previous_progress');
           $report->progress = $request->input('progress');
           break;
@@ -122,7 +128,7 @@ class ReportPanelController extends Controller
       }
 
       $report->save();
-      
+
       Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado el reporte [{$report->title}] de la meta [{$request->goal->title}] del objetivo [{$request->objective->title}]", [
         'objective_id' => $request->objective->id,
         'objective_title' => $request->objective->title,
@@ -140,14 +146,14 @@ class ReportPanelController extends Controller
       if(!$request->objective->hidden && $notifySubscriber){
         Notification::send($request->objective->subscribers, new EditReport($request->objective, $request->goal, $report));
       }
-      
+
       return redirect()->route('objectives.manage.goals.reports.index', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id,'reportId' => $report->id])->with('success','El reporte ha sido editado con exito');
     }
 
     public function viewReportComments (Request $request){
       $comments = $request->report->comments()->paginate(10);
       return view('objective.manage.goals.reports.comments', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'comments' => $comments]);
-    } 
+    }
 
     public function downloadReportComments (Request $request, $objectiveId, $goalId, $reportId){
       $this->hasManagerPrivileges($request);
@@ -157,17 +163,17 @@ class ReportPanelController extends Controller
     public function viewReportTestimonies (Request $request){
       $testimonies = $request->report->testimonies()->paginate(10);
       return view('objective.manage.goals.reports.testimonies', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'testimonies' => $testimonies]);
-    } 
+    }
 
     public function downloadReportTestimonies (Request $request, $objectiveId, $goalId, $reportId){
       $this->hasManagerPrivileges($request);
       return Excel::download(new ReportTestimoniesExport($reportId), Carbon::now()->format('Ymd').'-feedbacks-reporte-'.$reportId.'.xlsx');
-    } 
-    
+    }
+
      public function viewReportAlbum (Request $request){
       $photos = $request->report->photos()->paginate(10);
       return view('objective.manage.goals.reports.album', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'photos' => $photos]);
-    } 
+    }
 
     public function formReportAlbum (Request $request){
       $rules = [
@@ -227,7 +233,7 @@ class ReportPanelController extends Controller
     public function viewReportFiles (Request $request){
       $files = $request->report->files()->paginate(10);
       return view('objective.manage.goals.reports.files', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'files' => $files]);
-    } 
+    }
     public function formReportFile (Request $request){
       $rules = [
         'file' => 'required|file|max:102400'
@@ -258,11 +264,11 @@ class ReportPanelController extends Controller
       }
 
       return redirect()->route('objectives.manage.goals.reports.files', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id])->with('success','Se agrego el archivo al repositorio del objetivo');
-    } 
+    }
 
     public function viewReportMap (Request $request){
       return view('objective.manage.goals.reports.map', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
-    }  
+    }
 
      public function formReportMap (Request $request){
       $rules = [
@@ -283,7 +289,7 @@ class ReportPanelController extends Controller
       $report->save();
 
       return redirect()->route('objectives.manage.goals.reports.map', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id])->with('success','Geometria actualizada!');
-    } 
+    }
 
     public function viewReportConfiguration(Request $request){
       return view('objective.manage.goals.reports.configuration',['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
@@ -312,7 +318,7 @@ class ReportPanelController extends Controller
         ]);
 
       $request->report->delete();
-      
+
       // Notify
       $notifySubscribers = $request->boolean('notify');
       if(!$request->objective->hidden && $notifySubscribers){

@@ -55,9 +55,9 @@
 								<div class="my-1 d-flex justify-content-between align-items-center goal-container">
 									<span class="text-truncate w-100">{{$goal->title}}</span>
 									<div class="progress my-0 mx-1" style="height: 10px; width: 150px">
-										<div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{$goal->progress_percentage}}%" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100"></div>
+										<div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{ min(100, $goal->progress_percentage ?? 0) }}%" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100"></div>
 									</div>
-									<span class="goal-percentage text-smallest is-700 ml-1">{{$goal->progress_percentage}}%</span>
+									<span class="goal-percentage text-smallest is-700 ml-1">{{$goal->progress_label}}</span>
 								</div>
 							</div>
 							@empty
@@ -73,7 +73,7 @@
 						<h5 class="is-700 h5 text-body my-2 float-right"><i class="fas fa-angle-down fa-lg"></i></h5>
 					</div>
 					<div id="collapseOrganizations" class="collapse show">
-						<objective-organizations-carrousel :slides='@json($objective->organizations)'>	
+						<objective-organizations-carrousel :slides='@json($objective->organizations)'>
 						</objective-organizations-carrousel>
 					</div>
 					@endif

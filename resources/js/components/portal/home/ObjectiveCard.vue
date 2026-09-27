@@ -36,9 +36,9 @@
             <div class="my-1 d-flex justify-content-between align-items-center goal-container" v-for="goal in objective.latest_goals" :key="`goals_${goal.id}`">
               <span class="text-truncate w-100"><a :href="goal.url" class="text-dark">{{goal.title}}</a> <span :class="`text-${goal.status} text-smallest is-700`">({{goal.status_label}})</span></span>
               <div class="progress my-0 mx-1'" style="height: 10px; width: 150px" :title="goal.status_label">
-                <div class="progress-bar" :class="`bg-${goal.status}`" role="progressbar" :style="`width:${goal.progress_percentage}%`" :aria-valuenow="goal.progress_percentage" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar" :class="`bg-${goal.status}`" role="progressbar" :style="`width:${Math.min(100, goal.progress_percentage || 0)}%`" :aria-valuenow="goal.progress_percentage" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
-              <span class="goal-percentage text-smallest is-700 ml-1">{{goal.progress_percentage}}%</span>
+              <span class="goal-percentage text-smallest is-700 ml-1">{{goal.progress_percentage === null ? '—' : `${goal.progress_percentage}%`}}</span>
             </div>
           </div>
           <div class="col-md-6 col-lg-4">

@@ -24,6 +24,7 @@ import InputStrategicObjectiveSelect from './components/inputs/InputStrategicObj
 import InputUrls from './components/inputs/InputUrls.vue';
 import InputFile from './components/inputs/InputFile.vue';
 import InputAddMilestonesCreateGoal from './components/inputs/InputAddMilestonesCreateGoal.vue';
+import InputGoalIndicator from './components/inputs/InputGoalIndicator.vue';
 import TextEditor from './components/inputs/TextEditor.vue';
 import ReportComments from './components/comments/ReportComments.vue';
 import SetMapDefault from './components/maps/SetMapDefault.vue';
@@ -59,6 +60,7 @@ Vue.component('input-strategic-objective', InputStrategicObjectiveSelect);
 Vue.component('input-urls', InputUrls);
 Vue.component('input-file', InputFile);
 Vue.component('input-add-milestones-create-goal', InputAddMilestonesCreateGoal);
+Vue.component('input-goal-indicator', InputGoalIndicator);
 Vue.component('text-editor', TextEditor);
 Vue.component('report-comments', ReportComments);
 Vue.component('set-map-default', SetMapDefault);

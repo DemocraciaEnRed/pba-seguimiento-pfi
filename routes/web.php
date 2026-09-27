@@ -236,6 +236,7 @@ Route::group([
         // Metas
         Route::get('/metas', [ObjectivePanelController::class, 'viewListGoals'])->name('goals');
         Route::get('/metas/descargar', [ObjectivePanelController::class, 'downloadListGoals'])->name('goals.download');
+        Route::get('/metas/indicadores/descargar', [ObjectivePanelController::class, 'downloadGoalIndicators'])->name('goals.indicators.download');
         Route::get('/metas/nuevo', [ObjectivePanelController::class, 'viewAddGoal'])->name('goals.add');
         Route::post('/metas/nuevo', [ObjectivePanelController::class, 'formAddGoal'])->name('goals.add.form');
         Route::get('/metas/{goalId}', [GoalPanelController::class, 'viewGoal'])->name('goals.index');
@@ -251,6 +252,9 @@ Route::group([
         Route::delete('/metas/{goalId}/hitos/{milestoneId}/eliminar', [GoalPanelController::class, 'formDeleteGoalMilestone'])->name('goals.milestones.delete.form');
         Route::get('/metas/{goalId}/configuracion', [GoalPanelController::class, 'viewGoalConfiguration'])->name('goals.configuration');
         Route::delete('/metas/{goalId}/eliminar', [GoalPanelController::class, 'formDeleteGoal'])->name('goals.delete.form');
+        // Períodos
+        Route::post('/metas/{goalId}/periodos/{periodId}/omitir', [GoalPanelController::class, 'formSkipGoalPeriod'])->name('goals.periods.skip.form');
+        Route::delete('/metas/{goalId}/periodos/{periodId}/omitir', [GoalPanelController::class, 'formUnskipGoalPeriod'])->name('goals.periods.unskip.form');
         // Reporte
         Route::get('/metas/{goalId}/reportes', [GoalPanelController::class, 'viewListGoalReports'])->name('goals.reports');
         Route::get('/metas/{goalId}/reportes/descargar', [GoalPanelController::class, 'downloadListGoalReports'])->name('goals.reports.download');

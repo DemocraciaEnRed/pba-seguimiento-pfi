@@ -141,11 +141,19 @@ class ParticipesStart extends Migration
             $table->foreignId('objective_id')->constrained('objectives')->onDelete('cascade'); // Si el "id" en "objectives" se elimina, se elimina esta entrada
             $table->string('title',550);
             $table->string('status')->nullable();
-            $table->string('indicator',550);
-            $table->smallInteger('indicator_goal')->default(0);
-            $table->smallInteger('indicator_progress')->default(0);
-            $table->string('indicator_unit',550);
+            $table->string('measurement_mode', 20)->default('none');
+            $table->string('indicator',550)->nullable();
+            $table->decimal('indicator_goal', 14, 4)->nullable();
+            $table->decimal('indicator_progress', 14, 4)->nullable();
+            $table->string('indicator_unit',550)->nullable();
             $table->string('indicator_frequency',550)->nullable();
+            $table->text('indicator_formula')->nullable();
+            $table->string('indicator_direction', 30)->nullable();
+            $table->string('indicator_nature', 20)->nullable();
+            $table->string('target_semantics', 30)->nullable();
+            $table->string('period_type', 20)->nullable();
+            $table->date('period_start')->nullable();
+            $table->unsignedSmallInteger('period_count')->nullable();
             $table->string('source',550)->nullable();
             $table->decimal('map_lat', 10, 8)->nullable();
             $table->decimal('map_long', 11, 8)->nullable();
@@ -164,6 +172,19 @@ class ParticipesStart extends Migration
             $table->date('completed')->nullable();
             $table->timestamps();
             $table->softDeletes('deleted_at', 0);
+        });
+        Schema::create('goal_periods', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('goal_id')->constrained('goals')->cascadeOnDelete();
+            $table->unsignedSmallInteger('number');
+            $table->date('starts_on');
+            $table->date('ends_on');
+            $table->decimal('target_value', 14, 4)->nullable();
+            $table->timestamp('skipped_at')->nullable();
+            $table->foreignId('skipped_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('skip_reason')->nullable();
+            $table->timestamps();
+            $table->unique(['goal_id', 'number']);
         });
         Schema::create('objective_organization', function (Blueprint $table) {
             $table->id();
@@ -194,8 +215,15 @@ class ParticipesStart extends Migration
             $table->json('tags')->nullable();
             $table->string('previous_status')->nullable();
             $table->string('status')->nullable();
-            $table->integer('previous_progress')->nullable();
-            $table->integer('progress')->nullable();
+            $table->decimal('previous_progress', 14, 4)->nullable();
+            $table->decimal('progress', 14, 4)->nullable();
+            // RESTRICT on purpose: MySQL/MariaDB reject CASCADE/SET NULL on a base column of a generated column.
+            $table->foreignId('goal_period_id')->nullable()->constrained('goal_periods');
+            $table->decimal('measured_value', 14, 4)->nullable();
+            // Hard uniqueness of live progress reports per period; soft-deleted rows become NULL and free the period.
+            $table->unsignedBigInteger('progress_period_key')->nullable()
+                ->storedAs("if(`type` = 'progress' and `deleted_at` is null, `goal_period_id`, null)")
+                ->unique();
             $table->decimal('map_lat', 10, 8)->nullable();
             $table->decimal('map_long', 11, 8)->nullable();
             $table->decimal('map_zoom',4,2)->nullable();
@@ -276,6 +304,7 @@ class ParticipesStart extends Migration
         Schema::dropIfExists('communities');
         Schema::dropIfExists('goals');
         Schema::dropIfExists('milestones');
+        Schema::dropIfExists('goal_periods');
         Schema::dropIfExists('objective_organization');
         Schema::dropIfExists('objective_user');
         Schema::dropIfExists('objective_subscriber');

@@ -33,6 +33,7 @@
 							</h4>
 						</div>
 					</div>
+          @if($goal->isSimple())
           <div class="row my-2">
             <div class="col-md-6">
 					    <h6 class="is-700">Calculo del indicador</h6>
@@ -42,9 +43,9 @@
 					    <h6 class="is-700">Progreso</h6>
 					   <div class="my-1 d-flex justify-content-between align-items-center goal-container">
 								<div class="progress my-0 mx-1 w-100" style="height: 10px;">
-									<div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{$goal->progress_percentage}}%" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100"></div>
+									<div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{ min(100, $goal->progress_percentage ?? 0) }}%" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100"></div>
 								</div>
-								<span class="goal-percentage text-smallest is-700 ml-1">{{$goal->progress_percentage}}%</span>
+								<span class="goal-percentage text-smallest is-700 ml-1">{{$goal->progress_label}}</span>
 							</div>
             </div>
           </div>
@@ -61,13 +62,26 @@
           <div class="row my-2">
             <div class="col-md-6">
 					    <h6 class="is-700">Valor a alcanzar</h6>
-					    <p>{{$goal->indicator_goal}}</p>
+					    <p>{{ indicator_number($goal->indicator_goal) }}</p>
             </div>
             <div class="col-md-6">
 					    <h6 class="is-700">Valor actual</h6>
-					    <p>{{$goal->indicator_progress}}</p>
+					    <p>{{ indicator_number($goal->indicator_progress) }}</p>
             </div>
           </div>
+          @elseif($goal->isPeriodic())
+          <div class="row my-2">
+            <div class="col-md-6">
+					    <h6 class="is-700">Indicador</h6>
+					    <p>{{$goal->indicator}} <small class="text-muted">({{$goal->indicator_unit}})</small></p>
+            </div>
+            <div class="col-md-6">
+					    <h6 class="is-700">Lectura</h6>
+					    <p>{{ $goal->indicator_direction->label() }}</p>
+            </div>
+          </div>
+          @include('partials.indicatorPeriods', ['goal' => $goal, 'summary' => $goal->indicatorSummary()])
+          @endif
 					@if($goal->source)
           <div class="my-2">
 					    <h6 class="is-700">Fuente</h6>
@@ -84,13 +98,13 @@
 						@forelse ($goal->milestones as $milestone)
 							<p>
 								<span class="text-muted">Hito #{{$milestone->order}} - </span><span class="is-700">{{$milestone->title}}</span><br/>
-								<span class="text-smallest text-muted"> 
+								<span class="text-smallest text-muted">
 								 	@if(is_null($milestone->completed))
                   <i class="text-danger fas fa-xmark fa-fw"></i>
                   No completado
                   @else
                   <i class="text-success fas fa-check"></i>
-                  Completado - 
+                  Completado -
 									<span class="text-muted">Fecha de completado: @justdate($milestone->completed) - <a href="{{route('reports.index',['reportId' => $milestone->report->id])}}">Ver el reporte<i class="fas fa-arrow-right fa-fw"></i></a></span>
                   @endif
 								</span>
