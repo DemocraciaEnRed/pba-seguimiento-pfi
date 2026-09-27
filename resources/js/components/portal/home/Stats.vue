@@ -71,7 +71,7 @@
         <p><b>Avance por eje</b></p>
         <a v-for="category in categories" :key="`category-progress-${category.id}`" :href="`/objetivos?category=${category.id}`" class="d-block text-reset text-decoration-none py-2 border-top">
           <div class="d-flex flex-wrap justify-content-between align-items-baseline mb-1">
-            <span :style="`color: ${category.color}`"><i :class="`${category.icon} fa-fw`"></i>&nbsp;<b>Eje #{{ category.order }}</b>&nbsp;{{ category.title }}</span>
+            <span :style="`color: ${category.color}`"><category-icon :url="category.icon_url"></category-icon>&nbsp;<b>Eje #{{ category.order }}</b>&nbsp;{{ category.title }}</span>
             <span class="text-smaller text-muted" v-if="category.goals_total > 0">
               {{ category.goals_reached }}/{{ category.goals_total }} alcanzadas
               <template v-if="category.measured > 0">&middot; {{ percent(category.green, category.measured) }}% en verde (de {{ category.measured }} medidas)</template>

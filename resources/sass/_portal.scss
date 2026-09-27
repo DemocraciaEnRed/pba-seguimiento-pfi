@@ -22,6 +22,40 @@
   text-align: center;
 }
 
+// Mask keeps the SVG shape and paints it with the current text color.
+.category-icon {
+  display: inline-block;
+  width: 1.25em;
+  height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask: var(--category-icon-url) center / contain no-repeat;
+  mask: var(--category-icon-url) center / contain no-repeat;
+
+  &--lg {
+    font-size: 1.25em;
+    vertical-align: -0.2em;
+  }
+
+  &--2x {
+    font-size: 2em;
+  }
+
+  &--3x {
+    font-size: 3em;
+  }
+}
+
+.category-icon-option {
+  cursor: pointer;
+  opacity: 0.5;
+
+  input:checked + &,
+  &:hover {
+    opacity: 1;
+  }
+}
+
 .objective-goals-list{
   a {
     color: $black;

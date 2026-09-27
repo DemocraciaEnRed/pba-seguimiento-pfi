@@ -10,7 +10,7 @@
   <div class="card-body pb-2">
     <div class="d-flex align-items-center mb-3">
       <div class="mr-3 category-icon-container" style="background-color: {{$objective->category->background_color}}">
-        <i class="fa-2x fa-fw {{$objective->category->icon}}" style="color: {{$objective->category->color}}"></i>
+        <x-category-icon :icon="$objective->category->icon" size="2x" style="color: {{$objective->category->color}}" />
       </div>
       <div class="w-100">
         <span class=" text-smallest" style="color:{{$objective->category->color}}">{{$objective->category->title}}</span>

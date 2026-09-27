@@ -24,7 +24,7 @@
     </div>
     <div class="form-group">
       <label><b>Ícono</b></label>
-      <input-icon name="icon" value="{{$category->icon}}"></input-icon>
+      @include('admin.categories.icon-picker', ['selectedIcon' => old('icon', $category->icon)])
     </div>
     <div class="form-group">
       <label><b>Color del ícono</b></label>

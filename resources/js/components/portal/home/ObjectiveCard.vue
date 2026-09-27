@@ -4,7 +4,7 @@
       <div class="d-flex align-items-center flex-column flex-sm-row is-clickable" @click="showMore = !showMore">
         <div class="d-flex align-items-center mb-3 mb-sm-0 w-100">
           <div class="mr-4 category-icon-container" :style="`background-color: ${objective.category.background_color}`">
-            <i class="fa-lg fa-fw" :class="objective.category.icon" :style="`color: ${objective.category.color}`"></i>
+            <category-icon :url="objective.category.icon_url" size="lg" :style="`color: ${objective.category.color}`"></category-icon>
           </div>
           <div class="w-100">
             <span class="text-smallest" :style="`color:${objective.category.color}`">Eje #{{objective.category.order}} • {{objective.category.title}}</span><br>

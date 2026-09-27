@@ -21,7 +21,7 @@
       @forelse($categories as $category)
         <details class="catalog-tree__branch catalog-tree__branch--category" style="--catalog-color: {{ $category->color }}" open>
           <summary>
-            <span class="catalog-tree__label"><i class="fas fa-fw mr-2 {{ $category->icon }}"></i>{{ $category->title }}</span>
+            <span class="catalog-tree__label"><x-category-icon :icon="$category->icon" class="mr-2" />{{ $category->title }}</span>
             <div class="catalog-tree__stats_rows">
               <p>Estrategias <span class="badge badge-light badge-pill">{{ $category->strategicObjectives->count() }}</span></p>
               <p>Objetivos <span class="badge badge-light badge-pill">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->count()) }}</span></p>

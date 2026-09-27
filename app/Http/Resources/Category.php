@@ -20,6 +20,7 @@ class Category extends JsonResource
         $res = [
             'title' => $this->title,
             'icon' => $this->icon,
+            'icon_url' => $this->icon_url,
             'color' => $this->color,
             'background_color' => $this->background_color
         ];

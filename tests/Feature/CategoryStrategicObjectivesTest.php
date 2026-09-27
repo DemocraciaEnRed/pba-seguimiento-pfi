@@ -21,7 +21,7 @@ class CategoryStrategicObjectivesTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('admin.categories.create.form'), [
             'title' => 'Educación',
-            'icon' => 'fas fa-book',
+            'icon' => 'observatorio-aprendizaje',
             'color' => '#123456',
             'order' => 1,
             'strategic_objectives' => [
@@ -33,6 +33,7 @@ class CategoryStrategicObjectivesTest extends TestCase
         $category = Category::sole();
 
         $response->assertRedirect(route('admin.categories'));
+        $this->assertSame('observatorio-aprendizaje', $category->icon);
         $this->assertCount(2, $category->strategicObjectives);
         $this->assertSame(['OE-001', 'OE-002'], $category->strategicObjectives->pluck('codigo')->all());
     }
@@ -45,7 +46,7 @@ class CategoryStrategicObjectivesTest extends TestCase
 
         $response = $this->actingAs($admin)->put(route('admin.categories.edit.form', ['categoryId' => $category->id]), [
             'title' => 'Educación actualizada',
-            'icon' => 'fas fa-book-open',
+            'icon' => 'observatorio-innovacion',
             'color' => '#654321',
             'order' => 2,
             'strategic_objectives' => [
@@ -61,6 +62,7 @@ class CategoryStrategicObjectivesTest extends TestCase
 
         $response->assertRedirect(route('admin.categories'));
         $this->assertSame('Educación actualizada', $category->fresh()->title);
+        $this->assertSame('observatorio-innovacion', $category->fresh()->icon);
         $this->assertSame(['OE-001-A', 'OE-002'], $category->fresh()->strategicObjectives->pluck('codigo')->all());
     }
 
@@ -118,11 +120,52 @@ class CategoryStrategicObjectivesTest extends TestCase
         $this->assertModelExists($strategicObjective);
     }
 
+    public function test_admin_cannot_save_a_category_with_an_unavailable_icon(): void
+    {
+        $admin = $this->createAdmin();
+        $category = $this->createCategory();
+
+        $response = $this->actingAs($admin)->from(route('admin.categories.edit', ['categoryId' => $category->id]))
+            ->put(route('admin.categories.edit.form', ['categoryId' => $category->id]), [
+                'title' => $category->title,
+                'icon' => 'fas fa-book',
+                'color' => $category->color,
+                'order' => $category->order,
+            ]);
+
+        $response->assertSessionHasErrors('icon');
+        $this->assertSame('observatorio-aprendizaje', $category->fresh()->icon);
+    }
+
+    public function test_category_exposes_the_svg_icon_url(): void
+    {
+        $category = $this->createCategory();
+
+        $this->assertSame(asset('icons/observatorio-aprendizaje.svg'), $category->icon_url);
+        $this->assertSame(asset('icons/observatorio-aprendizaje.svg'), $category->toArray()['icon_url']);
+
+        $category->icon = 'fas fa-book';
+
+        $this->assertNull($category->icon_url);
+    }
+
+    public function test_admin_edit_form_preselects_the_current_icon(): void
+    {
+        $admin = $this->createAdmin();
+        $category = $this->createCategory();
+
+        $response = $this->actingAs($admin)->get(route('admin.categories.edit', ['categoryId' => $category->id]));
+
+        $response->assertOk();
+        $response->assertSee('value="observatorio-aprendizaje" class="d-none" checked', false);
+        $response->assertSee('icons/observatorio-genero.svg', false);
+    }
+
     private function createCategory(): Category
     {
         $category = new Category();
         $category->title = 'Educación';
-        $category->icon = 'fas fa-book';
+        $category->icon = 'observatorio-aprendizaje';
         $category->color = '#123456';
         $category->order = 1;
         $category->save();

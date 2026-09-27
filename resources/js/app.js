@@ -13,6 +13,7 @@ import VueScrollactive from 'vue-scrollactive';
 import Toasted from 'vue-toasted';
 
 import NotificationItem from './components/NotificationItem.vue';
+import CategoryIcon from './components/CategoryIcon.vue';
 import Paginator from './components/utils/Paginator.vue';
 import ErrorAlert from './components/utils/ErrorAlert.vue';
 import InputFile from './components/inputs/InputFile.vue';
@@ -49,6 +50,7 @@ Vue.use(Toasted, {
 })
 
 Vue.component('notification-item', NotificationItem);
+Vue.component('category-icon', CategoryIcon);
 Vue.component('paginator', Paginator);
 Vue.component('error-alert', ErrorAlert);
 Vue.component('input-file', InputFile);

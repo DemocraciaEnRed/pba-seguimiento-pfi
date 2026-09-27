@@ -8,7 +8,7 @@
         <i class="fas fa-star"></i>&nbsp;Todos
         </div>
       <div class="d-inline-block bg-white py-2 px-4 my-1 border rounded shadow-sm mr-2 is-clickable" :class="{'category-active': categorySelected == category.id}" v-for="category in categories" :key="`category${category.id}`" @click="changeCategory(category.id)">
-        <i :class="category.icon" :style="`color:${category.color}`"></i>&nbsp;{{category.title}}
+        <category-icon :url="category.icon_url" :style="`color:${category.color}`"></category-icon>&nbsp;{{category.title}}
         </div>
     </section>
     <hr>

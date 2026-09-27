@@ -10,7 +10,7 @@
         <swiper-slide  v-for="category in categories" :key="`category-${category.id}`">
           <div class="category-card-carrousel card shadow-sm is-clickable" @click="goTo(`/objetivos?category=${category.id}`)">
             <div class="card-body d-flex text-center align-items-center justify-content-center flex-column">
-              <p :style="`color: ${category.color}`"> <i :class="`${category.icon} fa-3x`"></i></p>
+              <p :style="`color: ${category.color}`"> <category-icon :url="category.icon_url" size="3x"></category-icon></p>
               <h6 :style="`color: ${category.color}`" class="is-500 m-0">Eje #{{ category.order }}</h6>
               <h5 :style="`color: ${category.color}`" class="is-600 m-0">{{ category.title }}</h5>
             </div>

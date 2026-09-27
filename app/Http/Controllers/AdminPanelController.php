@@ -24,6 +24,7 @@ use App\Setting;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use App\Exports\ObjectivesExport;
 use App\Services\Csv\CsvDownload;
@@ -80,7 +81,7 @@ class AdminPanelController extends Controller
     public function formCreateCategory(Request $request){
         $rules = [
             'title' => 'required|string|max:255' ,
-            'icon' => 'required|string|max:100',
+            'icon' => ['required', 'string', Rule::in(array_keys(Category::AVAILABLE_ICONS))],
             'color' => 'required|string|max:100' ,
             'order' => 'required|integer|min:0',
             'strategic_objectives' => 'nullable|array',
@@ -116,7 +117,7 @@ class AdminPanelController extends Controller
     public function formEditCategory(Request $request, $categoryId){
         $rules = [
             'title' => 'required|string|max:255' ,
-            'icon' => 'required|string|max:100',
+            'icon' => ['required', 'string', Rule::in(array_keys(Category::AVAILABLE_ICONS))],
             'color' => 'required|string|max:100' ,
             'order' => 'required|integer|min:0',
             'strategic_objectives' => 'nullable|array',

@@ -9,7 +9,7 @@
   <div class="card mb-3 shadow-sm">
     <div class="card-body d-flex align-items-center">
       <div class="mr-3 category-icon-container" style="background-color: {{$category->background_color}}">
-        <i class="fa-2x fa-fw {{$category->icon}}" style="color: {{$category->color}}"></i>
+        <x-category-icon :icon="$category->icon" size="2x" style="color: {{$category->color}}" />
       </div>
         <div class="w-100">
           <span class="text-smaller text-muted">N° {{$category->order}}</span>

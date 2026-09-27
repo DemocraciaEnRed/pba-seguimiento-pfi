@@ -9,7 +9,7 @@
   <div class="card mb-3 shadow-sm">
     <div class="card-body d-flex align-items-center">
       <div class="mr-3 category-icon-container" style="background-color: {{$strategicObjective->category->background_color}}">
-        <i class="fa-2x fa-fw {{$strategicObjective->category->icon}}" style="color: {{$strategicObjective->category->color}}"></i>
+        <x-category-icon :icon="$strategicObjective->category->icon" size="2x" style="color: {{$strategicObjective->category->color}}" />
       </div>
         <div class="w-100">
           <span class="text-smaller text-muted">{{$strategicObjective->codigo}} &middot; {{$strategicObjective->category->title}}</span>

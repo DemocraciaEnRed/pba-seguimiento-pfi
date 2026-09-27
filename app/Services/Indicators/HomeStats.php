@@ -23,7 +23,7 @@ class HomeStats
      *     goals_delayed: int,
      *     goals_inactive: int,
      *     traffic_lights: array{green: int, yellow: int, red: int, measured: int, unmeasured: int},
-     *     categories: list<array{id: int, title: string, icon: ?string, color: ?string, order: ?int, goals_total: int, goals_reached: int, measured: int, green: int}>
+     *     categories: list<array{id: int, title: string, icon: ?string, icon_url: ?string, color: ?string, order: ?int, goals_total: int, goals_reached: int, measured: int, green: int}>
      * }
      */
     public function compute(): array
@@ -73,6 +73,7 @@ class HomeStats
                     'id' => $category->id,
                     'title' => $category->title,
                     'icon' => $category->icon,
+                    'icon_url' => $category->icon_url,
                     'color' => $category->color,
                     'order' => $category->order,
                     'goals_total' => $categoryGoals->count(),
