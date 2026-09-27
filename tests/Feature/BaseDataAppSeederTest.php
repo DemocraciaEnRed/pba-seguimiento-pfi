@@ -32,8 +32,12 @@ class BaseDataAppSeederTest extends TestCase
 
         $integrityAxis = Category::query()->where('order', 1)->first();
         $this->assertNotNull($integrityAxis);
-        $this->assertSame('fas fa-users', $integrityAxis->icon);
+        $this->assertSame('observatorio-integridad', $integrityAxis->icon);
         $this->assertSame('#082d81', $integrityAxis->color);
+        $this->assertSame(
+            array_keys(Category::AVAILABLE_ICONS),
+            Category::query()->orderBy('order')->pluck('icon')->all()
+        );
 
         $strategicCodes = StrategicObjective::query()->pluck('codigo')->all();
         $this->assertCount(38, array_unique($strategicCodes));

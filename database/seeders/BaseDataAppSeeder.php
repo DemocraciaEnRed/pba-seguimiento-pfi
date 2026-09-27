@@ -266,13 +266,13 @@ class BaseDataAppSeeder extends Seeder
     private function axisPalette(): array
     {
         return [
-            1 => ['icon' => 'fas fa-users', 'color' => '#082d81'],
-            2 => ['icon' => 'fas fa-leaf', 'color' => '#4a903c'],
-            3 => ['icon' => 'fas fa-transgender-alt', 'color' => '#702ab7'],
-            4 => ['icon' => 'fas fa-lightbulb', 'color' => '#3fd9cf'],
-            5 => ['icon' => 'fas fa-chart-bar', 'color' => '#a30a0a'],
-            6 => ['icon' => 'fas fa-road', 'color' => '#d2327f'],
-            7 => ['icon' => 'fas fa-chalkboard-teacher', 'color' => '#d6baee'],
+            1 => ['icon' => 'observatorio-integridad', 'color' => '#082d81'],
+            2 => ['icon' => 'observatorio-sostenible', 'color' => '#4a903c'],
+            3 => ['icon' => 'observatorio-genero', 'color' => '#702ab7'],
+            4 => ['icon' => 'observatorio-innovacion', 'color' => '#3fd9cf'],
+            5 => ['icon' => 'observatorio-planeamiento', 'color' => '#a30a0a'],
+            6 => ['icon' => 'observatorio-procesos', 'color' => '#d2327f'],
+            7 => ['icon' => 'observatorio-aprendizaje', 'color' => '#d6baee'],
         ];
     }
 }
