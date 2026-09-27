@@ -18,6 +18,8 @@ class Category extends JsonResource
     public function toArray($request)
     {
         $res = [
+            'id' => $this->id,
+            'order' => $this->order,
             'title' => $this->title,
             'icon' => $this->icon,
             'icon_url' => $this->icon_url,

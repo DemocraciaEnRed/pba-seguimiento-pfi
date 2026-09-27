@@ -29,6 +29,7 @@
 						</div>
 						<div class="w-100">
 							<span class="" style="color:{{$objective->category->color}}">{{$objective->category->title}}</span>
+							<span class="d-block text-smaller text-muted"><i class="fas fa-compass fa-fw"></i> {{$objective->strategicObjective->title}}</span>
 							<h4 class="is-700 m-0">
 								{{$objective->title}}
 							</h4>

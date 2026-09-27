@@ -21,7 +21,7 @@
         <div class="card rounded shadow-sm h-100">
           <div class="card-body text-center">
             <p class="h3 is-700 mb-1"><i class="fas fa-bullseye text-info"></i>&nbsp;{{ objectivesTotal }}</p>
-            <p class="mb-0">Objetivos generales</p>
+            <p class="mb-0">Objetivos específicos</p>
           </div>
         </div>
       </div>

@@ -42,7 +42,7 @@ class ReportController extends Controller
     public function index(Request $request, $reportId){
         $report = Report::findorfail($reportId);
         $goal = Goal::findorfail($report->goal_id);
-        $objective = Objective::findorfail($goal->objective_id);
+        $objective = Objective::with('strategicObjective.category')->findOrFail($goal->objective_id);
         $testimony = null;
         if($request->user()){
             $testimony = $report->userTestimony($request->user()->id)->first();
@@ -77,6 +77,12 @@ class ReportController extends Controller
         $title = $request->query('s',null);
 
         $reports = Report::query();
+        $with = explode(',', (string) $request->query('with'));
+        if(in_array('report_hierarchy', $with)){
+            $reports->with('goal.objective.strategicObjective.category');
+        } elseif(in_array('report_goal', $with)){
+            $reports->with('goal');
+        }
         if(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);

@@ -7,6 +7,11 @@
         <div class="report-card-carrousel card shadow-sm">
           <div class="card-body d-flex align-start flex-column">
             <p class="text-muted mb-1 align-self-start text-smaller"> <i :class="`fas ${getReportIcon(report.type)} text-primary`"></i>&nbsp;&nbsp;{{report.type_label}}</p>
+            <template v-if="report.hierarchy">
+              <p class="text-smallest mb-0" :style="`color:${report.hierarchy.category.color}`"><category-icon :url="report.hierarchy.category.icon_url"></category-icon> {{report.hierarchy.category.title}}</p>
+              <p class="text-smallest text-muted mb-0" :title="report.hierarchy.objective.title"><i class="fas fa-crosshairs fa-fw"></i> {{shortString(report.hierarchy.objective.title, 60)}}</p>
+            </template>
+            <p class="text-smallest text-muted mb-1" v-if="report.goal" :title="report.goal.title"><i :class="`far fa-circle-dot fa-fw text-${report.goal.status}`"></i> {{shortString(report.goal.title, 60)}}</p>
             <p class="is-700 h5 m-0"><a :href="`/reportes/${report.id}`">{{shortString(report.title, 70)}}</a></p>
             <div class="mt-auto">
               <span class="text-muted text-smaller"><i class="far fa-comment fa-fw"></i>&nbsp;{{report.comments_count}} comentarios<br><i class="far fa-thumbs-up fa-fw"></i> {{report.positive_testimonies_count}} - <i class="far fa-clock fa-fw"></i>&nbsp;{{report.published_at}}</span>

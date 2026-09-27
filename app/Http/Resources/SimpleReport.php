@@ -6,6 +6,7 @@ use Auth;
 // use App\Http\Resources\User as UserResource;
 // use App\Testimony;
 use App\Http\Resources\Goal as GoalResource;
+use App\Http\Resources\GoalHierarchy as GoalHierarchyResource;
 use App\Http\Resources\Testimony as TestimonyResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -50,6 +51,9 @@ class SimpleReport extends JsonResource
             switch($withParam){
               case 'report_goal':
                 $res['goal'] = GoalResource::make($this->goal);
+                break;
+              case 'report_hierarchy':
+                $res['hierarchy'] = GoalHierarchyResource::make($this->goal);
                 break;
               case 'report_actions': 
                 if($user){

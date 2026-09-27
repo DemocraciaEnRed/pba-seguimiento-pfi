@@ -112,7 +112,7 @@ export default {
   },
   computed: {
     urlGet: function() {
-      let query = ['with=objective_stats','size=8'];
+      let query = ['with=objective_stats,objective_strategic_objective','size=8'];
       if (this.searchableString != null) {
         query.push("s=" + this.searchableString);
       }

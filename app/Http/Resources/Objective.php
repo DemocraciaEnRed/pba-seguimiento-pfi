@@ -59,7 +59,11 @@ class Objective extends JsonResource
                 $res['goals_status'] = $this->goals()->select('status',DB::raw('COUNT(*) AS total'))->groupBy('status')->get()->pluck('total','status');
                 break;
               case 'objective_strategic_objective':
-                $res['strategic_objective'] = $this->strategicObjective;
+                $res['strategic_objective'] = [
+                    'id' => $this->strategicObjective->id,
+                    'codigo' => $this->strategicObjective->codigo,
+                    'title' => $this->strategicObjective->title,
+                ];
                 break;
               default:
                 break;

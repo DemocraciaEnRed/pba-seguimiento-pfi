@@ -145,7 +145,7 @@ export default {
   },
   computed: {
     urlGet: function() {
-      let query = ['with=report_goal','order_by=updated_at,DESC','size=8'];
+      let query = ['with=report_goal,report_hierarchy','order_by=updated_at,DESC','size=8'];
       if (this.searchableString != null) {
         query.push("s=" + this.searchableString);
       }

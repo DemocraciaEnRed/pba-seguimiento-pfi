@@ -22,6 +22,9 @@
 			@include('objective.subscribe')
 			<div class="card shadow-sm mb-3">
 				<div class="card-body p-3">
+					<div class="mb-3">
+						@include('partials.hierarchy', ['objective' => $objective])
+					</div>
 					<div class="d-flex align-items-center mb-3">
 						<div class="mr-3 category-icon-container">
 							<i class="far fa-2x fa-fw fa-circle-dot text-{{$goal->status}}"></i>

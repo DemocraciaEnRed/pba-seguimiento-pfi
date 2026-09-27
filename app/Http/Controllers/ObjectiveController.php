@@ -26,7 +26,7 @@ class ObjectiveController extends Controller
     }
 
     public function index(Request $request, $objectiveId){
-        $objective = Objective::findorfail($objectiveId)->load(['organizations','organizations.logo']);
+        $objective = Objective::findorfail($objectiveId)->load(['strategicObjective.category','organizations','organizations.logo']);
         $reports = $objective->reports()->paginate(5);
         return view('objective.view',['objective' => $objective,'reports' => $reports]);
     }

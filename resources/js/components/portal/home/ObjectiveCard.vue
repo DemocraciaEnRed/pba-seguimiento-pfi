@@ -8,6 +8,7 @@
           </div>
           <div class="w-100">
             <span class="text-smallest" :style="`color:${objective.category.color}`">Eje #{{objective.category.order}} • {{objective.category.title}}</span><br>
+            <span class="text-smaller text-muted d-block" v-if="objective.strategic_objective"><i class="fas fa-compass fa-fw"></i> {{objective.strategic_objective.title}}</span>
             <span class="text-dark h5 is-700">{{objective.title}}</span>
           </div>
         </div>

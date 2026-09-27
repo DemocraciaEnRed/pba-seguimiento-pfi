@@ -27,7 +27,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $categories = Category::orderBy('order')->get();
+        $categories = Category::with([
+            'strategicObjectives.objectives' => function ($query) {
+                $query->where('hidden', false)->withCount('goals');
+            },
+        ])->orderBy('order')->get();
         return view('portal.home',[
             'categories' => $categories,
         ]);

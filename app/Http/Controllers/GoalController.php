@@ -23,7 +23,7 @@ class GoalController extends Controller
 
      public function index(Request $request, $goalId){
         $goal = Goal::findorfail($goalId);
-        $objective = Objective::findorfail($goal->objective_id);
+        $objective = Objective::with('strategicObjective.category')->findOrFail($goal->objective_id);
         return view('objective.goal.view',[
             'goal' => $goal,
             'objective' => $objective

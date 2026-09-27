@@ -8,6 +8,11 @@
         </div>
         <div class="w-100">
           <p class="mb-1 text-muted d-block d-md-none"><i  :class="`${report.type_icon} text-primary`"></i> {{report.type_label}}</p>
+          <p class="my-1 text-smaller" v-if="report.hierarchy">
+            <span :style="`color:${report.hierarchy.category.color}`"><category-icon :url="report.hierarchy.category.icon_url"></category-icon> {{report.hierarchy.category.title}}</span>
+            <span class="text-muted">&nbsp;•&nbsp;<i class="fas fa-compass fa-fw"></i> {{report.hierarchy.strategic_objective.title}}</span>
+            <span class="text-muted">&nbsp;›&nbsp;<a :href="report.hierarchy.objective.url" class="text-muted"><i class="fas fa-crosshairs fa-fw"></i> {{report.hierarchy.objective.title}}</a></span>
+          </p>
           <p class="my-1 text-smaller"><a :href="report.goal.url" class="text-dark"><i :class="`far fa-circle-dot text-${report.goal.status}`"></i> {{report.goal.title}}</a></p>
           <h5 class="my-1"><a :href="report.url" class="text-dark is-700">{{report.title}}</a></h5>
           <p class="m-0 text-muted text-smaller" v-if="report.tags && report.tags.length > 0">Tags: {{report.tags && report.tags.join(' / ')}}</p>
