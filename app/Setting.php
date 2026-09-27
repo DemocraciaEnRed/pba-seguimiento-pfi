@@ -21,7 +21,7 @@ class Setting extends Model
 
         case 'bool':
         case 'boolean':
-            return boolval($this->value);
+            return filter_var($this->value, FILTER_VALIDATE_BOOLEAN);
             break;
 
         default:

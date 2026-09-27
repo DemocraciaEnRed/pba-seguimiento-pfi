@@ -14,6 +14,7 @@ use App\Http\Controllers\GoalPanelController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportPanelController;
 use App\Http\Controllers\StructureImportController;
+use App\Http\Middleware\EnsureMapsEnabled;
 
 use Illuminate\Support\Facades\Route;
 
@@ -222,12 +223,12 @@ Route::group([
         Route::get('/logs', [ObjectivePanelController::class, 'viewObjectiveLogs'])->name('logs');
         Route::get('/configuracion', [ObjectivePanelController::class, 'viewObjectiveConfiguration'])->name('configuration');
         Route::put('/configuracion/ocultar', [ObjectivePanelController::class, 'formObjectiveConfigurationHide'])->name('configuration.hide.form');
-        Route::put('/configuracion/mapa', [ObjectivePanelController::class, 'formObjectiveConfigurationMap'])->name('configuration.map.form');
+        Route::put('/configuracion/mapa', [ObjectivePanelController::class, 'formObjectiveConfigurationMap'])->name('configuration.map.form')->middleware(EnsureMapsEnabled::class);
         Route::get('/portada', [ObjectivePanelController::class, 'viewObjectiveCover'])->name('cover');
         Route::post('/portada', [ObjectivePanelController::class, 'formObjectiveCover'])->name('cover.form');
         Route::get('/archivos', [ObjectivePanelController::class, 'viewObjectiveFiles'])->name('files');
         Route::post('/archivos', [ObjectivePanelController::class, 'formObjectiveFile'])->name('files.form');
-        Route::get('/mapa', [ObjectivePanelController::class, 'viewObjectiveMap'])->name('map');
+        Route::get('/mapa', [ObjectivePanelController::class, 'viewObjectiveMap'])->name('map')->middleware(EnsureMapsEnabled::class);
         Route::delete('/eliminar', [ObjectivePanelController::class, 'formDeleteObjective'])->name('delete.form');
         // Suscriptores
         Route::get('/suscriptores', [ObjectivePanelController::class, 'viewListSubscribers'])->name('subscribers');
@@ -281,8 +282,8 @@ Route::group([
         Route::get('/metas/{goalId}/reportes/{reportId}/album', [ReportPanelController::class, 'viewReportAlbum'])->name('goals.reports.album');
         Route::post('/metas/{goalId}/reportes/{reportId}/album', [ReportPanelController::class, 'formReportAlbum'])->name('goals.reports.album.form');
         Route::delete('/metas/{goalId}/reportes/{reportId}/album/{pictureId}/eliminar', [ReportPanelController::class, 'formDeletePictureReport'])->name('goals.reports.album.delete.form');
-        Route::get('/metas/{goalId}/reportes/{reportId}/mapa', [ReportPanelController::class, 'viewReportMap'])->name('goals.reports.map');
-        Route::put('/metas/{goalId}/reportes/{reportId}/mapa', [ReportPanelController::class, 'formReportMap'])->name('goals.reports.map.form');
+        Route::get('/metas/{goalId}/reportes/{reportId}/mapa', [ReportPanelController::class, 'viewReportMap'])->name('goals.reports.map')->middleware(EnsureMapsEnabled::class);
+        Route::put('/metas/{goalId}/reportes/{reportId}/mapa', [ReportPanelController::class, 'formReportMap'])->name('goals.reports.map.form')->middleware(EnsureMapsEnabled::class);
         Route::get('/metas/{goalId}/reportes/{reportId}/configuracion', [ReportPanelController::class, 'viewReportConfiguration'])->name('goals.reports.configuration');
         Route::delete('/metas/{goalId}/reportes/{reportId}/eliminar', [ReportPanelController::class, 'formDeleteReport'])->name('goals.reports.delete.form');
     });

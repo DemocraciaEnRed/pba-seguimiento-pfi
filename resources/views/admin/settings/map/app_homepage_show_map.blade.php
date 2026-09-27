@@ -10,7 +10,7 @@
       <input type="hidden"  name="name" value="app_homepage_show_map" >
       <input type="hidden"  name="type" value="boolean" >
       <input type="hidden"  name="cached" value="true" >
-      <input id="app_homepage_show_map" type="checkbox" class="custom-control-input" name="value" value="true" {{$settings['app_homepage_show_map']->value ? 'checked' : ''}}>
+      <input id="app_homepage_show_map" type="checkbox" class="custom-control-input" name="value" value="true" {{$settings['app_homepage_show_map']->casted_value ? 'checked' : ''}}>
       <label for="app_homepage_show_map" class="custom-control-label">Mostrar mapa en la homepage</label>
     </div>
   </div>

@@ -13,7 +13,7 @@
       <input type="hidden"  name="name" value="app_map_enabled" >
       <input type="hidden"  name="type" value="boolean" >
       <input type="hidden"  name="cached" value="true" >
-      <input id="app_map_enabled" type="checkbox" class="custom-control-input" name="value" value="true" {{$settings['app_map_enabled']->value ? 'checked' : ''}}>
+      <input id="app_map_enabled" type="checkbox" class="custom-control-input" name="value" value="true" {{$settings['app_map_enabled']->casted_value ? 'checked' : ''}}>
       <label for="app_map_enabled" class="custom-control-label">Habilitar georeferenciación</label>
     </div>
   </div>

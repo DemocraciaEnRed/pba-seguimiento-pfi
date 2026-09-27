@@ -2,6 +2,7 @@
 
 @extends('objective.manage.master')
 
+@if(app_setting('app_map_enabled'))
 @section('stylesheets')
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
 @endsection
@@ -9,6 +10,7 @@
 @section('headscripts')
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
 @endsection
+@endif
 
 @section('panelContent')
 
@@ -45,6 +47,7 @@
     </div>
     <button type="submit" class="btn btn-primary">Guardar</button>
   </form>
+  @if(app_setting('app_map_enabled'))
   <hr>
   <form action="{{ route('objectives.manage.configuration.map.form',['objectiveId' => $objective->id]) }}" method="POST">
     @method('PUT')
@@ -53,6 +56,7 @@
     <p>Defina el centro y zoom por defecto del mapa, para asegurar que los reportes del objetivo se vean de forma contenida dentro del area del mapa</p>
     <set-map-default access-token="{{app_setting('app_mapbox_api_key')}}" map-style="{{app_setting('app_mapbox_style')}}" :lat="{{$objective->map_lat ?: 'undefined'}}" :long="{{$objective->map_long ?: 'undefined'}}" :zoom="{{$objective->map_zoom ?: 'undefined'}}"></set-map-default>
   </form>
+  @endif
   <hr>
   <h5 class="is-700 has-text-danger"><i class="fas fa-trash"></i> Eliminar objetivo</h5>
   <p>Al eliminar el objetivo, tenga en cuenta lo siguiente</p>

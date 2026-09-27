@@ -2,6 +2,7 @@
   @include('report.metatags')
 @endsection
 
+@if(app_setting('app_map_enabled'))
 @section('stylesheets')
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
 @endsection
@@ -9,6 +10,7 @@
 @section('headscripts')
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
 @endsection
+@endif
 
 @extends('layouts.app')
 

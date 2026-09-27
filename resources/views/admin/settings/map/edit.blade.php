@@ -36,7 +36,7 @@
   @include('admin.settings.map.app_mapbox_api_key')
   <hr>
   @include('admin.settings.map.app_mapbox_style')
-  @if($settings['app_map_enabled']->value && $settings['app_mapbox_api_key']->value && $settings['app_mapbox_style']->value)
+  @if($settings['app_map_enabled']->casted_value && $settings['app_mapbox_api_key']->value && $settings['app_mapbox_style']->value)
     <hr>
     @include('admin.settings.map.app_map_default')
     @else
