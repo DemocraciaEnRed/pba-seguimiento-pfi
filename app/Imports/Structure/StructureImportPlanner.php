@@ -171,7 +171,8 @@ class StructureImportPlanner
         );
 
         $hierarchyKeys = array_map(CsvReader::normalize(...), array_merge(...Column::HIERARCHY));
-        $hasGoal = array_filter(array_diff_key($values, array_flip($hierarchyKeys)), fn (string $value): bool => $value !== '') !== [];
+        $goalKeys = array_diff(array_map(CsvReader::normalize(...), Column::headings(Column::MAX_PERIOD_COLUMNS)), $hierarchyKeys);
+        $hasGoal = array_filter(array_intersect_key($values, array_flip($goalKeys)), fn (string $value): bool => $value !== '') !== [];
         $hasObjective = $this->cell($values, Column::OBJECTIVE) !== '' || $this->cell($values, Column::OBJECTIVE_CODE) !== '';
 
         if ($strategicObjective === null) {

@@ -304,6 +304,16 @@ class StructureImportTest extends TestCase
         ], $plan->summary());
     }
 
+    public function test_unknown_columns_are_ignored(): void
+    {
+        $this->upload("Eje,Objetivo estratégico,Objetivo,Descripción del objetivo,Meta,Observaciones\r\nTransparencia,Nuevo objetivo estratégico,Nuevo objetivo,Descripción,,Revisar con el área\r\n");
+        $plan = $this->preview();
+
+        $this->assertSame([], $plan->errors);
+        $this->assertSame(['create' => 1, 'update' => 0, 'unchanged' => 0], $plan->summary()['Objetivos']);
+        $this->assertSame(['create' => 0, 'update' => 0, 'unchanged' => 0], $plan->summary()['Metas']);
+    }
+
     /**
      * @param  list<array<string, string>>  $rows
      */
