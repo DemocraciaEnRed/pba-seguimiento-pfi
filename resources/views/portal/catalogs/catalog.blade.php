@@ -7,9 +7,14 @@
 @section('content')
 <div class="container">
   <div class="py-5">
-    <div class="mb-4">
-      <h3 class="is-700 mb-2">Catálogo</h3>
-      <p class="lead mb-0">Explorá los ejes, objetivos estratégicos, objetivos y metas de la plataforma.</p>
+    <div class="mb-4 d-flex flex-wrap justify-content-between align-items-end" style="gap: 1rem;">
+      <div>
+        <h3 class="is-700 mb-2">Catálogo</h3>
+        <p class="lead mb-0">Explorá los ejes, objetivos estratégicos, objetivos y metas de la plataforma.</p>
+      </div>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-catalog-toggle aria-expanded="false">
+        <i class="fas fa-fw fa-expand-alt mr-1"></i><span>Expandir todo</span>
+      </button>
     </div>
 
     <div class="catalog-tree" role="tree" aria-label="Catálogo de objetivos">
@@ -78,6 +83,26 @@
     </div>
   </div>
 </div>
+@endsection
+
+@section('headscripts')
+<script>
+  document.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-catalog-toggle]');
+    if (!button) {
+      return;
+    }
+
+    const shouldExpand = button.getAttribute('aria-expanded') !== 'true';
+    document.querySelectorAll('.catalog-tree details').forEach(function (branch) {
+      branch.open = shouldExpand;
+    });
+
+    button.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+    button.querySelector('i').className = 'fas fa-fw mr-1 ' + (shouldExpand ? 'fa-compress-alt' : 'fa-expand-alt');
+    button.querySelector('span').textContent = shouldExpand ? 'Contraer todo' : 'Expandir todo';
+  });
+</script>
 @endsection
 
 @section('stylesheets')
