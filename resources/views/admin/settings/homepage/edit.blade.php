@@ -24,8 +24,6 @@
   @include('admin.settings.homepage.app_homepage_show_latest_reports')
   <hr>
   @include('admin.settings.homepage.app_homepage_latest_reports_at_the_end')
-  <hr>
-  @include('admin.settings.homepage.app_homepage_show_graph_last_reports')
 </section>
 
 @endsection

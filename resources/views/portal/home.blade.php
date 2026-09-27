@@ -24,34 +24,9 @@
         alt="{{ config('app.name', 'Laravel') }}">
     </div>
   </div>
-  <div class="row mb-4">
-    <div class="col-md-5 col-lg-4 mb-2 mb-md-0">
-      <div class="card rounded shadow-sm">
-        <div class="card-body text-center">
-          <p><b>Resumen</b></p>
-          <p><span class="h3 is-700"><i class="fas fa-bullseye text-info"></i>&nbsp{{$countObjectives}}</span><br>Objetivos publicados</p>
-          <div class="row">
-            <div class="col">
-              <p><span class="h3 is-700"><i class="fas fa-medal text-primary"></i>&nbsp;{{$countGoals}}</span><br>Metas publicadas</p>
-            </div>
-            <div class="col">
-              <p><span class="h3 is-700"><i class="fas fa-check text-success"></i>&nbsp{{$countGoalsCompleted}}</span><br>Metas completadas</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-7 col-lg-8">
-      <div class="card rounded shadow-sm">
-        <div class="card-body">
-          <p><b>Estado de las metas</b></p>
-          <portal-home-stats fetch-url="{{route('apiService.home.stats')}}" :show-reports-graph="{{app_setting('app_homepage_show_graph_last_reports') ? 'true' : 'false'}}">
-            @include('partials.loading')
-          </portal-home-stats>
-        </div>
-      </div>
-    </div>
-  </div>
+  <portal-home-stats fetch-url="{{route('apiService.home.stats')}}">
+    @include('partials.loading')
+  </portal-home-stats>
   @if(app_setting('app_homepage_show_categories_selector'))
   <h4 class="is-400 mb-3">Explorá los ejes de los objetivos</h4>
   <portal-home-categories :categories='@json($categories)'></portal-home-categories>

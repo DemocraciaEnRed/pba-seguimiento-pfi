@@ -126,12 +126,6 @@ class SettingsTableSeeder extends Seeder
         $setting->save();
         // migration 2023_01_31_105115_homepage-settings
         $setting = new Setting();
-        $setting->name = 'app_homepage_show_graph_last_reports';
-        $setting->value = true;
-        $setting->type = 'boolean';
-        $setting->cached = true;
-        $setting->save();
-        $setting = new Setting();
         $setting->name = 'app_homepage_show_latest_reports';
         $setting->value = true;
         $setting->type = 'boolean';

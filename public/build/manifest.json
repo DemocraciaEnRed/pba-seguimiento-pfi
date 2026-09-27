@@ -3,32 +3,32 @@
     "file": "assets/Stats-0g4Ncqgh.css",
     "src": "_Stats-0g4Ncqgh.css"
   },
-  "_Stats-6YsJ6hbS.js": {
-    "file": "assets/Stats-6YsJ6hbS.js",
+  "_Stats-h8UwjvG7.js": {
+    "file": "assets/Stats-h8UwjvG7.js",
     "name": "Stats",
     "css": [
       "assets/Stats-0g4Ncqgh.css"
     ]
   },
   "resources/js/admin-app.js": {
-    "file": "assets/admin-app-DdDutPsf.js",
+    "file": "assets/admin-app-DYOZK3N0.js",
     "name": "admin-app",
     "src": "resources/js/admin-app.js",
     "isEntry": true,
     "imports": [
-      "_Stats-6YsJ6hbS.js"
+      "_Stats-h8UwjvG7.js"
     ],
     "css": [
       "assets/admin-app-BAMniqtx.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CNQtK420.js",
+    "file": "assets/app-dDCboHlE.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_Stats-6YsJ6hbS.js"
+      "_Stats-h8UwjvG7.js"
     ],
     "css": [
       "assets/app-BKXzwkjf.css"

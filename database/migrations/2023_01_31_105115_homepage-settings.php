@@ -29,18 +29,6 @@ class HomepageSettings extends Migration
              }
 
              // Check if setting exists
-             $settingDoesntExists = DB::table('settings')->where('name', 'app_homepage_show_graph_last_reports')->count() == 0;
-             // If setting doesn't exists, then create it
-             if ($settingDoesntExists) {
-                 $setting = new Setting();
-                 $setting->name = 'app_homepage_show_graph_last_reports';
-                 $setting->value = true;
-                 $setting->type = 'boolean';
-                 $setting->cached = true;
-                 $setting->save();
-             }
-
-             // Check if setting exists
              $settingDoesntExists = DB::table('settings')->where('name', 'app_homepage_show_latest_reports')->count() == 0;
              // If setting doesn't exists, then create it
              if ($settingDoesntExists) {
@@ -90,12 +78,6 @@ class HomepageSettings extends Migration
         $settingExists = DB::table('settings')->where('name', 'app_homepage_subtitle')->count() > 0;
         if ($settingExists) {
             DB::table('settings')->where('name', 'app_homepage_subtitle')->update(['name' => 'app_home_subtitle']);
-        }
-        // check if settings exists
-        $settingExists = DB::table('settings')->where('name', 'app_homepage_show_graph_last_reports')->count() > 0;
-        // if settings exists, then delete it
-        if ($settingExists) {
-            DB::table('settings')->where('name', 'app_homepage_show_graph_last_reports')->delete();
         }
         // check if settings exists
         $settingExists = DB::table('settings')->where('name', 'app_homepage_show_latest_reports')->count() > 0;
