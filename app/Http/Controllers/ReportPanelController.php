@@ -6,7 +6,6 @@ use Image;
 use Storage;
 use Str;
 use Log;
-use Excel;
 use Carbon\Carbon;
 use App\Category;
 use App\Organization;
@@ -21,6 +20,7 @@ use App\Report;
 use App\Comment;
 use App\Exports\ReportCommentsExport;
 use App\Exports\ReportTestimoniesExport;
+use App\Services\Csv\CsvDownload;
 use App\Notifications\EditReport;
 use App\Notifications\DeleteReport;
 use App\Rules\MatchOldPassword;
@@ -155,9 +155,9 @@ class ReportPanelController extends Controller
       return view('objective.manage.goals.reports.comments', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'comments' => $comments]);
     }
 
-    public function downloadReportComments (Request $request, $objectiveId, $goalId, $reportId){
+    public function downloadReportComments (Request $request, CsvDownload $csvDownload, $objectiveId, $goalId, $reportId){
       $this->hasManagerPrivileges($request);
-      return Excel::download(new ReportCommentsExport($reportId), Carbon::now()->format('Ymd').'-comentarios-reporte-'.$reportId.'.xlsx');
+      return $csvDownload->download(new ReportCommentsExport($reportId), Carbon::now()->format('Ymd').'-comentarios-reporte-'.$reportId.'.csv');
     }
 
     public function viewReportTestimonies (Request $request){
@@ -165,9 +165,9 @@ class ReportPanelController extends Controller
       return view('objective.manage.goals.reports.testimonies', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'testimonies' => $testimonies]);
     }
 
-    public function downloadReportTestimonies (Request $request, $objectiveId, $goalId, $reportId){
+    public function downloadReportTestimonies (Request $request, CsvDownload $csvDownload, $objectiveId, $goalId, $reportId){
       $this->hasManagerPrivileges($request);
-      return Excel::download(new ReportTestimoniesExport($reportId), Carbon::now()->format('Ymd').'-feedbacks-reporte-'.$reportId.'.xlsx');
+      return $csvDownload->download(new ReportTestimoniesExport($reportId), Carbon::now()->format('Ymd').'-feedbacks-reporte-'.$reportId.'.csv');
     }
 
      public function viewReportAlbum (Request $request){

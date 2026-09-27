@@ -6,7 +6,6 @@ use Image;
 use Storage;
 use Str;
 use Log;
-use Excel;
 use Carbon\Carbon;
 use App\ActionLog;
 use App\Category;
@@ -24,6 +23,7 @@ use App\Report;
 use App\Exports\ObjectiveSubscribersExport;
 use App\Exports\ObjectiveGoalsExport;
 use App\Exports\ObjectiveIndicatorsExport;
+use App\Services\Csv\CsvDownload;
 use App\Notifications\NewGoal;
 use App\Notifications\EditObjective;
 use App\Notifications\DeleteObjective;
@@ -158,9 +158,9 @@ class ObjectivePanelController extends Controller
       return view('objective.manage.subscribers.list', ['objective' => $request->objective, 'subscribers' => $subscribers]);
     }
 
-    public function downloadListSubscribers(Request $request, $objectiveId){
+    public function downloadListSubscribers(Request $request, CsvDownload $csvDownload, $objectiveId){
       $this->hasManagerPrivileges($request);
-      return Excel::download(new ObjectiveSubscribersExport($objectiveId), Carbon::now()->format('Ymd').'-subscriptores-objetivo-'.$objectiveId.'.xlsx');
+      return $csvDownload->download(new ObjectiveSubscribersExport($objectiveId), Carbon::now()->format('Ymd').'-subscriptores-objetivo-'.$objectiveId.'.csv');
     }
 
     public function viewAddTeam(Request $request){
@@ -220,14 +220,14 @@ class ObjectivePanelController extends Controller
       return view('objective.manage.goals.list',['objective' => $request->objective]);
     }
 
-     public function downloadListGoals(Request $request, $objectiveId){
+     public function downloadListGoals(Request $request, CsvDownload $csvDownload, $objectiveId){
       $this->hasManagerPrivileges($request);
-      return Excel::download(new ObjectiveGoalsExport($objectiveId), Carbon::now()->format('Ymd').'-metas-objetivo-'.$objectiveId.'.xlsx');
+      return $csvDownload->download(new ObjectiveGoalsExport($objectiveId), Carbon::now()->format('Ymd').'-metas-objetivo-'.$objectiveId.'.csv');
     }
 
-    public function downloadGoalIndicators(Request $request, $objectiveId){
+    public function downloadGoalIndicators(Request $request, CsvDownload $csvDownload, $objectiveId){
       $this->hasManagerPrivileges($request);
-      return Excel::download(new ObjectiveIndicatorsExport((int) $objectiveId), Carbon::now()->format('Ymd').'-indicadores-objetivo-'.$objectiveId.'.xlsx');
+      return $csvDownload->download(new ObjectiveIndicatorsExport((int) $objectiveId), Carbon::now()->format('Ymd').'-indicadores-objetivo-'.$objectiveId.'.csv');
     }
 
     public function viewAddGoal(Request $request){

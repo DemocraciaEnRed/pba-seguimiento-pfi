@@ -38,6 +38,25 @@ class ObjectiveController extends Controller
         ]);
     }
 
+    public function viewCatalog()
+    {
+        $categories = Category::with([
+            'strategicObjectives' => function ($query) {
+                $query->orderBy('title');
+            },
+            'strategicObjectives.objectives' => function ($query) {
+                $query->where('hidden', false)->orderBy('title');
+            },
+            'strategicObjectives.objectives.goals' => function ($query) {
+                $query->orderBy('title');
+            },
+        ])->orderBy('order')->get();
+
+        return view('portal.catalogs.catalog', [
+            'categories' => $categories,
+        ]);
+    }
+
     public function fetch(Request $request)
     {
         $pageSize = $request->query('size',10);

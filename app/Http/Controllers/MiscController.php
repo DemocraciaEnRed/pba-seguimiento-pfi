@@ -31,7 +31,7 @@ class MiscController extends Controller
 			return view('start');
 		}
 		return redirect()->route('home');
-	}    
+	}
 	public function startApp(Request $request){
 		if(App::environment(['local','staging'])){
 			$rules = [
@@ -60,7 +60,7 @@ class MiscController extends Controller
 			return redirect()->route('home')->with('success','Aplicación instalada!');
 		}
 		return redirect()->route('home');
-	}    
+	}
 
 	public function testEmail(Request $request){
 
@@ -77,7 +77,7 @@ class MiscController extends Controller
 	public function testing(Request $request){
 
 			return view('testing');
-	
+
 	}
 
 }

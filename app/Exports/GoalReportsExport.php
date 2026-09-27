@@ -3,22 +3,14 @@
 namespace App\Exports;
 
 use App\Goal;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
-class GoalReportsExport implements FromCollection, WithMapping, WithHeadings
+class GoalReportsExport implements CsvExport
 {
 
-    public function __construct(int $id)
-    {
-        $this->id = $id;
-    }
+    public function __construct(private int $id) {}
 
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    public function collection(): Collection
     {
         return Goal::findorfail($this->id)->reports()->get();
     }
@@ -43,7 +35,6 @@ class GoalReportsExport implements FromCollection, WithMapping, WithHeadings
             "Valor medido",
             "Hito completado",
             "Fecha de completado del hito",
-            "Email autor",
             "Fecha creado",
             "Fecha actualizado",
         ];

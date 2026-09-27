@@ -8,7 +8,7 @@
   @isManager($objective->id)
   @if(!$subscribers->isEmpty())
   <div class="my-3">
-    <a href="{{route('objectives.manage.subscribers.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="far fa-file-excel fa-fw"></i>Descargar .xlsx</a>
+    <a href="{{route('objectives.manage.subscribers.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="fas fa-file-csv fa-fw"></i>Descargar .csv</a>
   </div>
   @endif
   @endisManager
@@ -22,7 +22,7 @@
         <h6 class="is-600 m-0">{{$subscriber->surname}}, {{$subscriber->name}}</h6>
         <span class="text-smaller text-muted">
         @isManager($objective->id)
-          Email: {{$subscriber->email}} - 
+          Email: {{$subscriber->email}} -
         @endisManager
           Suscripto el @datetime($subscriber->pivot->created_at)</span>
       </div>

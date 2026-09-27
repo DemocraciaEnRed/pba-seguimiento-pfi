@@ -7,7 +7,7 @@
   <p class="lead">Acá encontrarás el listado de objetivos que podés administrar</p>
   @if(!$objectives->isEmpty())
   <div class="my-3">
-    <a href="{{route('admin.objectives.download')}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="far fa-file-excel fa-fw"></i>Descargar .xlsx</a>
+    <a href="{{route('admin.objectives.download')}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="fas fa-file-csv fa-fw"></i>Descargar .csv</a>
   </div>
   @endif
   @forelse($objectives as $objective)

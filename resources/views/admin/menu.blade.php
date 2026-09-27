@@ -22,6 +22,10 @@ $currentRoute = Route::currentRouteName();
 <a href="{{ route('admin.objectives.create') }}" class="item-link {{ $currentRoute == 'admin.objectives.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
 <a href="{{ route('admin.objectives') }}" class="item-link {{ $currentRoute == 'admin.objectives' ? 'is-active' : null }}">Listar</a>
 </div>
+<h6 class="category"><i class="fas fa-file-import fa-fw"></i>&nbsp;Carga masiva</h6>
+<div class="menu-link">
+<a href="{{ route('admin.import') }}" class="item-link {{ Str::startsWith($currentRoute, 'admin.import') ? 'is-active' : null }}">Importar estructura</a>
+</div>
 <h6 class="category"><i class="far fa-calendar-days fa-fw"></i>&nbsp;Eventos</h6>
 <div class="menu-link">
 <a href="{{ route('admin.events.create') }}" class="item-link {{ $currentRoute == 'admin.events.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>

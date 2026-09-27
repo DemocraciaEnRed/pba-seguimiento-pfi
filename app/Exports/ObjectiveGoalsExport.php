@@ -3,22 +3,14 @@
 namespace App\Exports;
 
 use App\Objective;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
-class ObjectiveGoalsExport implements FromCollection, WithMapping, WithHeadings
+class ObjectiveGoalsExport implements CsvExport
 {
 
-    public function __construct(int $id)
-    {
-        $this->id = $id;
-    }
+    public function __construct(private int $id) {}
 
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    public function collection(): Collection
     {
         return Objective::findorfail($this->id)->goals()->get();
     }
@@ -28,17 +20,17 @@ class ObjectiveGoalsExport implements FromCollection, WithMapping, WithHeadings
         return [
             'Titulo',
             'Estado',
+            'Modo de medición',
             'Indicador',
             "Fuente",
             "Frecuencia del indicador",
             "Unidad del indicador",
             "Valor a alcanzar",
             "Valor actual",
-            "Progreso (%)",
+            "Progreso / cumplimiento a la fecha (%)",
             "Reportes",
             "Hitos",
             "Mapeado",
-            "Email autor",
             "Fecha creado",
             "Fecha actualizado",
         ];
@@ -49,9 +41,10 @@ class ObjectiveGoalsExport implements FromCollection, WithMapping, WithHeadings
         return [
             $goal->title,
             $goal->status_label,
+            $goal->measurement_mode->label(),
             $goal->indicator,
             $goal->source ?? '-',
-            $goal->indicator_frequency,
+            $goal->isPeriodic() ? $goal->period_type->label() : $goal->indicator_frequency,
             $goal->indicator_unit,
             (string) $goal->indicator_goal,
             (string) $goal->indicator_progress,

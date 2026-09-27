@@ -70,16 +70,6 @@ Also, the application requires the following module to process images:
 
 * Imagemagick PHP Extension
 
-The folowing extensions are required to work for [Laravel Excel](https://laravel-excel.com/):
-
-* PHP extension php_zip enabled `sudo apt-get install php-zip`
-* PHP extension php_xml enabled `sudo apt-get install php-xml`
-* PHP extension php_gd2 enabled `sudo apt-get install php-gd`
-* PHP extension php_iconv enabled 0
-* PHP extension php_simplexml enabled
-* PHP extension php_xmlreader enabled
-* PHP extension php_zlib enabled
-
 If the instalaion running `$ composer install` returns an error, it is probably due to a missing extension. Please pay attention to the error messages.
 
 
@@ -531,7 +521,6 @@ Discovered Package: anhskohbo/no-captcha
 Discovered Package: intervention/image
 Discovered Package: laravel/tinker
 Discovered Package: laravel/ui
-Discovered Package: maatwebsite/excel
 Discovered Package: nesbot/carbon
 Discovered Package: nunomaduro/collision
 Discovered Package: spatie/laravel-ignition

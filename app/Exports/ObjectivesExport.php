@@ -4,17 +4,12 @@ namespace App\Exports;
 
 use App\Objective;
 use App\Goal;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
-class ObjectivesExport implements FromCollection, WithMapping, WithHeadings
+class ObjectivesExport implements CsvExport
 {
 
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    public function collection(): Collection
     {
         return Objective::with('strategicObjective.category')->get();
     }

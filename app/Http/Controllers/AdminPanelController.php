@@ -25,8 +25,8 @@ use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ObjectivesExport;
+use App\Services\Csv\CsvDownload;
 use App\Rules\MatchOldPassword;
 use App\Notifications\NewEvent;
 use App\Notifications\EditEvent;
@@ -479,8 +479,8 @@ class AdminPanelController extends Controller
       return view('admin.objectives.list',['objectives' => $objectives]);
     }
 
-    public function downloadListObjectives(Request $request){
-      return Excel::download(new ObjectivesExport, Carbon::now()->format('Ymd').'-objetivos.xlsx');
+    public function downloadListObjectives(Request $request, CsvDownload $csvDownload){
+      return $csvDownload->download(new ObjectivesExport, Carbon::now()->format('Ymd').'-objetivos.csv');
     }
 
     public function viewCreateObjective(Request $request){

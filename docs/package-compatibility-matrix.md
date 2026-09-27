@@ -18,7 +18,7 @@ Use this as the working inventory while upgrading from Laravel 8 to Laravel 13. 
 | `fruitcake/laravel-cors` | `^1.0` | Remove | Replace middleware usage with framework CORS middleware. |
 | `guzzlehttp/guzzle` | `^7.0.1` | Keep on supported 7.x | Verify conflicts only. |
 | `intervention/image` | `^2.5` | Verify Laravel 10+ / PHP 8.2 support | May require major upgrade and facade/config changes. |
-| `maatwebsite/excel` | `^3.1` | Verify latest 3.1 / 4.x support per Laravel target | Exports are core admin/report functionality. |
+| `maatwebsite/excel` | `^3.1` | Removed | Exports migrated to CSV with `league/csv` (`App\Services\Csv\CsvDownload`). |
 | `predis/predis` | `^1.1` | Consider `^2.x` if needed | Repo config defaults Redis client to `phpredis`; confirm production runtime. |
 | `anhskohbo/no-captcha` | `^3.2` | Verify Laravel 9-13 compatibility | Form validation / captcha smoke tests required. |
 | `barryvdh/laravel-debugbar` | `^3.5` | Upgrade progressively or remove from upgrade branch | Dev-only package, but config/provider aliases are registered in the app. |
@@ -33,7 +33,7 @@ Use this as the working inventory while upgrading from Laravel 8 to Laravel 13. 
 | Manual providers / aliases | `config/app.php` | Debugbar, Intervention Image, NoCaptcha aliases/providers may change with package upgrades. |
 | Eloquent `$dates` | `app/ActionLog.php`, `app/Event.php`, `app/Milestone.php`, `app/Report.php` | Convert to `$casts` before or during Laravel 10. |
 | Custom logging | `app/Logging/MySQLCustomLogger.php`, `app/Logging/MySQLLoggingHandler.php` | Monolog 3 changes affect handler record types and levels. |
-| Excel exports | `app/Exports/*`, panel controllers | Verify `maatwebsite/excel` compatibility and facade alias behavior. |
+| CSV exports | `app/Exports/*`, `app/Services/Csv/CsvDownload.php`, panel controllers | Verify `league/csv` compatibility. |
 | Images | Upload controllers, `config/image.php`, `config/app.php` | Verify Intervention major-version API and Laravel package support. |
 | Frontend build | `package.json`, `webpack.mix.js` | Defer Mix/Vite migration unless Composer or Laravel asset helper changes force it. |
 

@@ -3,22 +3,14 @@
 namespace App\Exports;
 
 use App\Report;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Illuminate\Support\Collection;
 
-class ReportTestimoniesExport implements FromCollection, WithMapping, WithHeadings
+class ReportTestimoniesExport implements CsvExport
 {
 
-    public function __construct(int $id)
-    {
-        $this->id = $id;
-    }
+    public function __construct(private int $id) {}
 
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    public function collection(): Collection
     {
         return Report::findorfail($this->id)->testimonies()->get();
     }

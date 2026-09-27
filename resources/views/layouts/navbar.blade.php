@@ -2,7 +2,7 @@
   $countUnreadNotifications = 0;
   if(Auth::user()){
     $countUnreadNotifications = Auth::user()->unreadNotifications->count();
-  } 
+  }
 @endphp
 
 <nav class="navbar navbar-expand-md navbar-dark p-2 bg-primary">
@@ -20,6 +20,9 @@
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
           <a href="{{ route('objectives') }}" class="nav-link"><i class="fas fa-fw fa-bullseye"></i> Objetivos</a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ route('catalog') }}" class="nav-link"><i class="fas fa-fw fa-sitemap"></i> Catálogo</a>
         </li>
         <li class="nav-item">
           <a href="{{ route('reports') }}" class="nav-link"><i class="far fa-fw fa-copy"></i> Reportes</a>

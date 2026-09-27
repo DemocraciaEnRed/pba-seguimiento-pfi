@@ -13,6 +13,7 @@ use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalPanelController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportPanelController;
+use App\Http\Controllers\StructureImportController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -137,6 +138,13 @@ Route::group([
     Route::get('/objetivos/descargar', [AdminPanelController::class, 'downloadListObjectives'])->name('objectives.download');
     Route::get('/objetivos/nuevo', [AdminPanelController::class, 'viewCreateObjective'])->name('objectives.create');
     Route::post('/objetivos/nuevo', [AdminPanelController::class, 'formCreateObjective'])->name('objectives.create.form');
+    // Importar estructura
+    Route::get('/importar', [StructureImportController::class, 'index'])->name('import');
+    Route::post('/importar', [StructureImportController::class, 'upload'])->name('import.upload');
+    Route::get('/importar/ejemplo', [StructureImportController::class, 'downloadExample'])->name('import.example');
+    Route::get('/importar/plantilla', [StructureImportController::class, 'downloadTemplate'])->name('import.template');
+    Route::get('/importar/vista-previa', [StructureImportController::class, 'preview'])->name('import.preview');
+    Route::post('/importar/confirmar', [StructureImportController::class, 'confirm'])->name('import.confirm');
     // Events
     Route::get('/eventos', [AdminPanelController::class, 'viewUpcomingEvents'])->name('events');
     Route::get('/eventos/pasados', [AdminPanelController::class, 'viewPastEvents'])->name('events.past');
@@ -190,6 +198,7 @@ Route::group([
 });
 
 Route::get('/objetivos', [ObjectiveController::class, 'viewList'])->name('objectives');
+Route::get('/catalogo', [ObjectiveController::class, 'viewCatalog'])->name('catalog');
 Route::post('/objetivos/{objectiveId}/subscribirse', [ObjectiveController::class, 'formToggleSubscription'])->name('objectives.subscribers.form');
 Route::get('/reportes', [ReportController::class, 'viewList'])->name('reports');
 Route::get('/reportes/{reportId}', [ReportController::class, 'index'])->name('reports.index');

@@ -6,7 +6,6 @@ use Image;
 use Storage;
 use Str;
 use Log;
-use Excel;
 use Carbon\Carbon;
 use App\Category;
 use App\Organization;
@@ -20,6 +19,7 @@ use App\GoalPeriod;
 use App\Milestone;
 use App\Report;
 use App\Exports\GoalReportsExport;
+use App\Services\Csv\CsvDownload;
 use App\Notifications\NewReport;
 use App\Notifications\CompletedGoal;
 use App\Notifications\NewGoal;
@@ -238,9 +238,9 @@ class GoalPanelController extends Controller
       return view('objective.manage.goals.reports.list',['objective' => $request->objective, 'goal' => $request->goal, 'reports' => $reports]);
     }
 
-    public function downloadListGoalReports(Request $request, $objectiveId, $goalId){
+    public function downloadListGoalReports(Request $request, CsvDownload $csvDownload, $objectiveId, $goalId){
       $this->hasManagerPrivileges($request);
-      return Excel::download(new GoalReportsExport($goalId), Carbon::now()->format('Ymd').'-reportes-meta-'.$goalId.'-objetivo-'.$objectiveId.'.xlsx');
+      return $csvDownload->download(new GoalReportsExport($goalId), Carbon::now()->format('Ymd').'-reportes-meta-'.$goalId.'-objetivo-'.$objectiveId.'.csv');
     }
 
     public function viewNewGoalReport(Request $request, $objectiveId, $goalId){

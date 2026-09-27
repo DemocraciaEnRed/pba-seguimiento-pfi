@@ -6,14 +6,11 @@ use App\Goal;
 use App\Objective;
 use App\Services\Indicators\MeasurementMode;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
 
 /**
  * Mirrors the client's monitoring spreadsheet: one row per periodic goal, targets and results per period.
  */
-class ObjectiveIndicatorsExport implements FromCollection, WithMapping, WithHeadings
+class ObjectiveIndicatorsExport implements CsvExport
 {
     private ?Collection $goals = null;
 

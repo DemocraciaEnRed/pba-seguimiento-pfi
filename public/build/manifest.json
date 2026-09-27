@@ -11,7 +11,7 @@
     ]
   },
   "resources/js/admin-app.js": {
-    "file": "assets/admin-app-NJVM-dAN.js",
+    "file": "assets/admin-app-DdDutPsf.js",
     "name": "admin-app",
     "src": "resources/js/admin-app.js",
     "isEntry": true,
@@ -23,7 +23,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Vm6YeElR.js",
+    "file": "assets/app-CNQtK420.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -31,7 +31,7 @@
       "_Stats-6YsJ6hbS.js"
     ],
     "css": [
-      "assets/app-BI_niUsZ.css"
+      "assets/app-BKXzwkjf.css"
     ]
   }
 }

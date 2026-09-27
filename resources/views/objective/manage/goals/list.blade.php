@@ -8,8 +8,8 @@
   @isManager($objective->id)
   @if(!$objective->goals->isEmpty())
   <div class="my-3">
-    <a href="{{route('objectives.manage.goals.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="far fa-file-excel fa-fw"></i>Descargar .xlsx</a>
-    <a href="{{route('objectives.manage.goals.indicators.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="far fa-file-excel fa-fw"></i>Indicadores por período .xlsx</a>
+    <a href="{{route('objectives.manage.goals.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="fas fa-file-csv fa-fw"></i>Descargar .csv</a>
+    <a href="{{route('objectives.manage.goals.indicators.download', ['objectiveId' => $objective->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="fas fa-file-csv fa-fw"></i>Indicadores por período .csv</a>
   </div>
   @endif
   @endisManager

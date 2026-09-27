@@ -446,9 +446,12 @@ class PeriodicGoalReportsTest extends TestCase
         $this->assertSame([null, null, null], [$row['Resultado P3'], $row['Cumplimiento P3'], $row['Desvío P3']]);
         $this->assertSame([20.65, '131%', '+31%'], [$row['Resultado a la fecha'], $row['Cumplimiento a la fecha'], $row['Desvío a la fecha']]);
 
-        $this->actingAs($this->manager)
+        $response = $this->actingAs($this->manager)
             ->get(route('objectives.manage.goals.indicators.download', ['objectiveId' => $this->objective->id]))
-            ->assertDownload('20260815-indicadores-objetivo-'.$this->objective->id.'.xlsx');
+            ->assertDownload('20260815-indicadores-objetivo-'.$this->objective->id.'.csv')
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+
+        $this->assertStringContainsString(",15.49,174%,+74%,25.81,105%,+5%,,,,,,,20.65,131%,+31%\r\n", $response->streamedContent());
     }
 
     public function test_the_summary_reproduces_the_client_spreadsheet(): void
