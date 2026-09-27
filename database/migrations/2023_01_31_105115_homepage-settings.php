@@ -19,7 +19,7 @@ class HomepageSettings extends Migration
 
          // if settings table is not empty, then check if app_google_analytics_4_id exists
          if ($settingsTableIsNotEmpty) {
- 
+
              // Check if setting exists
              $settingDoesExists = DB::table('settings')->where('name', 'app_home_subtitle')->count() > 0;
              // If setting doesn't exists, then create it
@@ -64,7 +64,7 @@ class HomepageSettings extends Migration
                  $setting->cached = true;
                  $setting->save();
              }
-         }        
+         }
     }
 
     /**
