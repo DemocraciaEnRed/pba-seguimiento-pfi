@@ -1,17 +1,13 @@
-@php
-    $heightHeader = 100
-@endphp
-
 @extends('layouts.app')
+
+@section('hero')
+<x-hero title="Catálogo" subtitle="Explorá los ejes, objetivos estratégicos, objetivos y metas de la plataforma." />
+@endsection
 
 @section('content')
 <div class="container">
   <div class="py-5">
-    <div class="mb-4 d-flex flex-wrap justify-content-between align-items-end" style="gap: 1rem;">
-      <div>
-        <h3 class="is-700 mb-2">Catálogo</h3>
-        <p class="lead mb-0">Explorá los ejes, objetivos estratégicos, objetivos y metas de la plataforma.</p>
-      </div>
+    <div class="mb-4 d-flex justify-content-end">
       <button type="button" class="btn btn-outline-secondary btn-sm" data-catalog-toggle aria-expanded="false">
         <i class="fas fa-fw fa-expand-alt mr-1"></i><span>Expandir todo</span>
       </button>

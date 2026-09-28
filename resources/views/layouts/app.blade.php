@@ -31,7 +31,11 @@
     <div id="app">
         @include('layouts.navbar')
         @include('partials.flashMessage')
-        @include('layouts.header')
+        @hasSection('hero')
+            @yield('hero')
+        @else
+            @include('layouts.header')
+        @endif
         @yield('content')
     </div>
     @include('layouts.footer')

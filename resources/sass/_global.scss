@@ -210,12 +210,12 @@
 }
 
 .app-portal-header {
-  background: url('/img/citybg.jpg');
+  background-image: linear-gradient(to right, $hero-gradient-start, $hero-gradient-end);
   background-size: cover;
   background-position: center center;
   .app-portal-header-overlay {
     height: 200px;
-    background-color: transparentize($primary, 0.25);
+    background-image: linear-gradient(to right, transparentize($hero-gradient-start, 0.15), transparentize($hero-gradient-end, 0.15));
   }
 }@each $breakpoint in map-keys($grid-breakpoints) {
   @each $size, $length in $sizes {

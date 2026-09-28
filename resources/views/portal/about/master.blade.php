@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('hero')
+<x-hero title="¿Cómo funciona?" />
+@endsection
+
 @section('content')
 <div class="container">
   <div id="about-container" class="row">

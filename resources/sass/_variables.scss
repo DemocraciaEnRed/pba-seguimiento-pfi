@@ -42,6 +42,9 @@ $danger:        $red !default;
 $light:         $gray-400 !default;
 $dark:          $gray-800 !default;
 
+$hero-gradient-start: #417097 !default;
+$hero-gradient-end:   #00adc2 !default;
+
 $yiq-contrasted-threshold:  175 !default;
 
 $body-bg: #fff;
@@ -92,6 +95,10 @@ $navbar-padding-y:                  1rem !default;
 
 $navbar-dark-color:                 $white !default;
 $navbar-dark-hover-color:           $success !default;
+
+$navbar-light-color:                $primary !default;
+$navbar-light-hover-color:          darken($primary, 10%) !default;
+$navbar-light-active-color:         darken($primary, 10%) !default;
 
 // Pagination
 

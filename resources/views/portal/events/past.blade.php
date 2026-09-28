@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
-@section('content')
+@section('hero')
 @include('portal.events.header')
+@endsection
+
+@section('content')
 <div id="calendarList">
 	@forelse($events as $event)
 	@if($loop->odd)
@@ -13,7 +16,7 @@
 				<div class="card shadow-sm my-4">
 					<div class="card-body">
 					<p class="text-muted">{{Str::limit($event->content, 150, $end=' [...]')}}</p>
-					@if ($event->objectives->count() > 0)	
+					@if ($event->objectives->count() > 0)
 					<p class="text-info"><i class="fas fa-bullseye"></i>&nbsp;{{$event->objectives->count()}} objetivos estan relacionados con este evento</p>
 					@endif
 					<h6 class="text-dark mb-2 is-700"><i class="fas fa-calendar-days"></i>&nbsp;{{$event->moment}}</h6>
@@ -23,7 +26,7 @@
 				<br>
 			</div>
 			<div class="col-md-5 column-picture text-lg-right">
-				@if ($event->photos->count() > 0)	
+				@if ($event->photos->count() > 0)
 					<img src="{{asset($event->photos[0]->thumbnail_path)}}" class="image is-centered shadow custom-border">
 				@else
 					<img src="{{asset('img/event-default.png')}}" class="image is-centered shadow custom-border">
@@ -36,7 +39,7 @@
 	<div class="layout-two container">
 		<div class="row justify-content-center align-items-center">
 			<div class="col-lg-5 column-picture">
-				@if ($event->photos->count() > 0)	
+				@if ($event->photos->count() > 0)
 					<img src="{{asset($event->photos[0]->thumbnail_path)}}" class="image is-centered shadow custom-border">
 				@else
 					<img src="{{asset('img/event-default.png')}}" class="image is-centered shadow custom-border">
@@ -48,7 +51,7 @@
 				<div class="card shadow-sm my-4">
 					<div class="card-body">
 					<p class="text-muted">{{Str::limit($event->content, 150, $end=' [...]')}}</p>
-					@if ($event->objectives->count() > 0)	
+					@if ($event->objectives->count() > 0)
 					<p class="text-info"><i class="fas fa-bullseye"></i>&nbsp;{{$event->objectives->count()}} objetivos estan relacionados con este evento</p>
 					@endif
 					<h6 class="text-dark mb-2 is-700"><i class="fas fa-calendar-days"></i>&nbsp;{{$event->moment}}</h6>

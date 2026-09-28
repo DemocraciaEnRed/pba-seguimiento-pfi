@@ -5,10 +5,10 @@
   }
 @endphp
 
-<nav class="navbar navbar-expand-md navbar-dark p-2 bg-primary">
+<nav class="navbar navbar-expand-md navbar-light p-2 bg-white">
   <div class="container">
     <a class="navbar-brand" href="{{ url('/') }}">
-      <img src="{{asset(app_setting('app_logo_white','img/default-logo-white.svg'))}}" class="img-fluid" alt="{{ config('app.name', 'Laravel') }}" style="height:25px;">
+      <img src="{{asset(app_setting('app_logo_color','img/default-logo-color.svg'))}}" class="img-fluid" alt="{{ config('app.name', 'Laravel') }}" style="height:25px;">
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
       aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
@@ -54,7 +54,7 @@
         </li>
         @endif
         <li class="nav-item dropdown">
-          <a id="navbarDropdown" class="nav-link dropdown-toggle text-white" href="#" role="button"
+          <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
             @include('utils.avatar',['avatar' => Auth::user()->avatar, 'size' => 20]) {{ Auth::user()->name }} <span
               class="caret"></span>

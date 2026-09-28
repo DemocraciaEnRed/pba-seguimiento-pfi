@@ -1,7 +1,3 @@
-@php
-    $heightHeader = 300
-@endphp
-
 @if(app_setting('app_map_enabled'))
 @section('stylesheets')
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
@@ -14,18 +10,23 @@
 
 @extends('layouts.app')
 
-@section('content')
-<div class="container push-to-header" style="margin-top: -250px">
-  <div class="row justify-content-between align-items-center mb-3 mb-md-5 flex-column-reverse flex-md-row">
+@section('hero')
+<x-hero size="lg">
+  <div class="row justify-content-between align-items-center flex-column-reverse flex-md-row">
     <div class="col-md-5 text-center text-md-left mb-3 mb-md-0">
-      <h5 class="text-white">{{app_setting('app_homepage_subtitle')}}</h5>
-      <a href="{{route('about.general')}}" class="btn btn-info">Más información <i class="fas fa-arrow-right"></i></a>
+      <h5>{{app_setting('app_homepage_subtitle')}}</h5>
+      <a href="{{route('about.general')}}" class="btn btn-light">Más información <i class="fas fa-arrow-right"></i></a>
     </div>
     <div class="col-md-5">
       <img src="{{asset(app_setting('app_logo_white','img/default-logo-white.svg'))}}" class="img-fluid image logo-home ml-md-auto ml-auto mr-auto mr-md-0 mb-3 mb-md-0"
         alt="{{ config('app.name', 'Laravel') }}">
     </div>
   </div>
+</x-hero>
+@endsection
+
+@section('content')
+<div class="container py-5">
   <portal-home-stats fetch-url="{{route('apiService.home.stats')}}">
     @include('partials.loading')
   </portal-home-stats>
