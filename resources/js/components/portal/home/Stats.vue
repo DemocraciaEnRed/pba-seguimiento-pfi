@@ -67,28 +67,30 @@
       </div>
     </div>
     <h4 class="is-400 mb-3">Explorá los ejes de los objetivos</h4>
-    <div v-for="category in categories" :key="`category-card-${category.id}`" class="catalog-tree__card" :style="`--catalog-color: ${category.color}`">
-      <a :href="`${catalogUrl}#eje-${category.id}`" class="catalog-tree__bar catalog-tree__bar--header">
-        <span class="catalog-tree__label"><category-icon :url="category.icon_url" class="mr-2"></category-icon>{{ category.title }}</span>
-        <div class="catalog-tree__stats_rows">
-          <p>Estrategias <span class="badge badge-light badge-pill">{{ category.strategic_objectives_count }}</span></p>
-          <p>Objetivos <span class="badge badge-light badge-pill">{{ category.objectives_count }}</span></p>
-          <p>Metas <span class="badge badge-light badge-pill">{{ category.goals_total }}</span></p>
-        </div>
-      </a>
-      <a :href="`${objectivesUrl}?category=${category.id}`" class="catalog-tree__card-body">
-        <div class="d-flex flex-wrap justify-content-between align-items-baseline mb-1">
-          <span class="text-smaller" v-if="category.goals_total > 0">
-            <b>{{ percent(category.goals_reached, category.goals_total) }}%</b> de avance &middot; {{ category.goals_reached }}/{{ category.goals_total }} alcanzadas
-            <template v-if="category.measured > 0">&middot; {{ percent(category.green, category.measured) }}% en verde (de {{ category.measured }} medidas)</template>
-          </span>
-          <span class="text-smaller text-muted" v-else>Sin metas publicadas</span>
-          <span class="text-smaller text-muted">Ver objetivos&nbsp;<i class="fas fa-arrow-right"></i></span>
-        </div>
-        <div class="progress" style="height: 8px">
-          <div class="progress-bar" role="progressbar" :style="`width: ${percent(category.goals_reached, category.goals_total)}%; background-color: ${category.color}`"></div>
-        </div>
-      </a>
+    <div class="category-cards-grid mb-3" v-if="categories.length > 0">
+      <div v-for="category in categories" :key="`category-card-${category.id}`" class="catalog-tree__card" :style="`--catalog-color: ${category.color}`">
+        <a :href="`${catalogUrl}#eje-${category.id}`" class="catalog-tree__bar catalog-tree__bar--header">
+          <span class="catalog-tree__label"><category-icon :url="category.icon_url" class="mr-2"></category-icon>{{ category.title }}</span>
+          <div class="catalog-tree__stats_rows">
+            <p>Estrategias <span class="badge badge-light badge-pill">{{ category.strategic_objectives_count }}</span></p>
+            <p>Objetivos <span class="badge badge-light badge-pill">{{ category.objectives_count }}</span></p>
+            <p>Metas <span class="badge badge-light badge-pill">{{ category.goals_total }}</span></p>
+          </div>
+        </a>
+        <a :href="`${objectivesUrl}?category=${category.id}`" class="catalog-tree__card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-baseline mb-1">
+            <span class="text-smaller" v-if="category.goals_total > 0">
+              <b>{{ percent(category.goals_reached, category.goals_total) }}%</b> de avance &middot; {{ category.goals_reached }}/{{ category.goals_total }} alcanzadas
+              <template v-if="category.measured > 0">&middot; {{ percent(category.green, category.measured) }}% en verde (de {{ category.measured }} medidas)</template>
+            </span>
+            <span class="text-smaller text-muted" v-else>Sin metas publicadas</span>
+            <span class="text-smaller text-muted">Ver objetivos&nbsp;<i class="fas fa-arrow-right"></i></span>
+          </div>
+          <div class="progress" style="height: 8px">
+            <div class="progress-bar" role="progressbar" :style="`width: ${percent(category.goals_reached, category.goals_total)}%; background-color: ${category.color}`"></div>
+          </div>
+        </a>
+      </div>
     </div>
     <div class="alert alert-info" v-if="categories.length === 0">No hay ejes cargados en la plataforma.</div>
   </section>

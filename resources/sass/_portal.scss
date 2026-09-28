@@ -566,6 +566,26 @@
   }
 }
 
+.category-cards-grid {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: 1fr;
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catalog-tree__card {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+
+  .catalog-tree__bar--header {
+    flex: 1 1 auto;
+  }
+}
+
 .catalog-tree__card-body {
   color: inherit;
   display: block;
