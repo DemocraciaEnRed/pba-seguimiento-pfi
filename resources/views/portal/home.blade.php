@@ -12,7 +12,7 @@
 
 @section('hero')
 <x-hero size="lg">
-  <div class="row justify-content-between align-items-center flex-column-reverse flex-md-row">
+  <!-- <div class="row justify-content-between align-items-center flex-column-reverse flex-md-row">
     <div class="col-md-5 text-center text-md-left mb-3 mb-md-0">
       <h5>{{app_setting('app_homepage_subtitle')}}</h5>
       <a href="{{route('about.general')}}" class="btn btn-light">Más información <i class="fas fa-arrow-right"></i></a>
@@ -20,8 +20,16 @@
     <div class="col-md-5">
       <img src="{{asset(app_setting('app_logo_white','img/default-logo-white.svg'))}}" class="img-fluid image logo-home ml-md-auto ml-auto mr-auto mr-md-0 mb-3 mb-md-0"
         alt="{{ config('app.name', 'Laravel') }}">
+    </div> -->
+    <div class="row justify-content-center align-items-center text-center">
+      <div class="col-md-8">
+        <img src="{{asset(app_setting('app_logo_white','img/default-logo-white.svg'))}}" class="img-fluid image logo-home mb-3 mx-auto"
+        alt="{{ config('app.name', 'Laravel') }}">
+        <hr class="bg-white">
+        <h5 class="d-none d-sm-block">{{app_setting('app_homepage_subtitle')}}</h5>
+        <h6 class="d-sm-none">{{app_setting('app_homepage_subtitle')}}</h6>
+      </div>
     </div>
-  </div>
 </x-hero>
 @endsection
 
