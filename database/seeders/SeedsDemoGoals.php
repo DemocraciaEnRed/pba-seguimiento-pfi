@@ -22,10 +22,6 @@ trait SeedsDemoGoals
             MeasurementMode::Periodic,
             MeasurementMode::Simple,
             MeasurementMode::None,
-            MeasurementMode::Periodic,
-            MeasurementMode::Simple,
-            MeasurementMode::Simple,
-            MeasurementMode::None,
         ];
         $catalog = $this->periodicDemoCatalog();
         $periodicPosition = 0;

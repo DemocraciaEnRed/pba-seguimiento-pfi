@@ -4,73 +4,27 @@ namespace Database\Seeders;
 
 use App\User;
 use App\Role;
-use App\File;
 use App\ImageFile;
-use App\Category;
-use App\StrategicObjective;
 use App\Community;
 use App\Organization;
 use App\Objective;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 
 class DemoSeeder extends Seeder
 {
     use SeedsDemoGoals;
 
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * Decorates the axes, strategic and general objectives loaded by `db:seed` with demo users, organizations and goals.
      */
-    public function run()
+    public function run(): void
     {
         $faker = \Faker\Factory::create('es_AR');
 
-        $category = new Category();
-        $category->title = 'Educacion';
-        $category->icon = 'observatorio-aprendizaje';
-        $category->color = '#602282';
-        $category->order = 1;
-        $category->save();
-        $category = new Category();
-        $category->title = 'Seguridad';
-        $category->icon = 'observatorio-integridad';
-        $category->color = '#30689c';
-        $category->order = 2;
-        $category->save();
-        $category = new Category();
-        $category->title = 'Ecologia';
-        $category->icon = 'observatorio-sostenible';
-        $category->color = '#32a852';
-        $category->order = 3;
-        $category->save();
-        $category = new Category();
-        $category->title = 'Economia comunitaria';
-        $category->icon = 'observatorio-procesos';
-        $category->color = '#b52260';
-        $category->order = 4;
-        $category->save();
-        $category = new Category();
-        $category->title = 'Musica';
-        $category->icon = 'observatorio-innovacion';
-        $category->color = '#ba8e14';
-        $category->order = 5;
-        $category->save();
-
-        $strategicObjectivesByCategory = array();
-        foreach (Category::all() as $categoryForStrategic) {
-            $strategicObjectivesByCategory[$categoryForStrategic->id] = array();
-            for ($s=0; $s < 2; $s++) {
-                $strategicObjective = new StrategicObjective();
-                $strategicObjective->codigo = 'OE-' . str_pad("{$categoryForStrategic->id}{$s}", 4, '0', STR_PAD_LEFT);
-                $strategicObjective->title = $faker->sentence;
-                $strategicObjective->category()->associate($categoryForStrategic);
-                $strategicObjective->save();
-                $strategicObjectivesByCategory[$categoryForStrategic->id][] = $strategicObjective->id;
-            }
+        if (! Objective::query()->exists()) {
+            $this->call(DatabaseSeeder::class);
         }
 
         $admin = new User();
@@ -115,15 +69,9 @@ class DemoSeeder extends Seeder
             $organizations[] = $organization->id;
         }
 
-        for ($i=0; $i <= 20; $i++) {
-            $objective = new Objective();
-            $category = Category::findorfail($faker->randomElement([1,2,3,4]));
-            $objective->title = $faker->sentence;
-            $objective->content = $faker->text(600);
+        foreach (Objective::query()->orderBy('id')->get() as $i => $objective) {
             $objective->hidden = false;
             $objective->tags = $faker->randomElements(['tag1','tag2','tag3','tag4','tag5','tag6'],3);
-            $objective->strategicObjective()->associate(StrategicObjective::findOrFail($faker->randomElement($strategicObjectivesByCategory[$category->id])));
-            $objective->author()->associate($admin);
             $objective->save();
             $objective->organizations()->attach($faker->randomElements($organizations,3));
 
