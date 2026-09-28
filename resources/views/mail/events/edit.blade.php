@@ -10,9 +10,9 @@
 @component('mail::message')
 # ¡Atención {{$user->name}}! 👏👏
 
-Han editado el evento **{{$event->title}}** en Partícipes 🗓️ y como estas suscripto a un objetivo relacionado con el evento, nos parecio oportuno avisarte. 😮
+Han editado el evento **{{$event->title}}** en el {{ config('app.short_name') }} 🗓️ y como estas suscripto a un objetivo relacionado con el evento, nos parecio oportuno avisarte. 😮
 
-El evento se llevará a cabo el @justdate($event->date) a las @justtime($event->date). Te invitamos a que veas el evento editado en la web de Participes 👇
+El evento se llevará a cabo el @justdate($event->date) a las @justtime($event->date). Te invitamos a que veas el evento editado en la web del {{ config('app.short_name') }} 👇
 
 @component('mail::button', ['url' => route('events.index', ['eventId' => $event->id])])
 🔍 Ver mas información

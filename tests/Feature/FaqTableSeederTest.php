@@ -28,4 +28,15 @@ class FaqTableSeederTest extends TestCase
         $this->assertStringContainsString('mailto:mesadeayuda@minfra.gba.gob.ar', $ministry->content);
         $this->assertStringContainsString('https://wa.me/2214354223', $ministry->content);
     }
+
+    public function test_seeded_content_has_no_legacy_brand_or_placeholders(): void
+    {
+        $this->seed(FaqTableSeeder::class);
+
+        foreach (Faq::all() as $faq) {
+            $this->assertStringNotContainsStringIgnoringCase('partícipes', $faq->title.$faq->content);
+            $this->assertStringNotContainsString('[Nombre de la plataforma]', $faq->content);
+            $this->assertStringNotContainsString('xxxx', $faq->content);
+        }
+    }
 }

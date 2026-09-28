@@ -152,6 +152,11 @@ return [
     'force_https' => env('FORCE_HTTPS', false),
 
     /*
+    | Short platform name used in email subjects/bodies and portal copy.
+    */
+    'short_name' => env('APP_SHORT_NAME', 'Mapa de Fortalecimiento Institucional'),
+
+    /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers
     |--------------------------------------------------------------------------

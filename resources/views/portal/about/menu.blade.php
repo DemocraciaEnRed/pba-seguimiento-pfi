@@ -10,10 +10,6 @@
       @foreach($faqs['general'] as $faqQuestion)
       <a class="item-link scrollactive-item" href="#{{$faqQuestion['section']}}{{$faqQuestion['id']}}">{{$faqQuestion['title']}}</a>
       @endforeach
-      {{-- <a class="item-link scrollactive-item" href="#que-es">¿Qué es Partícipes?</a>
-      <a class="item-link scrollactive-item" href="#quienes-somos">¿Quiénes somos Partícipes?</a>
-      <a class="item-link scrollactive-item" href="#como-participo">¿Cómo participo?</a>
-      <a class="item-link scrollactive-item" href="#mas-alla">Más allá de nuestra ciudad</a> --}}
     </scrollactive>
     @endif
   @else

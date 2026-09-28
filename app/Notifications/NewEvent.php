@@ -68,7 +68,7 @@ class NewEvent extends Notification implements ShouldQueue
     {   
         
         return (new MailMessage)
-                    ->subject('¡Nuevo evento en Participes!')
+                    ->subject('¡Nuevo evento en el '.config('app.short_name').'!')
                     ->markdown('mail.events.new', ['user' => $notifiable, 'event' => $this->event]);
     }
 

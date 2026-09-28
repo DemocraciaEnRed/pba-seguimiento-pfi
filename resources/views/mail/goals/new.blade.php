@@ -25,7 +25,7 @@
 @endif
 @endcomponent
 
-La nueva meta 🎯 **{{$goal->title}}** y podes entrar a ver todo acerca de ella en la web de Participes haciendo clic en el botón 👇
+La nueva meta 🎯 **{{$goal->title}}** y podes entrar a ver todo acerca de ella en la web del {{ config('app.short_name') }} haciendo clic en el botón 👇
 
 @component('mail::button', ['url' => route('goals.index', ['goalId' => $goal->id])])
 🔍 Ver meta

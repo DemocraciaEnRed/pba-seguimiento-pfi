@@ -6,7 +6,7 @@
   <div>
 
   <h1><i class="fas fa-gear fa-fw fa-spin"></i> Administración</h1>
-  <p class="lead">Este es el panel de administración de la plataforma Partícipes.</p>
+  <p class="lead">Este es el panel de administración de la plataforma {{ config('app.short_name') }}.</p>
   <hr class="my-4">
   <div class="card border-light my-3 text-center">
     <div class="card-body py-4 row justify-content-between">

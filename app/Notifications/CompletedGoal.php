@@ -73,7 +73,7 @@ class CompletedGoal extends Notification implements ShouldQueue
     {   
         
         return (new MailMessage)
-                    ->subject('¡Una meta llego a su 100% en Partícipes!')
+                    ->subject('¡Una meta llego a su 100% en el '.config('app.short_name').'!')
                     ->markdown('mail.reports.completed', ['user' => $notifiable, 'objective' => $this->objective, 'goal' => $this->goal, 'report' => $this->report]);
     }
 

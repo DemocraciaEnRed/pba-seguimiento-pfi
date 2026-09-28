@@ -82,7 +82,7 @@ class SettingsTableSeeder extends Seeder
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_social_description';
-        $setting->value = 'Aqui podes informarte de los avances del Plan de Fortalecimiento Institucional del Ministerio de Infraestructura y Obras Públicas de la Provincia de Buenos Aires.';
+        $setting->value = 'Aqui podes informarte de los avances del Plan de Fortalecimiento Institucional del Ministerio de Infraestructura y Servicios Públicos de la Provincia de Buenos Aires.';
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
