@@ -33,7 +33,7 @@ class BaseDataAppSeederTest extends TestCase
         $integrityAxis = Category::query()->where('order', 1)->first();
         $this->assertNotNull($integrityAxis);
         $this->assertSame('observatorio-integridad', $integrityAxis->icon);
-        $this->assertSame('#082d81', $integrityAxis->color);
+        $this->assertSame('#003563', $integrityAxis->color);
         $this->assertSame(
             array_keys(Category::AVAILABLE_ICONS),
             Category::query()->orderBy('order')->pluck('icon')->all()
