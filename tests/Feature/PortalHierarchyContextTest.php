@@ -128,7 +128,10 @@ class PortalHierarchyContextTest extends TestCase
                 'Fortalecer la transparencia',
                 'Publicar datos abiertos',
                 'Portal de datos publicado',
-            ]);
+            ])
+            ->assertSee(route('catalog').'#eje-'.$this->category->id, false)
+            ->assertSee(route('objectives.index', [$this->objective->id]), false)
+            ->assertDontSee('hierarchy-tree', false);
     }
 
     public function test_objective_page_shows_its_strategic_objective(): void

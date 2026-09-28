@@ -7,8 +7,10 @@
             <category-icon :url="objective.category.icon_url" size="lg" :style="`color: ${objective.category.color}`"></category-icon>
           </div>
           <div class="w-100">
-            <span class="text-smallest" :style="`color:${objective.category.color}`">Eje #{{objective.category.order}} • {{objective.category.title}}</span><br>
-            <span class="text-smaller text-muted d-block" v-if="objective.strategic_objective"><i class="fas fa-compass fa-fw"></i> {{objective.strategic_objective.title}}</span>
+            <p class="my-1 text-smaller">
+              <span :style="`color:${objective.category.color}`">{{objective.category.title}}</span>
+              <span class="text-muted" v-if="objective.strategic_objective">&nbsp;•&nbsp;<i class="fas fa-compass fa-fw"></i> {{objective.strategic_objective.title}}</span>
+            </p>
             <span class="text-dark h5 is-700">{{objective.title}}</span>
           </div>
         </div>
