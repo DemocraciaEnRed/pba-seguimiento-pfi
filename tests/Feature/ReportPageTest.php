@@ -71,6 +71,7 @@ class ReportPageTest extends TestCase
         $this->get(route('reports.index', ['reportId' => $this->report->id]))
             ->assertOk()
             ->assertSee('report-hero', false)
+            ->assertSee('--hero-accent: #123456', false)
             ->assertSee('Inauguramos la obra')
             ->assertSee('Reporte de Novedad')
             ->assertSee('#obras')

@@ -24,7 +24,8 @@ class GoalController extends Controller
 
      public function index(Request $request, $goalId){
         $goal = Goal::findorfail($goalId);
-        $objective = Objective::with('strategicObjective.category')->findOrFail($goal->objective_id);
+        $objective = Objective::with(['strategicObjective.category', 'goals', 'communities'])->findOrFail($goal->objective_id);
+        abort_unless($objective->isVisibleTo($request->user()), 404);
         return view('objective.goal.view',[
             'goal' => $goal,
             'objective' => $objective
@@ -32,6 +33,8 @@ class GoalController extends Controller
     }
 
     public function fetchReports(Request $request, $goalId){
+        $goal = Goal::with('objective')->findOrFail($goalId);
+        abort_unless($goal->objective->isVisibleTo($request->user()), 404);
         $pageSize = $request->query('size',10);
         $orderBy = $request->query('order_by');
         $detailed = $request->query('detailed');

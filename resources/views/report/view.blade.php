@@ -19,7 +19,7 @@
 @endphp
 
 @section('hero')
-<x-hero :align="'center'" :image="$coverPhoto ? asset($coverPhoto->path) : null" size="md" class="report-hero">
+<x-hero :align="'center'" :image="$coverPhoto ? asset($coverPhoto->path) : null" :accent="$objective->category?->color" size="md" class="report-hero">
   {{--
   @include('partials.hierarchy-breadcrumb', ['objective' => $objective])
   <p class="my-1 text-smaller">

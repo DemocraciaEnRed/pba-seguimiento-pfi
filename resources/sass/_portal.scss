@@ -21,7 +21,7 @@
   background-size: cover;
   background-position: center center;
 
-  h1, h2, h3, h4, h5, h6, p, small, .lead, .text-muted, a:not(.btn) {
+  h1, h2, h3, h4, h5, h6, p, small, .lead, .text-muted, a:not(.btn):not(.badge) {
     color: $white !important;
   }
 
@@ -40,6 +40,16 @@
     background-image: linear-gradient(to right, transparentize($hero-gradient-start, 0.15), transparentize($hero-gradient-end, 0.15));
   }
 
+  &--accent {
+    --hero-start: color-mix(in srgb, var(--hero-accent) 65%, #0b1f33);
+    --hero-end: var(--hero-accent);
+    background-image: linear-gradient(to right, var(--hero-start), var(--hero-end));
+  }
+
+  &--accent.hero--has-image .hero__overlay {
+    background-image: linear-gradient(to right, color-mix(in srgb, var(--hero-start) 85%, transparent), color-mix(in srgb, var(--hero-end) 85%, transparent));
+  }
+
   .hero__title {
     font-size: 2rem;
     font-weight: 700;
@@ -55,6 +65,12 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 1.5rem;
+  }
+
+  .hero__tag {
+    background-color: transparentize($white, .8);
+    color: $white;
+    font-weight: 600;
   }
 }
 
@@ -115,7 +131,21 @@
   }
 }
 
+.objective-menu {
+  .card {
+    overflow: hidden;
+  }
+
+  @include media-breakpoint-up(md) {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
 .objective-goals-list{
+  .list-item + .list-item {
+    border-top: 1px solid $gray-200;
+  }
   a {
     color: $black;
     &:hover {

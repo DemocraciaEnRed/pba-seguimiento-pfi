@@ -100,7 +100,11 @@ class ReportController extends Controller
         $dateRange = $validated['date_range'] ?? null;
         $sort = $validated['sort'] ?? null;
 
-        $reports = Report::query()->fromVisibleObjectives()->forListing(explode(',', (string) $request->query('with')));
+        $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
+        $isVisibleObjectiveFilter = ! is_null($objective) && (bool) Objective::find($objective)?->isVisibleTo($request->user());
+        if(! $isVisibleObjectiveFilter){
+            $reports->fromVisibleObjectives();
+        }
         if(!is_null($sort)){
             match ($sort) {
                 'recent' => $reports->orderBy('date', 'desc'),

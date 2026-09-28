@@ -75,6 +75,19 @@ class ReportsSearchTest extends TestCase
         $this->assertSame([$second->id], $this->fetchIds(['objective' => $this->secondGoal->objective_id]));
     }
 
+    public function test_members_see_reports_of_their_hidden_objective_when_filtering_by_it(): void
+    {
+        $hidden = $this->createReport($this->hiddenGoal);
+        $this->createReport($this->firstGoal);
+        $this->hiddenGoal->objective->members()->attach($this->author, ['role' => 'reporter']);
+
+        $this->assertSame([], $this->fetchIds(['objective' => $this->hiddenGoal->objective_id]));
+
+        $this->actingAs($this->author);
+        $this->assertSame([$hidden->id], $this->fetchIds(['objective' => $this->hiddenGoal->objective_id]));
+        $this->assertNotContains($hidden->id, $this->fetchIds());
+    }
+
     public function test_filters_by_date_range(): void
     {
         $lastWeek = $this->createReport($this->firstGoal, ['date' => '2026-09-21']);

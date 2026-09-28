@@ -88,4 +88,14 @@ class Objective extends Model
     public function hasGoal($goalId){
         return $this->goals()->where('id', $goalId)->exists();
     }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        // Inside a Model, ->hidden resolves to the protected $hidden property, not the column.
+        if (! $this->getAttribute('hidden')) {
+            return true;
+        }
+
+        return ! is_null($user) && ($user->hasRole('admin') || $user->isMemberObjective($this->id));
+    }
 }

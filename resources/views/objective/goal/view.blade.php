@@ -1,41 +1,36 @@
-@php
-	if(is_null($objective->cover)){
-		$hideHeader = true;
-	}
-	$urlHeader = !is_null($objective->cover) ? $objective->cover->thumbnail_path : null;
-	$heightHeader = !is_null($objective->cover) ? 400 : null;
-@endphp
-
 @section('metatags')
   @include('objective.goal.metatags')
 @endsection
 
 @extends('layouts.app')
 
+@section('hero')
+<x-hero :image="$objective->cover ? asset($objective->cover->path) : null" :accent="$objective->category?->color" class="goal-hero">
+  @include('partials.hierarchy-breadcrumb', ['objective' => $objective])
+  <hr class="bg-white">
+  <span class="badge badge-white text-black px-2 py-1 mt-2 mb-2 is-size-6"><i class="far fa-circle-dot fa-fw text-{{$goal->status}}"></i> Meta {{$goal->status_label}}</span>
+  <h1 class="hero__title">{{ $goal->title }}</h1>
+  @isMember($objective->id)
+  <x-slot:actions>
+    <a href="{{route('objectives.manage.goals.reports.add',['objectiveId'=> $objective->id, 'goalId' => $goal->id])}}" class="btn btn-white"><i class="fas fa-plus fa-fw"></i> Nuevo reporte</a>
+    @isManager($objective->id)
+    <a href="{{route('objectives.manage.goals.index',['objectiveId'=> $objective->id, 'goalId' => $goal->id])}}" class="btn btn-outline-white"><i class="fas fa-up-right-from-square fa-fw"></i> Panel meta</a>
+    @endisManager
+  </x-slot:actions>
+  @endisMember
+</x-hero>
+@endsection
+
 @section('content')
-<div class="container {{ is_null($objective->cover) ? 'py-5' : null }}" style="{{ !is_null($objective->cover) ? 'margin-top: -350px;' : null}}" >
+<div class="container py-5">
 	<div class="row justify-content-center">
 		<div class="col-md-4">
 			@include('objective.menu')
 		</div>
 		<div class="col-md-8">
-			@include('objective.subscribe')
+			{{-- @include('objective.subscribe') --}}
 			<div class="card shadow-sm mb-3">
 				<div class="card-body p-3">
-					<div class="mb-2">
-						@include('partials.hierarchy-breadcrumb', ['objective' => $objective])
-					</div>
-					<div class="d-flex align-items-center mb-3">
-						<div class="mr-3 category-icon-container">
-							<i class="far fa-2x fa-fw fa-circle-dot text-{{$goal->status}}"></i>
-						</div>
-						<div class="w-100">
-							<span class="text-{{$goal->status}}">Meta {{$goal->status_label}}</span>
-							<h4 class="is-700 m-0">
-								{{$goal->title}}
-							</h4>
-						</div>
-					</div>
           @if($goal->isSimple())
           <div class="row my-2">
             <div class="col-md-6">
@@ -118,12 +113,7 @@
 					</div>
 					@endif
           <hr>
-					<div class="clearfix mt-2 mb-4">
-						<h5 class="is-700 float-left">Reportes</h5>
-						@isMember($objective->id)
-					    <a href="{{route('objectives.manage.goals.reports.add',['objectiveId'=> $objective->id, 'goalId' => $goal->id])}}" class="btn btn-primary btn-sm float-right"><i class="fas fa-plus"></i> Nuevo reporte</a>
-						@endisMember
-					</div>
+					<h5 class="is-700 mt-2 mb-4">Reportes</h5>
 					<report-list fetch-url="{{route('apiService.goals.reports',['goalId'=> $goal->id, 'size' => 3, 'with' =>'report_hierarchy,report_cover,report_excerpt,report_highlights', 'order_by'=>'date,DESC'])}}" context="none">
 						@include('partials.loading')
 					</report-list>

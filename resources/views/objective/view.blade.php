@@ -1,72 +1,47 @@
-@php
-	if(is_null($objective->cover)){
-		$hideHeader = true;
-	}
-	$urlHeader = !is_null($objective->cover) ? $objective->cover->thumbnail_path : null;
-	$heightHeader = !is_null($objective->cover) ? 400 : null;
-	$currentRoute = Route::currentRouteName();
-@endphp
-
 @section('metatags')
   @include('objective.metatags')
 @endsection
 
 @extends('layouts.app')
 
+@section('hero')
+<x-hero :image="$objective->cover ? asset($objective->cover->path) : null" :accent="$objective->category?->color" size="md" class="objective-hero">
+  <a href="{{ route('catalog') }}#eje-{{ $objective->category->id }}" class="badge badge-white text-black px-2 py-1 mb-2 is-size-6">
+    <x-category-icon :icon="$objective->category->icon" style="color: {{$objective->category->color}}" /> {{ $objective->category->title }}
+  </a>
+  <p class="mb-1"><i class="fas fa-compass fa-fw"></i> {{ $objective->strategicObjective->title }}</p>
+  <hr class="bg-white">
+  <h1 class="hero__title">{{ $objective->title }}</h1>
+  @if(!empty($objective->tags))
+  <ul class="list-inline mt-3 mb-0">
+    @foreach ($objective->tags as $tag)
+    <li class="list-inline-item mb-1"><span class="badge hero__tag">#{{ $tag }}</span></li>
+    @endforeach
+  </ul>
+  @endif
+  @isManager($objective->id)
+  <x-slot:actions>
+    <a href="{{ route('objectives.manage.index', ['objectiveId' => $objective->id]) }}" class="btn btn-white"><i class="fas fa-up-right-from-square fa-fw"></i> Panel objetivo</a>
+  </x-slot:actions>
+  @endisManager
+</x-hero>
+@endsection
+
 @section('content')
-<div class="container {{ is_null($objective->cover) ? 'py-5' : null }}" style="{{ !is_null($objective->cover) ? 'margin-top: -350px;' : null}}" >
+<div class="container py-5">
 	<div class="row justify-content-center">
 		<div class="col-md-4">
 			@include('objective.menu')
 		</div>
 		<div class="col-md-8">
-			@include('objective.subscribe')
+			{{-- @include('objective.subscribe') --}}
+			<portal-objective-stats fetch-url="{{route('apiService.objectives.stats',['objectiveId' => $objective->id])}}">
+				@include('partials.loading')
+			</portal-objective-stats>
 			<div class="card shadow-sm">
 				<div class="card-body">
-					<div class="d-flex align-items-center mb-3">
-						<div class="mr-3 category-icon-container" style="background-color: {{$objective->category->background_color}}">
-							<x-category-icon :icon="$objective->category->icon" size="2x" style="color: {{$objective->category->color}}" />
-						</div>
-						<div class="w-100">
-							<span class="" style="color:{{$objective->category->color}}">{{$objective->category->title}}</span>
-							<span class="d-block text-smaller text-muted"><i class="fas fa-compass fa-fw"></i> {{$objective->strategicObjective->title}}</span>
-							<h4 class="is-700 m-0">
-								{{$objective->title}}
-							</h4>
-						</div>
-					</div>
-						<div class="card border-light mb-3">
-							<div class="card-body py-4">
-								<portal-objective-stats fetch-url="{{route('apiService.objectives.stats',['objectiveId' => $objective->id])}}">
-									@include('partials.loading')
-								</portal-objective-stats>
-							</div>
-						</div>
+					<h5 class="is-700 mb-3">Sobre el objetivo</h5>
 					<p>{!! nl2br(e($objective->content)) !!}</p>
-					@if(!$objective->goals->isEmpty())
-					<hr>
-					<div class="my-3">
-						<div class="clearfix is-clickable" data-toggle="collapse" data-target="#collapseGoalStatus">
-						<h5 class="is-700 h5 text-body my-2 float-left">Estados de las metas</h5>
-						<h5 class="is-700 h5 text-body my-2 float-right"><i class="fas fa-angle-down fa-lg"></i></h5>
-						</div>
-						<div id="collapseGoalStatus" class="collapse">
-							@forelse ($objective->goals as $goal)
-							<div slot="content">
-								<div class="my-1 d-flex justify-content-between align-items-center goal-container">
-									<span class="text-truncate w-100">{{$goal->title}}</span>
-									<div class="progress my-0 mx-1" style="height: 10px; width: 150px">
-										<div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{ min(100, $goal->progress_percentage ?? 0) }}%" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100"></div>
-									</div>
-									<span class="goal-percentage text-smallest is-700 ml-1">{{$goal->progress_label}}</span>
-								</div>
-							</div>
-							@empty
-								<p slot="content" class="text-muted">No hay metas del objetivo</p>
-							@endforelse
-						</div>
-					</div>
-					@endif
 					@if(!$objective->organizations->isEmpty())
 					<hr>
 					<div class="clearfix is-clickable" data-toggle="collapse" data-target="#collapseOrganizations">
@@ -123,14 +98,15 @@
 							@endforelse
 					</div>
 					@endif
-					<hr>
-					<h5 class="is-700 mt-2 mb-4">Reportes</h5>
-					<report-list fetch-url="{{route('apiService.objectives.reports',['objectiveId'=> $objective->id, 'size' => 3, 'with' =>'report_goal,report_hierarchy,report_cover,report_excerpt,report_highlights', 'order_by'=>'date,DESC'])}}" context="goal">
-						@include('partials.loading')
-					</report-list>
 				</div>
 			</div>
 		</div>
 	</div>
+	<section class="mt-5" id="reportes">
+		<h3 class="is-700 mb-3">Reportes</h3>
+		<search-reports fetch-url="{{route('apiService.reports')}}" :fixed-objective="{{ $objective->id }}">
+			@include('partials.loading')
+		</search-reports>
+	</section>
 </div>
 @endsection

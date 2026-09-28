@@ -59,14 +59,7 @@ class Report extends Model
 
     public function isVisibleTo(?User $user): bool
     {
-        $objective = $this->goal->objective;
-
-        // Inside a Model, ->hidden resolves to the protected $hidden property, not the column.
-        if (! $objective->getAttribute('hidden')) {
-            return true;
-        }
-
-        return ! is_null($user) && ($user->hasRole('admin') || $user->isMemberObjective($objective->id));
+        return $this->goal->objective->isVisibleTo($user);
     }
 
     public function objective()

@@ -5,6 +5,8 @@ use App\Objective;
 use App\Goal;
 use App\Report;
 use App\Category;
+use App\Services\Indicators\ObjectiveStats;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Resources\Objective as ObjectiveResource;
 use App\Http\Resources\Report as ReportResource;
@@ -26,9 +28,9 @@ class ObjectiveController extends Controller
     }
 
     public function index(Request $request, $objectiveId){
-        $objective = Objective::findorfail($objectiveId)->load(['strategicObjective.category','organizations','organizations.logo']);
-        $reports = $objective->reports()->paginate(5);
-        return view('objective.view',['objective' => $objective,'reports' => $reports]);
+        $objective = Objective::with(['strategicObjective.category', 'organizations.logo', 'goals', 'communities', 'cover', 'members', 'files'])->findOrFail($objectiveId);
+        abort_unless($objective->isVisibleTo($request->user()), 404);
+        return view('objective.view',['objective' => $objective]);
     }
 
     public function viewList(Request $request){
@@ -95,6 +97,7 @@ class ObjectiveController extends Controller
     }
 
     public function fetchReports(Request $request, $objectiveId){
+        abort_unless(Objective::findOrFail($objectiveId)->isVisibleTo($request->user()), 404);
         $pageSize = $request->query('size',10);
         $orderBy = $request->query('order_by');
         $detailed = $request->query('detailed');
@@ -128,31 +131,15 @@ class ObjectiveController extends Controller
         }
     }
 
-    public function fetchStats(Request $request, $objectiveId){
-        $objective = Objective::findorfail($objectiveId);
-        $countGoals = Goal::where('objective_id',$objectiveId)->count();
-        $countGoalsCompleted = Goal::where('objective_id',$objectiveId)->where('status','reached')->count();
-        $countGoalsOngoin = Goal::where('objective_id',$objectiveId)->where('status','ongoing')->count();
-        $countGoalsDelayed = Goal::where('objective_id',$objectiveId)->where('status','delayed')->count();
-        $countGoalsInactive = Goal::where('objective_id',$objectiveId)->where('status','inactive')->count();
-        $reportsTotal =$objective->reports()->count();
-        $filesTotal =$objective->files()->count();
-        $subscribersTotal =$objective->subscribers()->count();
+    public function fetchStats(Request $request, ObjectiveStats $objectiveStats, $objectiveId): JsonResponse
+    {
+        $objective = Objective::findOrFail($objectiveId);
+        abort_unless($objective->isVisibleTo($request->user()), 404);
 
         return response()->json([
             'message' => 'Ok',
-            'data' => [
-                'goals_total' => $countGoals,
-                'goals_reached' => $countGoalsCompleted,
-                'goals_ongoing' => $countGoalsOngoin,
-                'goals_delayed' => $countGoalsDelayed,
-                'goals_inactive' => $countGoalsInactive,
-                'reports_total' => $reportsTotal,
-                'files_total' => $filesTotal,
-                'subscribers_total' => $subscribersTotal,
-                // 'reports_data' => $reportsData
-            ]
-        ],200);
+            'data' => $objectiveStats->compute($objective),
+        ]);
     }
 
      public function formToggleSubscription(Request $request, $objectiveId){

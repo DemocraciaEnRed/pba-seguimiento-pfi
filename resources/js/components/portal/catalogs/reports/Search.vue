@@ -4,23 +4,26 @@
     <small class="form-text text-muted">{{status}}</small>
 
     <section class="my-2">
-      <div class="d-inline-block bg-white py-2 px-4 my-1 border rounded shadow-sm mr-2 is-clickable" :class="{'type-active': typeSelected == null}" @click="typeSelected = null">
-        <i class="fas fa-star"></i>&nbsp;Cualquier tipo
-      </div>
-      <div class="d-inline-block bg-white py-2 px-4 my-1 border rounded shadow-sm mr-2 is-clickable" :class="{'type-active': typeSelected == type.id}" v-for="type in types" :key="`type-${type.id}`" @click="typeSelected = type.id">
-        <i :class="`${type.icon} text-primary`"></i>&nbsp;{{type.title}}
+      <label class="text-smaller is-700 mb-1">Por tipo</label>
+      <div class="d-flex flex-column flex-md-row">
+        <div class="bg-white py-2 px-4 my-1 border rounded shadow-sm mr-md-2 is-clickable" :class="{'type-active': typeSelected == null}" @click="typeSelected = null">
+          <i class="fas fa-star"></i>&nbsp;Cualquier tipo
+        </div>
+        <div class="bg-white py-2 px-4 my-1 border rounded shadow-sm mr-md-2 is-clickable" :class="{'type-active': typeSelected == type.id}" v-for="type in types" :key="`type-${type.id}`" @click="typeSelected = type.id">
+          <i :class="`${type.icon} text-primary`"></i>&nbsp;{{type.title}}
+        </div>
       </div>
     </section>
 
     <div class="form-row mt-3">
-      <div class="col-md-6 col-lg-3 mb-2">
+      <div class="col-md-6 col-lg-3 mb-2" v-if="fixedObjective == null">
         <label class="text-smaller is-700 mb-1" for="filter-category">Eje</label>
         <select id="filter-category" class="custom-select shadow-sm" v-model="categorySelected">
           <option :value="null">Todos los ejes</option>
           <option v-for="category in categories" :key="`category-${category.id}`" :value="category.id">{{category.title}}</option>
         </select>
       </div>
-      <div class="col-md-6 col-lg-3 mb-2">
+      <div class="col-md-6 col-lg-3 mb-2" v-if="fixedObjective == null">
         <label class="text-smaller is-700 mb-1" for="filter-objective">Objetivo</label>
         <select id="filter-objective" class="custom-select shadow-sm" v-model="objectiveSelected">
           <option :value="null">Todos los objetivos</option>
@@ -34,14 +37,14 @@
           </template>
         </select>
       </div>
-      <div class="col-md-6 col-lg-3 mb-2">
+      <div class="mb-2" :class="filterColumnClass">
         <label class="text-smaller is-700 mb-1" for="filter-date">Fecha del reporte</label>
         <select id="filter-date" class="custom-select shadow-sm" v-model="dateRange">
           <option :value="null">Cualquier fecha</option>
           <option v-for="range in dateRanges" :key="`range-${range.id}`" :value="range.id">{{range.title}}</option>
         </select>
       </div>
-      <div class="col-md-6 col-lg-3 mb-2">
+      <div class="mb-2" :class="filterColumnClass">
         <label class="text-smaller is-700 mb-1" for="filter-sort">Ordenar por</label>
         <select id="filter-sort" class="custom-select shadow-sm" v-model="sort">
           <option v-for="option in sorts" :key="`sort-${option.id}`" :value="option.id">{{option.title}}</option>
@@ -54,7 +57,7 @@
     </div>
     <hr>
     <div class="reports-grid reports-grid--uniform mb-3" :class="{'reports-grid--loading': isLoading}" v-if="reports.length > 0">
-      <report-tile v-for="report in reports" :key="`report-${report.id}`" :report="report"></report-tile>
+      <report-tile v-for="report in reports" :key="`report-${report.id}`" :report="report" :context="fixedObjective == null ? 'hierarchy' : 'goal'"></report-tile>
     </div>
     <div class="card shadow-sm" v-else>
       <div class="card-body p-5 text-center">
@@ -86,6 +89,10 @@ export default {
     categories: {
       type: Array,
       default: () => []
+    },
+    fixedObjective: {
+      type: Number,
+      default: null
     }
   },
   components: {
@@ -100,7 +107,7 @@ export default {
       status: 'Comience escribiendo el nombre',
       typeSelected: null,
       categorySelected: null,
-      objectiveSelected: null,
+      objectiveSelected: this.fixedObjective,
       dateRange: null,
       sort: DEFAULT_SORT,
       reports: [],
@@ -139,7 +146,9 @@ export default {
     }
   },
   created: function(){
-    this.readFiltersFromUrl()
+    if (this.fixedObjective == null) {
+      this.readFiltersFromUrl()
+    }
     this.fetchReports()
   },
   methods: {
@@ -156,6 +165,7 @@ export default {
       this.objectiveSelected = this.findObjectiveCategory(toId(params.get('objective'))) ? toId(params.get('objective')) : null
     },
     writeFiltersToUrl: function(){
+      if (this.fixedObjective != null) return
       const params = new URLSearchParams()
       if (this.searchableString != null) params.set('s', this.searchableString)
       if (this.typeSelected != null) params.set('type', this.typeSelected)
@@ -174,7 +184,7 @@ export default {
       this.nameToSearch = ''
       this.typeSelected = null
       this.categorySelected = null
-      this.objectiveSelected = null
+      this.objectiveSelected = this.fixedObjective
       this.dateRange = null
       this.sort = DEFAULT_SORT
     },
@@ -213,11 +223,14 @@ export default {
     categoriesWithObjectives: function(){
       return this.categories.filter(category => category.objectives.length > 0)
     },
+    filterColumnClass: function(){
+      return this.fixedObjective == null ? 'col-md-6 col-lg-3' : 'col-md-6'
+    },
     hasActiveFilters: function(){
       return this.nameToSearch !== ''
         || this.typeSelected != null
         || this.categorySelected != null
-        || this.objectiveSelected != null
+        || this.objectiveSelected != this.fixedObjective
         || this.dateRange != null
         || this.sort !== DEFAULT_SORT
     },

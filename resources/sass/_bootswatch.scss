@@ -75,6 +75,11 @@ a.badge-white:focus {
 
 // Typography ==================================================================
 
+// Bootstrap 4 only ships .text-black-50.
+.text-black {
+  color: $black !important;
+}
+
 // Tables ======================================================================
 
 .table {
