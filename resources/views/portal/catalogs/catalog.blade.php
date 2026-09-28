@@ -2,11 +2,11 @@
 
 @section('hero')
 <x-hero title="El Plan" subtitle="Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas.">
-  <div class="mt-4">
-    <button type="button" class="btn btn-outline-light btn-sm" data-catalog-toggle aria-expanded="false">
+  <x-slot:actions>
+    <button type="button" class="btn btn-outline-light" data-catalog-toggle aria-expanded="false">
       <i class="fas fa-fw fa-expand-alt mr-1"></i><span>Expandir todo</span>
     </button>
-  </div>
+  </x-slot:actions>
 </x-hero>
 @endsection
 

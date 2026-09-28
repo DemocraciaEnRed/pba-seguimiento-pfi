@@ -49,26 +49,26 @@ $yiq-contrasted-threshold:  175 !default;
 
 $body-bg: #fff;
 
-// // Grid
-// // Bootstrap 4 replaces (not merges) these maps, so every key must be listed.
+// Grid
+// Bootstrap 4 replaces (not merges) these maps, so every key must be listed.
 
-// $grid-breakpoints: (
-//   xs: 0,
-//   sm: 576px,
-//   md: 768px,
-//   lg: 992px,
-//   xl: 1200px,
-//   xxl: 1600px
-// ) !default;
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1140px,
+  xxl: 1320px
+) !default;
 
-// // Tailwind-style: the container caps at its breakpoint width. All rem so Bootstrap's ascending assert can compare them.
-// $container-max-widths: (
-//   sm: 36rem,
-//   md: 48rem,
-//   lg: 62rem,
-//   xl: 75rem,
-//   xxl: 100rem
-// ) !default;
+// Tailwind-style: the container caps at its breakpoint width. All rem so Bootstrap's ascending assert can compare them.
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1140px,
+  xxl: 1320px
+) !default;
 
 // Links
 
