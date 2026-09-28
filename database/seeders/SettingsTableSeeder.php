@@ -64,13 +64,13 @@ class SettingsTableSeeder extends Seeder
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_footer_contact_info';
-        $setting->value = "correo@correo.com\nCiudad Autónoma de Buenos Aires\n1423\n+54 9 01100210515";
+        $setting->value = "mesadeayuda@minfra.gba.gob.ar";
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_footer_description';
-        $setting->value = 'Plataforma de monitoreo ciudadano que te permite hacer seguimiento de objetivos y metas de gobiernos';
+        $setting->value = '';
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
