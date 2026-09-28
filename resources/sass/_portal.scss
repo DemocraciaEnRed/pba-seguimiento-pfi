@@ -424,6 +424,11 @@
         min-height: 170px;
       }
 
+      // Sin esto, el texto con nowrap fuerza al body a desbordar la tarjeta
+      .card-body {
+        min-width: 0;
+      }
+
       .report-tile__excerpt {
         -webkit-line-clamp: 3;
       }
