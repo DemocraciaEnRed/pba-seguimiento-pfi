@@ -267,7 +267,7 @@ class BaseDataAppSeeder extends Seeder
     {
         return [
             1 => ['icon' => 'observatorio-integridad', 'color' => '#003563'],
-            2 => ['icon' => 'observatorio-sostenible', 'color' => '#12a24'],
+            2 => ['icon' => 'observatorio-sostenible', 'color' => '#12a24f'],
             3 => ['icon' => 'observatorio-genero', 'color' => '#542471'],
             4 => ['icon' => 'observatorio-innovacion', 'color' => '#58c0dc'],
             5 => ['icon' => 'observatorio-planeamiento', 'color' => '#bd0b1d'],

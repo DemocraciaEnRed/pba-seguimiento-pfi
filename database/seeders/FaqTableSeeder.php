@@ -17,17 +17,23 @@ class FaqTableSeeder extends Seeder
         // general
         //------
         $faq = new Faq();
-        $faq->title = '¿Qué es Partícipes Digital?';
+        $faq->title = 'Sobre el “Plan de Fortalecimiento Institucional”';
         $faq->section = 'general';
         $faq->order = 1;
-        $faq->content = '<p>Es una plataforma de monitoreo ciudadano que te permite hacer seguimiento de objetivos y metas de gobiernos.</p>';
+        $faq->content = '<p>El Plan de Fortalecimiento Institucional del Ministerio de Infraestructura y Servicios Públicos de la Provincia de Buenos Aires tiene como propósito impulsar una gestión pública más eficiente, transparente e innovadora, orientada a mejorar la calidad de vida de las y los bonaerenses. A través del desarrollo de capacidades institucionales, la transformación digital y la articulación entre distintos actores y niveles de gobierno, el plan busca fortalecer la planificación, el monitoreo y la ejecución de políticas públicas con foco en resultados, integridad, gobierno abierto y construcción de valor público.</p>';
         $faq->save();
         //------
         $faq = new Faq();
-        $faq->title = '¿Quíenes somos Partícipes?';
+        $faq->title = 'Ministerio de Infraestructura y Servicios Públicos';
         $faq->section = 'general';
         $faq->order = 2;
-        $faq->content = '<p>Somos una red de organizaciones que creemos en la importancia de un gobierno abierto. Es por eso que relevamos políticas públicas en nuestra ciudad, apoyados en reportes constantes y organizados.</p>';
+        $faq->content = '<p>El Ministerio de Infraestructura y Servicios Públicos tiene como objetivo estratégico transformar la matriz del desarrollo económico y productivo de la provincia de Buenos Aires, reduciendo las inequidades y brechas de infraestructura existentes. En ello, la Obra Pública cumple un rol fundamental, ya que permite impulsar un crecimiento sostenible y sustentable y redistribuir oportunidades para mejorar la calidad de vida de las y los bonaerenses.</p>'
+            .'<p>Sin embargo, la Obra Pública forma parte de una agenda de problemas complejos, propios de la gestión de las políticas públicas, que requieren un abordaje estratégico para reducir las brechas que limitan el desarrollo humano. Estos problemas no pueden ser pensados únicamente como instancias coyunturales, sino que para trabajar en una agenda de políticas transformadoras deben proyectarse y planificarse en un horizonte de mediano y largo plazo, posibilitando la construcción colectiva. Esto requiere intervenciones coordinadas de múltiples áreas, niveles de gobierno y actores no estatales con altos niveles de complejidad e incertidumbre.</p>'
+            .'<p>Frente a estos desafíos, es necesario reconstruir la confianza en las instituciones públicas, sobre todo en una era compleja, donde los gobiernos deben responder a escenarios como el avance de la inteligencia artificial, la transformación digital, las crecientes desigualdades sociales o la crisis climática, para contrarrestar los efectos de la polarización y la desinformación en la gestión de los asuntos públicos.</p>'
+            .'<p>Estos retos multidimensionales implican más que aprobar buenas políticas: se requiere desarrollar nuevas capacidades institucionales innovadoras, basadas en la generación de valor público y con un fuerte foco en la integridad, la transparencia y el gobierno abierto, en tanto herramientas centrales para robustecer la confianza en las instituciones públicas.</p>'
+            .'<p>Asimismo, se debe asumir el desafío de transformar el funcionamiento administrativo del Estado, pasando de una perspectiva enfocada en el cumplimiento de funciones y actividades, hacia otra que mire los resultados e impactos de dichas funciones y actividades, ubicando a la ciudadanía en el centro de las políticas públicas e incorporando activamente su visión. Para ello, resulta central trabajar junto a los diversos niveles de gobierno, representaciones sectoriales y organizaciones de la sociedad civil: lo importante es lograr resultados que atiendan y resuelvan las demandas y necesidades de la población.</p>'
+            .'<p><a href="mailto:mesadeayuda@minfra.gba.gob.ar">mesadeayuda@minfra.gba.gob.ar</a></p>'
+            .'<p><a href="https://wa.me/2214354223" target="_blank" rel="noopener noreferrer">https://wa.me/2214354223</a></p>';
         $faq->save();
         //------
         $faq = new Faq();
@@ -35,13 +41,6 @@ class FaqTableSeeder extends Seeder
         $faq->section = 'general';
         $faq->order = 3;
         $faq->content = '<p>Partícipes digital está dirigido a organizaciones de la sociedad civil y ciudadanía interesada y comprometida en el monitoreo ciudadano de las problemáticas públicas de sus ciudades, con el fin de generar incidencia.</p> <p><b>Informate</b> sobre monitoreos de políticas públicas realizados por organizaciones de la sociedad civil y ciudadanía de forma sencilla y colaborativa.</p> <p><b>Validá</b> la información sobre avances de metas o compromisos de gobierno, comentaá y sumate a comunidades temáticas.</p><p><b>Involucrate:</b> Conectate con otros actores de la sociedad civil y potencia tu capacidad de incidencia.</p>';
-        $faq->save();
-        //------
-        $faq = new Faq();
-        $faq->title = 'Más allá de nuestra ciudad';
-        $faq->section = 'general';
-        $faq->order = 4;
-        $faq->content = '<p>Esta plataforma surge del proyecto Partícipes de fortalecimiento de procesos de rendición de cuentas en Córdoba, Buenos Aires, Rosario y Mendoza a través del monitoreo ciudadano de políticas públicas, facilitado por el uso de herramientas tecnológicas y nuevos canales de comunicación. Este proyecto es coordinado por la Fundación Avina y es financiado por la Unión Europea.</p>';
         $faq->save();
         //------
         // faq
