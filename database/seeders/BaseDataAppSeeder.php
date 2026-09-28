@@ -266,13 +266,13 @@ class BaseDataAppSeeder extends Seeder
     private function axisPalette(): array
     {
         return [
-            1 => ['icon' => 'observatorio-integridad', 'color' => '#082d81'],
-            2 => ['icon' => 'observatorio-sostenible', 'color' => '#4a903c'],
-            3 => ['icon' => 'observatorio-genero', 'color' => '#702ab7'],
-            4 => ['icon' => 'observatorio-innovacion', 'color' => '#3fd9cf'],
-            5 => ['icon' => 'observatorio-planeamiento', 'color' => '#a30a0a'],
-            6 => ['icon' => 'observatorio-procesos', 'color' => '#d2327f'],
-            7 => ['icon' => 'observatorio-aprendizaje', 'color' => '#d6baee'],
+            1 => ['icon' => 'observatorio-integridad', 'color' => '#003563'],
+            2 => ['icon' => 'observatorio-sostenible', 'color' => '#12a24'],
+            3 => ['icon' => 'observatorio-genero', 'color' => '#542471'],
+            4 => ['icon' => 'observatorio-innovacion', 'color' => '#58c0dc'],
+            5 => ['icon' => 'observatorio-planeamiento', 'color' => '#bd0b1d'],
+            6 => ['icon' => 'observatorio-procesos', 'color' => '#e31269'],
+            7 => ['icon' => 'observatorio-aprendizaje', 'color' => '#8891c3'],
         ];
     }
 }
