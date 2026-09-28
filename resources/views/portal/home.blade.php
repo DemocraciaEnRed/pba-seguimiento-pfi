@@ -37,25 +37,25 @@
   @empty
     <div class="alert alert-info">No hay ejes cargados en la plataforma.</div>
   @endforelse
-  <p class="mb-4 text-right"><a href="{{route('catalog')}}" class="btn btn-outline-primary">Explorá el catálogo con todos los objetivos y metas de los ejes <i class="fas fa-arrow-right"></i></a></p>
+  <p class="mb-4 text-right"><a href="{{route('catalog')}}" class="btn btn-outline-primary">Recorré el plan completo con todos los objetivos y metas <i class="fas fa-arrow-right"></i></a></p>
   @endif
 
 
   @if(app_setting('app_homepage_show_latest_reports') && !app_setting('app_homepage_latest_reports_at_the_end'))
-  <h4 class="is-400 mb-3">Ultimos reportes publicados</h4>
+  <h4 class="is-400 mb-3">Últimos reportes de seguimiento</h4>
   <portal-home-reports-grid fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC','with'=>'report_goal,report_hierarchy,report_cover,report_excerpt,report_highlights','size' => 8])}}"></portal-home-reports-grid>
-  <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver más reportes <i class="fas fa-arrow-right"></i></a></p>
+  <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver todo el seguimiento <i class="fas fa-arrow-right"></i></a></p>
   @endif
-  <h4 class="is-400 mb-3">Ultimos objetivos actualizados</h4>
+  <h4 class="is-400 mb-3">Últimos objetivos actualizados</h4>
   <portal-last-objectives fetch-url="{{route('apiService.objectives',['order_by'=>'updated_at,DESC','with'=>'objective_latest_goals,objective_latest_report,objective_stats,objective_strategic_objective','size' => 5])}}"></portal-last-objectives>
-  <p class="mb-4 text-right"><a href="{{route('objectives')}}" class="btn btn-outline-primary">Ver más objetivos <i class="fas fa-arrow-right"></i></a></p>
+  <p class="mb-4 text-right"><a href="{{route('objectives')}}" class="btn btn-outline-primary">Ver todos los objetivos <i class="fas fa-arrow-right"></i></a></p>
   @if(app_setting('app_homepage_show_latest_reports') && app_setting('app_homepage_latest_reports_at_the_end'))
-  <h4 class="is-400 mb-3">Ultimos reportes publicados</h4>
+  <h4 class="is-400 mb-3">Últimos reportes de seguimiento</h4>
   <portal-home-reports-grid fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC','with'=>'report_goal,report_hierarchy,report_cover,report_excerpt,report_highlights','size' => 8])}}"></portal-home-reports-grid>
-  <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver más reportes <i class="fas fa-arrow-right"></i></a></p>
+  <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver todo el seguimiento <i class="fas fa-arrow-right"></i></a></p>
   @endif
   @if(app_setting('app_map_enabled') && app_setting('app_homepage_show_map'))
-    <h4 class="is-400 mb-3">Ultimos 15 reportes geolocalizados</h4>
+    <h4 class="is-400 mb-3">Últimos 15 reportes geolocalizados</h4>
     <map-reports fetch-url="{{route('apiService.reports',['mappable' => true, 'order_by'=>'updated_at,DESC', 'size'=> 15])}}" :paginated="false" access-token="{{app_setting('app_mapbox_api_key')}}" map-style="{{app_setting('app_mapbox_style')}}" :lat="{{app_setting('app_map_lat_default') ?: 'undefined'}}" :long="{{app_setting('app_map_long_default') ?: 'undefined'}}" :zoom="{{app_setting('app_map_zoom_default') ?: 'undefined'}}">
   @endif
 </div>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('hero')
-<x-hero title="Catálogo" subtitle="Explorá los ejes, objetivos estratégicos, objetivos y metas de la plataforma." />
+<x-hero title="El Plan" subtitle="Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas." />
 @endsection
 
 @section('content')
@@ -13,7 +13,7 @@
       </button>
     </div>
 
-    <div class="catalog-tree" role="tree" aria-label="Catálogo de objetivos">
+    <div class="catalog-tree" role="tree" aria-label="Estructura del plan">
       @forelse($categories as $category)
         <details id="eje-{{ $category->id }}" class="catalog-tree__branch catalog-tree__branch--category" style="--catalog-color: {{ $category->color }}" open>
           <summary>

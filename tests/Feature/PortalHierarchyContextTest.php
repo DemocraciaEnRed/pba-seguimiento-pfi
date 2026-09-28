@@ -119,6 +119,11 @@ class PortalHierarchyContextTest extends TestCase
             ->assertSee(route('catalog').'#eje-'.$this->category->id, false);
     }
 
+    public function test_report_page_keeps_its_url_after_the_listing_moved(): void
+    {
+        $this->get('/reportes/'.$this->report->id)->assertOk();
+    }
+
     public function test_goal_page_shows_the_axis_and_objectives_it_belongs_to(): void
     {
         $this->get(route('goals.index', ['goalId' => $this->goal->id]))

@@ -19,13 +19,13 @@
       <!-- Left Side Of Navbar -->
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
+          <a href="{{ route('catalog') }}" class="nav-link"><i class="fas fa-fw fa-sitemap"></i> El Plan</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('objectives') }}" class="nav-link"><i class="fas fa-fw fa-bullseye"></i> Objetivos</a>
         </li>
         <li class="nav-item">
-          <a href="{{ route('catalog') }}" class="nav-link"><i class="fas fa-fw fa-sitemap"></i> Catálogo</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('reports') }}" class="nav-link"><i class="far fa-fw fa-copy"></i> Reportes</a>
+          <a href="{{ route('reports') }}" class="nav-link"><i class="far fa-fw fa-copy"></i> Seguimiento</a>
         </li>
         <li class="nav-item">
           <a href="{{ route('events.upcoming') }}" class="nav-link"><i class="far fa-fw fa-calendar-days"></i> Eventos</a>

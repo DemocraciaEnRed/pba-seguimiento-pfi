@@ -199,9 +199,11 @@ Route::group([
 });
 
 Route::get('/objetivos', [ObjectiveController::class, 'viewList'])->name('objectives');
-Route::get('/catalogo', [ObjectiveController::class, 'viewCatalog'])->name('catalog');
+Route::get('/plan', [ObjectiveController::class, 'viewCatalog'])->name('catalog');
+Route::permanentRedirect('/catalogo', '/plan');
 Route::post('/objetivos/{objectiveId}/subscribirse', [ObjectiveController::class, 'formToggleSubscription'])->name('objectives.subscribers.form');
-Route::get('/reportes', [ReportController::class, 'viewList'])->name('reports');
+Route::get('/seguimiento', [ReportController::class, 'viewList'])->name('reports');
+Route::permanentRedirect('/reportes', '/seguimiento');
 Route::get('/reportes/{reportId}', [ReportController::class, 'index'])->name('reports.index');
 Route::post('/reportes/{reportId}/testimony', [ReportController::class, 'formToggleTestimony'])->name('reports.testimonies.form');
 Route::get('/metas/{goalId}', [GoalController::class, 'index'])->name('goals.index');

@@ -37,9 +37,9 @@ class PortalHeroTest extends TestCase
     {
         return [
             'home' => ['home', null],
-            'objectives' => ['objectives', 'Catálogo de objetivos específicos'],
-            'catalog' => ['catalog', 'Catálogo'],
-            'reports' => ['reports', 'Catálogo de reportes'],
+            'objectives' => ['objectives', 'Objetivos'],
+            'catalog' => ['catalog', 'El Plan'],
+            'reports' => ['reports', 'Seguimiento'],
             'upcoming events' => ['events.upcoming', 'Eventos'],
             'past events' => ['events.past', 'Eventos'],
             'about general' => ['about.general', '¿Cómo funciona?'],
@@ -59,6 +59,53 @@ class PortalHeroTest extends TestCase
         if ($title) {
             $response->assertSee('<h1 class="hero__title">', false)->assertSee($title);
         }
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string, 2: string}>
+     */
+    public static function sectionPages(): array
+    {
+        return [
+            'plan' => ['catalog', 'El Plan', 'Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas.'],
+            'objectives' => ['objectives', 'Objetivos', 'Buscá objetivos por nombre o eje y seguí el avance de sus metas.'],
+            'tracking' => ['reports', 'Seguimiento', 'Novedades, avances e hitos que publican los equipos sobre cada objetivo.'],
+        ];
+    }
+
+    #[DataProvider('sectionPages')]
+    public function test_section_heroes_describe_what_each_page_is_for(string $routeName, string $title, string $subtitle): void
+    {
+        $this->get(route($routeName))
+            ->assertOk()
+            ->assertSee('<h1 class="hero__title">'.$title.'</h1>', false)
+            ->assertSee('<p class="hero__subtitle lead">'.$subtitle.'</p>', false);
+    }
+
+    public function test_sections_use_their_new_urls(): void
+    {
+        $this->assertSame(url('/plan'), route('catalog'));
+        $this->assertSame(url('/seguimiento'), route('reports'));
+    }
+
+    public function test_legacy_section_urls_redirect_permanently(): void
+    {
+        $this->get('/catalogo')->assertStatus(301)->assertRedirect('/plan');
+        $this->get('/reportes')->assertStatus(301)->assertRedirect('/seguimiento');
+    }
+
+    public function test_navbar_lists_sections_from_the_plan_to_its_tracking(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSeeInOrder([
+                'href="'.route('catalog').'" class="nav-link"',
+                'href="'.route('objectives').'" class="nav-link"',
+                'href="'.route('reports').'" class="nav-link"',
+                'href="'.route('events.upcoming').'" class="nav-link"',
+                'href="'.route('about.general').'" class="nav-link"',
+            ], false)
+            ->assertSeeInOrder(['El Plan', 'Objetivos', 'Seguimiento', 'Eventos', '¿Cómo funciona?']);
     }
 
     public function test_events_hero_marks_the_current_listing_as_active(): void

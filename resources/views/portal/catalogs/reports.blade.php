@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('hero')
-<x-hero title="Catálogo de reportes" />
+<x-hero title="Seguimiento" subtitle="Novedades, avances e hitos que publican los equipos sobre cada objetivo." />
 @endsection
 
 @section('content')

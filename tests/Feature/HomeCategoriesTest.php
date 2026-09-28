@@ -43,7 +43,7 @@ class HomeCategoriesTest extends TestCase
             ->assertSee(route('catalog').'#eje-'.$first->id, false)
             ->assertSee(route('catalog').'#eje-'.$second->id, false)
             ->assertSeeInOrder(['Eje Integridad', 'Eje Sostenible'])
-            ->assertSee('Explorá el catálogo con todos los objetivos y metas de los ejes')
+            ->assertSee('Recorré el plan completo con todos los objetivos y metas')
             ->assertDontSee('portal-home-categories', false);
     }
 
@@ -77,7 +77,7 @@ class HomeCategoriesTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertDontSee('Eje Integridad')
-            ->assertDontSee('Explorá el catálogo con todos los objetivos y metas de los ejes');
+            ->assertDontSee('Recorré el plan completo con todos los objetivos y metas');
     }
 
     public function test_catalog_exposes_an_anchor_per_axis(): void
