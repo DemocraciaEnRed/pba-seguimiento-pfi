@@ -58,7 +58,7 @@ class SettingsTableSeeder extends Seeder
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_homepage_subtitle';
-        $setting->value = 'Canal de monitoreo ciudadano, para hacer seguimiento de objetivos y metas de gobierno';
+        $setting->value = 'Impulsando una gestión pública más eficiente, transparente e innovadora, orientada a mejorar la calidad de vida de las y los bonaerenses';
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
@@ -76,13 +76,13 @@ class SettingsTableSeeder extends Seeder
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_social_title';
-        $setting->value = 'Partícipes - Monitoreo Ciudadano';
+        $setting->value = 'Mapa de Fortalecimiento Institucional MISP 2024-2027 - PBA';
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_social_description';
-        $setting->value = 'Canal de monitoreo ciudadano, para hacer seguimiento de objetivos y metas de gobierno';
+        $setting->value = 'Aqui podes informarte de los avances del Plan de Fortalecimiento Institucional del Ministerio de Infraestructura y Obras Públicas de la Provincia de Buenos Aires.';
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
