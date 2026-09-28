@@ -33,6 +33,7 @@ class Objective extends JsonResource
             'created_at' => $this->created_at,
             'published_at' => $this->created_at->diffForHumans(),
             'updated_at' => $this->updated_at,
+            'updated_when' => $this->updated_at?->diffForHumans(),
             'url' => route('objectives.index',['objectiveId' => $this->id])
         ];
 
@@ -52,6 +53,17 @@ class Objective extends JsonResource
                 break;
               case 'objective_latest_reports':
                 $res['latest_reports'] = ReportResource::collection($this->reports()->orderBy('updated_at','DESC')->limit(4)->get());
+                break;
+              case 'objective_latest_report':
+                $latestReport = $this->reports()->orderBy('reports.updated_at', 'DESC')->first();
+                $res['latest_report'] = $latestReport ? [
+                    'id' => $latestReport->id,
+                    'title' => $latestReport->title,
+                    'type_label' => $latestReport->type_label,
+                    'type_icon' => $latestReport->type_icon,
+                    'when' => $latestReport->created_at->diffForHumans(),
+                    'url' => route('reports.index', ['reportId' => $latestReport->id]),
+                ] : null;
                 break;
               case 'objective_stats':
                 $res['reports_count'] = $this->reports()->count();

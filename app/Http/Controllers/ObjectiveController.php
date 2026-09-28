@@ -100,7 +100,7 @@ class ObjectiveController extends Controller
         $detailed = $request->query('detailed');
         $fetchAll = $request->query('all');
         $onlyMappable = $request->query('mappable');
-        $reports = Report::query();
+        $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
         if(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);

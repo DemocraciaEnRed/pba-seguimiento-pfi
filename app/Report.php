@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -27,6 +28,28 @@ class Report extends Model
     public function period()
     {
         return $this->belongsTo(GoalPeriod::class, 'goal_period_id');
+    }
+
+    /**
+     * Preloads what the report resources read for the requested `with` options.
+     *
+     * @param  list<string>  $with
+     */
+    public function scopeForListing(Builder $query, array $with): void
+    {
+        $query->withCount(['comments', 'positiveTestimonies', 'negativeTestimonies']);
+
+        if (in_array('report_hierarchy', $with)) {
+            $query->with('goal.objective.strategicObjective.category');
+        } elseif (in_array('report_goal', $with) || in_array('report_highlights', $with)) {
+            $query->with('goal');
+        }
+        if (in_array('report_cover', $with)) {
+            $query->with(['photos' => fn ($photos) => $photos->orderBy('id')]);
+        }
+        if (in_array('report_highlights', $with)) {
+            $query->with(['period', 'milestone']);
+        }
     }
 
     public function objective()

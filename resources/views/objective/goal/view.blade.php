@@ -124,7 +124,7 @@
 					    <a href="{{route('objectives.manage.goals.reports.add',['objectiveId'=> $objective->id, 'goalId' => $goal->id])}}" class="btn btn-primary btn-sm float-right"><i class="fas fa-plus"></i> Nuevo reporte</a>
 						@endisMember
 					</div>
-					<report-list fetch-url="{{route('apiService.goals.reports',['goalId'=> $goal->id, 'size' => 3, 'with' =>'report_goal,report_latest_comments,report_actions', 'detailed' => true, 'order_by'=>'date,DESC'])}}" login-url="{{route('login')}}">
+					<report-list fetch-url="{{route('apiService.goals.reports',['goalId'=> $goal->id, 'size' => 3, 'with' =>'report_hierarchy,report_cover,report_excerpt,report_highlights', 'order_by'=>'date,DESC'])}}" context="none">
 						@include('partials.loading')
 					</report-list>
 				</div>

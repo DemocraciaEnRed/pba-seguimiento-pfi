@@ -42,15 +42,15 @@
 
   @if(app_setting('app_homepage_show_latest_reports') && !app_setting('app_homepage_latest_reports_at_the_end'))
   <h4 class="is-400 mb-3">Ultimos reportes publicados</h4>
-  <portal-home-reports-carrousel fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC','with'=>'report_goal,report_hierarchy'])}}"></portal-home-reports-carrousel>
+  <portal-home-reports-grid fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC','with'=>'report_goal,report_hierarchy,report_cover,report_excerpt,report_highlights','size' => 8])}}"></portal-home-reports-grid>
   <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver más reportes <i class="fas fa-arrow-right"></i></a></p>
   @endif
   <h4 class="is-400 mb-3">Ultimos objetivos actualizados</h4>
-  <portal-last-objectives fetch-url="{{route('apiService.objectives',['order_by'=>'updated_at,DESC','with'=>'objective_latest_goals,objective_latest_reports,objective_stats,objective_strategic_objective','size' => 5])}}"></portal-last-objectives>
+  <portal-last-objectives fetch-url="{{route('apiService.objectives',['order_by'=>'updated_at,DESC','with'=>'objective_latest_goals,objective_latest_report,objective_stats,objective_strategic_objective','size' => 5])}}"></portal-last-objectives>
   <p class="mb-4 text-right"><a href="{{route('objectives')}}" class="btn btn-outline-primary">Ver más objetivos <i class="fas fa-arrow-right"></i></a></p>
   @if(app_setting('app_homepage_show_latest_reports') && app_setting('app_homepage_latest_reports_at_the_end'))
   <h4 class="is-400 mb-3">Ultimos reportes publicados</h4>
-  <portal-home-reports-carrousel fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC','with'=>'report_goal,report_hierarchy'])}}"></portal-home-reports-carrousel>
+  <portal-home-reports-grid fetch-url="{{route('apiService.reports',['order_by'=>'updated_at,DESC','with'=>'report_goal,report_hierarchy,report_cover,report_excerpt,report_highlights','size' => 8])}}"></portal-home-reports-grid>
   <p class="mb-4 text-right"><a href="{{route('reports')}}" class="btn btn-outline-primary">Ver más reportes <i class="fas fa-arrow-right"></i></a></p>
   @endif
   @if(app_setting('app_map_enabled') && app_setting('app_homepage_show_map'))

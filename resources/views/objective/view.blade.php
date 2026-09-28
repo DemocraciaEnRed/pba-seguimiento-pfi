@@ -125,7 +125,7 @@
 					@endif
 					<hr>
 					<h5 class="is-700 mt-2 mb-4">Reportes</h5>
-					<report-list fetch-url="{{route('apiService.objectives.reports',['objectiveId'=> $objective->id, 'size' => 3, 'with' =>'report_goal,report_latest_comments,report_actions', 'detailed' => true,  'order_by'=>'date,DESC'])}}" login-url="{{route('login')}}">
+					<report-list fetch-url="{{route('apiService.objectives.reports',['objectiveId'=> $objective->id, 'size' => 3, 'with' =>'report_goal,report_hierarchy,report_cover,report_excerpt,report_highlights', 'order_by'=>'date,DESC'])}}" context="goal">
 						@include('partials.loading')
 					</report-list>
 				</div>

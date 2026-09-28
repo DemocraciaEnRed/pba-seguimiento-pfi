@@ -76,13 +76,7 @@ class ReportController extends Controller
         $type = $request->query('type',null);
         $title = $request->query('s',null);
 
-        $reports = Report::query();
-        $with = explode(',', (string) $request->query('with'));
-        if(in_array('report_hierarchy', $with)){
-            $reports->with('goal.objective.strategicObjective.category');
-        } elseif(in_array('report_goal', $with)){
-            $reports->with('goal');
-        }
+        $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
         if(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);

@@ -1,19 +1,20 @@
 <template>
   <section v-if="firstFetch">
-    <div class="d-flex align-items-stretch" v-for="(report,index) in reports" :key="report.id">
-      <div class="date-column d-none d-sm-block" :class="{'mb-3': index == reports.length - 1}" style="min-width: 85px;">
-        <div class="date-pill w-100" v-if="showDate(index)">{{report.date.split('T')[0]}}</div>
-        <div class="date-line"></div>
-        <div class="last-one" v-if="index == reports.length - 1"></div>
-      </div>
-      <report-card :report="report" @fetch-more="fetchMore" :login-url="loginUrl"></report-card>
+    <ol class="report-timeline list-unstyled mb-3" v-if="reports.length > 0">
+      <li class="report-timeline__item" v-for="(report, index) in reports" :key="report.id">
+        <span class="report-timeline__marker shadow-sm" :title="report.type_label"><i :class="`${report.type_icon} fa-fw`"></i></span>
+        <p class="report-timeline__date text-smaller is-700 text-muted mb-2" v-if="showDate(index)">
+          {{formatDate(report.date)}}
+        </p>
+        <report-tile :report="report" :context="context" horizontal></report-tile>
+      </li>
+    </ol>
+    <div class="text-center" v-if="canFetchMore">
+      <button @click="fetchMore" :disabled="isLoading" class="btn btn-outline-primary">
+        <span v-if="isLoading"><i class="fas fa-arrows-rotate fa-spin"></i>&nbsp;Cargando</span>
+        <span v-else>Cargar más reportes</span>
+      </button>
     </div>
-      <div class="text-center">
-        <button @click="fetchMore" v-if="canFetchMore" :disabled="isLoading" class="btn btn-outline-dark">
-          <span v-if="isLoading"><i class="fas fa-arrows-rotate fa-spin"></i>&nbsp;Cargando</span>
-          <span v-else>Cargar mas reportes</span>
-        </button>
-      </div>
     <p class="text-muted" v-if="reports.length == 0">No hay reportes</p>
   </section>
   <section v-else>
@@ -22,11 +23,20 @@
 </template>
 
 <script>
-import ReportCard from './ReportCard'
+import ReportTile from './ReportTile'
 export default {
-  props: ['fetchUrl', 'loginUrl'],
+  props: {
+    fetchUrl: {
+      type: String,
+      required: true
+    },
+    context: {
+      type: String,
+      default: 'none'
+    }
+  },
   components: {
-    ReportCard
+    ReportTile
   },
   data(){
     return {
@@ -87,6 +97,10 @@ export default {
       if(nowDate == lastDate) return false
       return true
     },
+    formatDate: function(date){
+      const [year, month, day] = date.split('T')[0].split('-').map(Number)
+      return new Date(year, month - 1, day).toLocaleDateString('es-AR', {day: 'numeric', month: 'long', year: 'numeric'})
+    },
   },
   computed:{
     canFetchMore: function(){
@@ -99,43 +113,49 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$marker-size: 34px;
+$marker-gap: 16px;
 
-.date-column{
+.report-timeline{
   position: relative;
+  padding-left: $marker-size + $marker-gap;
+
+  &::before{
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: $marker-size * 0.5 - 1px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary), rgba(0, 0, 0, 0.08));
+    border-radius: 2px;
+  }
 }
-.date-pill{
-  z-index: 10;
+.report-timeline__item{
   position: relative;
-  top: 0px;
-  padding: 3px 2px;
-  border-radius: 10px;
-  background-color: #FFF;
-  border: 2px solid #343a40;
-  font-size: 0.7em;
-  font-weight: 800;
-  color: #343a40;
-  text-align: center;
+  padding-bottom: 1.25rem;
+
+  &:last-child{
+    padding-bottom: 0;
+  }
 }
-.date-line{
-	position: absolute;
-	top: 0px;
-	height: 100%;
-	width: 2px;
-	background-color: #343a40;
-	margin: 0 auto;
-	left: 50%;
-	margin-right: -50%;
-	transform: translate(-50%, 0%);
-}
-.last-one{
+.report-timeline__marker{
   position: absolute;
-  height: 25px;
-  width: 25px;
-  bottom: 0;
-  border: 2px solid #343a40;
+  top: 0;
+  left: -($marker-size + $marker-gap);
+  width: $marker-size;
+  height: $marker-size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   background-color: #FFF;
-  border-radius: 25px;
-  left: 50%;
-  transform: translate(-50%, 0%);
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  font-size: 0.85rem;
+  z-index: 1;
+}
+.report-timeline__date{
+  line-height: $marker-size;
 }
 </style>

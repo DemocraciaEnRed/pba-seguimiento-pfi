@@ -301,8 +301,158 @@
   }
 }
 
-.report-card-carrousel{
-  min-height: 200px;
+.reports-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    .report-tile--featured {
+      grid-column: span 2;
+    }
+  }
+
+  @include media-breakpoint-only(md) {
+    // Evita que la última tarjeta quede sola en su fila
+    .report-tile:last-child:nth-child(even) {
+      display: none;
+    }
+  }
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.report-tile {
+  border-top: 3px solid var(--report-accent, #{$primary});
+  color: inherit;
+  container-type: inline-size;
+  overflow: hidden;
+  transition: transform .15s ease-in-out, box-shadow .15s ease-in-out;
+
+  .report-tile__inner {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  &:hover,
+  &:focus {
+    color: inherit;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: $box-shadow !important;
+
+    .report-tile__title {
+      color: $primary !important;
+    }
+  }
+
+  .report-tile__media {
+    align-items: center;
+    background-color: $light;
+    background-position: center;
+    background-size: cover;
+    display: flex;
+    height: 140px;
+    justify-content: center;
+    position: relative;
+  }
+
+  .report-tile__type {
+    left: .75rem;
+    position: absolute;
+    top: .75rem;
+  }
+
+  .report-tile__context {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .report-tile__title,
+  .report-tile__excerpt {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    overflow: hidden;
+  }
+
+  .report-tile__title {
+    -webkit-line-clamp: 3;
+  }
+
+  .report-tile__excerpt {
+    -webkit-line-clamp: 2;
+  }
+
+  .report-tile__highlights {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+  }
+
+  .report-highlight {
+    background-color: $gray-100;
+    border-radius: 4px;
+    font-size: .8rem;
+    padding: .2rem .5rem;
+  }
+
+  .report-highlight--milestone {
+    background-color: transparentize($warning, .8);
+  }
+
+  &--featured {
+    .report-tile__media {
+      height: 220px;
+    }
+
+    .report-tile__title {
+      -webkit-line-clamp: 2;
+    }
+
+    .report-tile__excerpt {
+      -webkit-line-clamp: 4;
+    }
+  }
+
+  // Imagen a la izquierda y texto a la derecha cuando la tarjeta tiene espacio
+  @container (min-width: 540px) {
+    &--horizontal {
+      .report-tile__inner {
+        flex-direction: row;
+      }
+
+      .report-tile__media {
+        flex: 0 0 38%;
+        height: auto;
+        min-height: 170px;
+      }
+
+      .report-tile__excerpt {
+        -webkit-line-clamp: 3;
+      }
+    }
+
+    &--horizontal.report-tile--featured {
+      .report-tile__media {
+        flex-basis: 48%;
+        min-height: 280px;
+      }
+
+      .report-tile__title {
+        -webkit-line-clamp: 3;
+      }
+
+      .report-tile__excerpt {
+        -webkit-line-clamp: 5;
+      }
+    }
+  }
 }
 
 .category-card-carrousel{
