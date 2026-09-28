@@ -72,9 +72,9 @@
         <a :href="`${catalogUrl}#eje-${category.id}`" class="catalog-tree__bar catalog-tree__bar--header">
           <span class="catalog-tree__label"><category-icon :url="category.icon_url" class="mr-2"></category-icon>{{ category.title }}</span>
           <div class="catalog-tree__stats_rows">
-            <p>Estrategias <span class="badge badge-light badge-pill">{{ category.strategic_objectives_count }}</span></p>
-            <p>Objetivos <span class="badge badge-light badge-pill">{{ category.objectives_count }}</span></p>
-            <p>Metas <span class="badge badge-light badge-pill">{{ category.goals_total }}</span></p>
+            <p>Estrategias <span class="badge badge-light">{{ category.strategic_objectives_count }}</span></p>
+            <p>Objetivos <span class="badge badge-light">{{ category.objectives_count }}</span></p>
+            <p>Metas <span class="badge badge-light">{{ category.goals_total }}</span></p>
           </div>
         </a>
         <a :href="`${objectivesUrl}?category=${category.id}`" class="catalog-tree__card-body">

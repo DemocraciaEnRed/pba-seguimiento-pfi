@@ -26,7 +26,7 @@ class GoalReportsExport implements CsvExport
             "Tags",
             "Mapeado",
             "Comentarios",
-            "Feedbacks positivos",
+            "Me gusta",
             "Estado de la meta previamente",
             "Nuevo estado de la meta",
             "Progreso previo",

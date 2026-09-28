@@ -52,6 +52,23 @@ class Report extends Model
         }
     }
 
+    public function scopeFromVisibleObjectives(Builder $query): void
+    {
+        $query->whereHas('goal.objective', fn (Builder $objectives) => $objectives->where('hidden', false));
+    }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        $objective = $this->goal->objective;
+
+        // Inside a Model, ->hidden resolves to the protected $hidden property, not the column.
+        if (! $objective->getAttribute('hidden')) {
+            return true;
+        }
+
+        return ! is_null($user) && ($user->hasRole('admin') || $user->isMemberObjective($objective->id));
+    }
+
     public function objective()
     {
         return $this->goal->objective();

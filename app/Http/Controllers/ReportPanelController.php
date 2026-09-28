@@ -167,7 +167,7 @@ class ReportPanelController extends Controller
 
     public function downloadReportTestimonies (Request $request, CsvDownload $csvDownload, $objectiveId, $goalId, $reportId){
       $this->hasManagerPrivileges($request);
-      return $csvDownload->download(new ReportTestimoniesExport($reportId), Carbon::now()->format('Ymd').'-feedbacks-reporte-'.$reportId.'.csv');
+      return $csvDownload->download(new ReportTestimoniesExport($reportId), Carbon::now()->format('Ymd').'-me-gusta-reporte-'.$reportId.'.csv');
     }
 
      public function viewReportAlbum (Request $request){

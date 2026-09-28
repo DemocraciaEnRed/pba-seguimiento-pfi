@@ -20,7 +20,7 @@ class ReportTestimoniesExport implements CsvExport
         return [
             'Usuario',
             'Usuario Email',
-            "Feedback",
+            "Me gusta",
         ];
     }
 
@@ -29,7 +29,7 @@ class ReportTestimoniesExport implements CsvExport
         return  [
           $testimony->user->fullname,
           $testimony->user->email,
-          $testimony->value ? 'Positivo' : 'Negativo'
+          $testimony->value ? 'Sí' : 'No'
         ];
     }
 }

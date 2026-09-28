@@ -7,7 +7,7 @@
 @section('content')
 <div class="container">
   <div class="py-5">
-  <search-reports fetch-url="{{route('apiService.reports')}}" querystring="" map-enabled="{{app_setting('app_map_enabled')}}">
+  <search-reports fetch-url="{{route('apiService.reports')}}" :categories='@json($categories)'>
     @include('partials.loading')
   </search-reports>
   </div>

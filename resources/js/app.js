@@ -30,6 +30,7 @@ import MapReports from './components/maps/MapReports.vue';
 import Collapse from './components/utils/Collapse.vue';
 import ReportsList from './components/report/ReportsList.vue';
 import Album from './components/report/Album.vue';
+import LikeButton from './components/report/LikeButton.vue';
 import SearchObjectives from './components/portal/catalogs/objectives/Search.vue';
 import SearchReports from './components/portal/catalogs/reports/Search.vue';
 
@@ -67,6 +68,7 @@ Vue.component('map-reports', MapReports);
 Vue.component('collapse', Collapse);
 Vue.component('report-list', ReportsList);
 Vue.component('report-album', Album);
+Vue.component('report-like-button', LikeButton);
 Vue.component('search-objectives', SearchObjectives);
 Vue.component('search-reports', SearchReports);
 

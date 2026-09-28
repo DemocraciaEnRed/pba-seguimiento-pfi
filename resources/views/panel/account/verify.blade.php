@@ -14,7 +14,7 @@
 </div>
 <p>Es importante que verifique su correo electronico <b>{{Auth::user()->email}}</b> para que pueda:</p>
     <ul>
-      <li>Participar de los reportes comentando o compartiendo su feedback.</li>
+      <li>Participar de los reportes comentando o marcándolos con "Me gusta".</li>
       <li>Para poder suscribirse a sus objetivos de interes y recibir notificaciones (de encontrarse habilitada la opcion de recibir por correo electrónico).</li>
       <li>Para poder formar parte de un equipo de algún objetivo y participar de forma mas cercana.</li>
     </ul>

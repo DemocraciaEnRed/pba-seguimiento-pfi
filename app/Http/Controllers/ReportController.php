@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Auth;
 use Log;
 use Notification;
+use App\Category;
 use App\Comment;
 use App\Report;
 use App\Goal;
@@ -41,6 +42,7 @@ class ReportController extends Controller
 
     public function index(Request $request, $reportId){
         $report = Report::findorfail($reportId);
+        abort_unless($report->isVisibleTo($request->user()), 404);
         $goal = Goal::findorfail($report->goal_id);
         $objective = Objective::with('strategicObjective.category')->findOrFail($goal->objective_id);
         $testimony = null;
@@ -56,9 +58,21 @@ class ReportController extends Controller
     }
 
     public function viewList(Request $request){
-       
+        $categories = Category::with(['objectives' => fn ($objectives) => $objectives->where('objectives.hidden', false)->orderBy('objectives.title')])
+            ->orderBy('order')
+            ->get()
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'title' => $category->title,
+                'color' => $category->color,
+                'objectives' => $category->objectives->map(fn (Objective $objective) => [
+                    'id' => $objective->id,
+                    'title' => $objective->title,
+                ])->values(),
+            ]);
+
         return view('portal.catalogs.reports',[
-            
+            'categories' => $categories,
         ]);
     }
 
@@ -68,18 +82,49 @@ class ReportController extends Controller
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function fetch(Request $request)
-    {   
+    {
+        $validated = $request->validate([
+            'category' => 'nullable|integer',
+            'objective' => 'nullable|integer',
+            'date_range' => 'nullable|string|in:last_30_days,last_3_months,last_year',
+            'sort' => 'nullable|string|in:recent,oldest,most_commented,most_liked',
+        ]);
         $isMappable = $request->query('mappable');
         $orderBy = $request->query('order_by');
         $detailed = $request->query('detailed',false);
         $pageSize = $request->query('size',10);
         $type = $request->query('type',null);
         $title = $request->query('s',null);
+        $category = $validated['category'] ?? null;
+        $objective = $validated['objective'] ?? null;
+        $dateRange = $validated['date_range'] ?? null;
+        $sort = $validated['sort'] ?? null;
 
-        $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
-        if(!is_null($orderBy)){
+        $reports = Report::query()->fromVisibleObjectives()->forListing(explode(',', (string) $request->query('with')));
+        if(!is_null($sort)){
+            match ($sort) {
+                'recent' => $reports->orderBy('date', 'desc'),
+                'oldest' => $reports->orderBy('date', 'asc'),
+                'most_commented' => $reports->orderBy('comments_count', 'desc'),
+                'most_liked' => $reports->orderBy('positive_testimonies_count', 'desc'),
+            };
+            $reports->orderBy('id', $sort === 'oldest' ? 'asc' : 'desc');
+        } elseif(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);
+        }
+        if(!is_null($category)){
+            $reports->whereHas('goal.objective.strategicObjective', fn ($strategicObjectives) => $strategicObjectives->where('category_id', $category));
+        }
+        if(!is_null($objective)){
+            $reports->whereHas('goal', fn ($goals) => $goals->where('objective_id', $objective));
+        }
+        if(!is_null($dateRange)){
+            $reports->where('date', '>=', match ($dateRange) {
+                'last_30_days' => now()->subDays(30)->startOfDay(),
+                'last_3_months' => now()->subMonths(3)->startOfDay(),
+                'last_year' => now()->subYear()->startOfDay(),
+            });
         }
         if($isMappable){
             $reports->whereNotNull('map_long')->whereNotNull('map_lat')->whereNotNull('map_center');
@@ -108,6 +153,7 @@ class ReportController extends Controller
 
     public function fetchComments(Request $request, $reportId){
         $request->report = Report::findorfail($reportId);
+        abort_unless($request->report->isVisibleTo($request->user()), 404);
         $comments = Comment::query();
         $comments->whereHasMorph(
             'commentable',
@@ -142,7 +188,7 @@ class ReportController extends Controller
         if($report->author->id != $request->user()->id ){
             $report->author->notify(new NewCommentReportForAuthor($report, $comment));
         }
-        
+
         $teamMembersToNotify = $report->goal->objective->members->except([$report->author->id, $request->user()->id]);
         Notification::send($teamMembersToNotify, new NewCommentReportForTeamObjective($report, $comment));
 
@@ -160,7 +206,7 @@ class ReportController extends Controller
 
         $isTheOwner = $comment->user_id == $request->user()->id;
         $isVerified = $request->user()->hasVerifiedEmail();
-        
+
          $rules = [
             'content' => 'required|string|max:2000'
         ];
@@ -170,19 +216,19 @@ class ReportController extends Controller
             $comment->content = $request->input('content');
             $comment->edited = true;
             $comment->save();
-            
+
             return response()->json(['message' => 'El comentario ha sido editado'], 200);
         }
-        
+
         // Not the author and not a member of the objective
-        
+
         return response()->json(['message' => 'Not authorized'], 403);
     }
 
     public function runDeleteComment(Request $request, $reportId, $commentId){
         $report = Report::findorfail($reportId);
         $comment = Comment::findorfail($commentId);
-        
+
         if(!$request->user()){
             return response()->json(['message' => 'Not authorized'], 403);
         }
@@ -194,7 +240,7 @@ class ReportController extends Controller
             $comment->delete();
             return response()->json(['message' => 'El comentario ha sido borrado'], 200);
         }
-        
+
         $isUserObjectiveMember = $request->user()->isMemberObjective($report->objective->id);
         if($isUserObjectiveMember  && $isVerified){
             Log::channel('mysql')->info("[{$request->user()->fullname}] (Miembro del equipo) ha eliminado el comentario de [{$comment->user->fullname}] hecho en el reporte [{$report->title}], de la meta [{$report->goal->title}] del objetivo [{$report->objective->title}]", [
@@ -215,7 +261,7 @@ class ReportController extends Controller
             $comment->delete();
             return response()->json(['message' => 'El comentario ha sido borrado'], 200);
         }
-        
+
         $isUserAdmin = $request->user()->hasRole('admin');
         if($isUserAdmin && $isVerified){
              Log::channel('mysql')->info("[{$request->user()->fullname}] (Admin) ha eliminado el comentario de [{$comment->user->fullname}] hecho en el reporte [{$report->title}] de la meta [{$report->goal->title}] del objetivo [{$report->objective->title}]", [
@@ -238,16 +284,16 @@ class ReportController extends Controller
         }
 
         // Not the author and not a member of the objective
-        
+
         return response()->json(['message' => 'Not authorized'], 403);
     }
 
     public function runCreateReply(Request $request, $reportId, $commentId){
-        
+
         if(!$request->user()){
             return response()->json(['message' => 'Not authorized'], 403);
         }
-        
+
         $isVerified = $request->user()->hasVerifiedEmail();
         if(!$request->user()){
             return response()->json(['message' => 'Not authorized'], 403);
@@ -264,7 +310,7 @@ class ReportController extends Controller
         $comment->content = $request->input('content');
         $comment->user()->associate($request->user());
         $parentComment->replies()->save($comment);
-        
+
         $parentComment->user->notify(new NewReplyReport($parentComment->commentable, $comment));
 
         return response()->json(['message' => 'Se ha creado la respuesta'], 200);
@@ -283,7 +329,7 @@ class ReportController extends Controller
 
         $isTheOwner = $comment->user_id == $request->user()->id;
         $isVerified = $request->user()->hasVerifiedEmail();
-        
+
          $rules = [
             'content' => 'required|string|max:2000'
         ];
@@ -295,9 +341,9 @@ class ReportController extends Controller
             $comment->save();
             return response()->json(['message' => 'La respuesta ha sido editada'], 200);
         }
-        
+
         // Not the author and not a member of the objective
-        
+
         return response()->json(['message' => 'Not authorized'], 403);
     }
 
@@ -319,7 +365,7 @@ class ReportController extends Controller
             $comment->delete();
             return response()->json(['message' => 'El comentario ha sido borrado'], 200);
         }
-        
+
         $isUserObjectiveMember = $request->user()->isMemberObjective($report->objective->id);
         if($isUserObjectiveMember  && $isVerified){
             Log::channel('mysql')->info("[{$request->user()->fullname}] (Miembro del equipo) ha eliminado la respuesta de [{$comment->user->fullname}] hecho en un comentario del reporte [{$report->title}], de la meta [{$report->goal->title}] del objetivo [{$report->objective->title}]", [
@@ -341,7 +387,7 @@ class ReportController extends Controller
             $comment->delete();
             return response()->json(['message' => 'El comentario ha sido borrado'], 200);
         }
-        
+
         $isUserAdmin = $request->user()->hasRole('admin');
         if($isUserAdmin && $isVerified){
             $comment->delete();
@@ -365,15 +411,16 @@ class ReportController extends Controller
         }
 
         // Not the author and not a member of the objective
-        
+
         return response()->json(['message' => 'Not authorized'], 403);
     }
 
     public function runToggleTestimony(Request $request, $reportId){
-        if(!$request->user()) {
+        if(!$request->user() || !$request->user()->hasVerifiedEmail()) {
             abort(403, 'No autorizado');
         }
         $report = Report::findorfail($reportId);
+        abort_unless($report->isVisibleTo($request->user()), 404);
         $testimony = $report->userTestimony($request->user()->id)->first();
         if($testimony){
             $testimony->delete();
@@ -384,26 +431,31 @@ class ReportController extends Controller
             $testimony->value = true;
             $testimony->save();
         }
-        return response()->json(['message' => 'Agregado testimonio', 'value' => true], 200);
+        return response()->json([
+            'message' => $testimony->exists ? 'Te gusta este reporte' : 'Quitaste tu me gusta',
+            'liked' => $testimony->exists,
+            'count' => $report->positiveTestimonies()->count(),
+        ], 200);
 
     }
-    
+
     public function formToggleTestimony(Request $request, $reportId){
-        if(!$request->user()) {
+        if(!$request->user() || !$request->user()->hasVerifiedEmail()) {
             abort(403, 'No autorizado');
         }
         $report = Report::findorfail($reportId);
+        abort_unless($report->isVisibleTo($request->user()), 404);
         $testimony = $report->userTestimony($request->user()->id)->first();
         if($testimony){
             $testimony->delete();
-            $msg = 'Hemos quitado tu feedback correctamente';
+            $msg = 'Quitaste tu me gusta del reporte';
         } else {
             $testimony = new Testimony();
             $testimony->user()->associate($request->user());
             $testimony->report()->associate($report);
             $testimony->value = true;
             $testimony->save();
-            $msg = '¡Hemos guardado tu feedback con exito, muchas gracias!';
+            $msg = '¡Te gusta este reporte!';
         }
         return redirect()->route('reports.index', ['reportId' => $reportId])->with('success',$msg);
 

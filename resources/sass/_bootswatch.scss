@@ -42,6 +42,37 @@
   }
 }
 
+// White is not a theme color, so Bootstrap doesn't generate these variants
+.btn-white {
+  @include button-variant($white, $white, $gray-100, $gray-100, $gray-200, $gray-200);
+
+  &,
+  &:hover,
+  &:focus,
+  &.focus,
+  &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled).active,
+  .show > &.dropdown-toggle {
+    color: $primary;
+  }
+}
+
+.btn-outline-white {
+  @include button-outline-variant($white, $primary);
+}
+
+// Badges ======================================================================
+
+.badge-white {
+  @include badge-variant($white);
+}
+
+.badge-white,
+a.badge-white:hover,
+a.badge-white:focus {
+  color: $primary;
+}
+
 // Typography ==================================================================
 
 // Tables ======================================================================

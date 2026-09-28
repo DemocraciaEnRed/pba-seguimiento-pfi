@@ -3,7 +3,7 @@
 @section('panelContent')
 
 <section>
-  <h3 class="is-700">Feedbacks</h3>
+  <h3 class="is-700">Me gusta</h3>
   @isManager($objective->id)
   @if(!$testimonies->isEmpty())
   <div class="my-3">
@@ -32,7 +32,7 @@
   @empty
     <div class="card shadow-sm my-3">
       <div class="card-body text-center">
-        <i class="far fa-face-surprise"></i>&nbsp;¡No hay feedbacks del reporte!
+        <i class="far fa-face-surprise"></i>&nbsp;¡El reporte todavía no tiene me gusta!
       </div>
     </div>
   @endforelse

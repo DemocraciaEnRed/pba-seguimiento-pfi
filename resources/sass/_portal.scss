@@ -58,6 +58,18 @@
   }
 }
 
+.report-hero {
+  .report-hero__meta {
+    font-size: .9rem;
+  }
+
+  .report-hero__tag {
+    background-color: transparentize($white, .8);
+    color: $white;
+    font-weight: 600;
+  }
+}
+
 .category-icon-container{
   padding: 8px 5px 5px;
   border-radius: 6px;
@@ -86,6 +98,10 @@
 
   &--3x {
     font-size: 3em;
+  }
+
+  &--4x {
+    font-size: 4em;
   }
 }
 
@@ -314,6 +330,15 @@
 
   @include media-breakpoint-up(lg) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  // Listados paginados: todas las tarjetas visibles, sin destacado
+  &--uniform {
+    @include media-breakpoint-only(md) {
+      .report-tile:last-child:nth-child(even) {
+        display: flex;
+      }
+    }
   }
 }
 

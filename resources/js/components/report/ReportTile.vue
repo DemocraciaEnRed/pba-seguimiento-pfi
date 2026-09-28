@@ -3,7 +3,7 @@
     <div class="report-tile__inner">
       <div class="report-tile__media" :style="mediaStyle">
         <category-icon v-if="!report.cover" :url="category.icon_url" :size="featured ? '3x' : '2x'" :style="{color: category.color}"></category-icon>
-        <span class="report-tile__type badge badge-light shadow-sm"><i :class="`${report.type_icon} fa-fw text-primary`"></i> {{report.type_label}}</span>
+        <span class="report-tile__type badge badge-white shadow-sm"><i :class="`${report.type_icon} fa-fw text-primary`"></i> {{report.type_label}}</span>
       </div>
       <div class="card-body d-flex flex-column">
         <template v-if="context === 'hierarchy' && report.hierarchy">
@@ -33,8 +33,8 @@
         </div>
         <p class="mt-auto mb-0 text-muted text-smallest">
           <i class="far fa-clock fa-fw"></i> {{report.published_at}}
-          <span class="ml-2"><i class="far fa-comment fa-fw"></i> {{report.comments_count}}</span>
-          <span class="ml-2"><i class="far fa-thumbs-up fa-fw"></i> {{report.positive_testimonies_count}}</span>
+          <span class="ml-2" title="Comentarios"><i class="far fa-comment fa-fw"></i> {{report.comments_count}}</span>
+          <span class="ml-2" title="Me gusta"><i class="far fa-thumbs-up fa-fw"></i> {{report.positive_testimonies_count}}</span>
         </p>
       </div>
     </div>

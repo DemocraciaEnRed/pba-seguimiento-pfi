@@ -180,11 +180,11 @@ class CsvExportsTest extends TestCase
 
         $response = $this->actingAs($this->manager)
             ->get(route('objectives.manage.goals.reports.testimonies.download', $this->reportRouteParameters()))
-            ->assertDownload("20260815-feedbacks-reporte-{$this->report->id}.csv");
+            ->assertDownload("20260815-me-gusta-reporte-{$this->report->id}.csv");
 
         $this->assertSame([
-            ['Usuario', 'Usuario Email', 'Feedback'],
-            ['Admin, Ana', 'admin@example.com', 'Positivo'],
+            ['Usuario', 'Usuario Email', 'Me gusta'],
+            ['Admin, Ana', 'admin@example.com', 'Sí'],
         ], $this->csvRecords($response));
     }
 
@@ -196,7 +196,7 @@ class CsvExportsTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->streamedContent();
 
-        $this->assertSame(Bom::Utf8->value."Usuario,\"Usuario Email\",Feedback\r\n", $content);
+        $this->assertSame(Bom::Utf8->value."Usuario,\"Usuario Email\",\"Me gusta\"\r\n", $content);
     }
 
     public function test_a_non_member_cannot_download_objective_exports(): void

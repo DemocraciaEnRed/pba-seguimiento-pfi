@@ -27,7 +27,7 @@
             <span class="is-700 is-size-5"><i class="far fa-comments fa-fw text-primary"></i>&nbsp;{{report.comments_count}}</span><br><span class="text-smaller">Comentarios</span>
           </div>
           <div class="text-center m-2">
-            <span class="is-700 is-size-5"><i class="fas fa-thumbs-up fa-fw text-primary"></i>&nbsp;{{report.positive_testimonies_count}}</span><br><span class="text-smaller">Feedbacks</span>
+            <span class="is-700 is-size-5"><i class="fas fa-thumbs-up fa-fw text-primary"></i>&nbsp;{{report.positive_testimonies_count}}</span><br><span class="text-smaller">Me gusta</span>
           </div>
         </div>
           <div class="ml-2 align-self-center">
@@ -50,10 +50,10 @@ export default {
     }
   },
   components: {
-    
+
   },
   computed: {
-    
+
   }
 }
 </script>
