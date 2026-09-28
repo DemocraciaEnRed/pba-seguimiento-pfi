@@ -451,8 +451,9 @@
 }
 
 .catalog-tree__branch {
-  border-left: 2px solid #dee2e6;
-  margin-left: .75rem;
+  //border-left: 2px solid #dee2e6;
+  //margin-left: .75rem;
+
 
   summary {
     align-items: center;
@@ -489,18 +490,33 @@
 }
 
 .catalog-tree__branch--category {
-  border-left: 0;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.675rem;
   margin: 1rem 0;
+  overflow: hidden;
   scroll-margin-top: 1rem;
 
   > summary::before {
     color: #fff;
   }
+
+  &[open] {
+    background-color: #fff;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+
+    > summary {
+      border-radius: 0;
+    }
+
+    > .catalog-tree__children {
+      padding: .5rem 0;
+    }
+  }
 }
 
 .catalog-tree__branch--category > summary,
 .catalog-tree__bar {
-  border-radius: 1rem;
+  border-radius: 0.675rem;
   width: 100%;
   text-align: left;
   background-color: var(--catalog-color, #155d68);
@@ -533,7 +549,7 @@
 
 .catalog-tree__card {
   background-color: #fff;
-  border-radius: 0.5rem;
+  border-radius: 0.675rem;
   box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
   margin-bottom: .75rem;
   overflow: hidden;
@@ -563,6 +579,10 @@
   --catalog-color: #6f42c1;
   color: #343a40;
   font-weight: 600;
+
+  // .catalog-tree__stats_rows {
+
+  // }
 }
 
 .catalog-tree__branch--objective > summary {
@@ -570,6 +590,12 @@
 
   .catalog-tree__link {
     color: #0056b3;
+  }
+
+  .catalog-tree__stats_rows {
+    display: grid;
+    // grid of 2 columns
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -580,6 +606,16 @@
 .catalog-tree__branch--objective > summary,
 .catalog-tree__leaf {
   border-top: 1px solid #edf0f2;
+}
+
+.catalog-tree__branch--strategic > summary,
+.catalog-tree__branch--objective > summary,
+.catalog-tree__leaf {
+  transition: background-color .15s ease-in-out;
+  border-left: 4px solid var(--catalog-color, #6c757d);
+  &:hover {
+    background-color: #f8f9fa;
+  }
 }
 
 .catalog-tree__link {
@@ -610,12 +646,12 @@
 
 .catalog-tree__stats_rows {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   flex-wrap: wrap;
   margin: 0;
-  gap: 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 400;
+  gap: 0.1rem;
+  font-size: 0.625rem;
+  font-weight: 500;
 
   p {
     align-items: center;
@@ -624,6 +660,12 @@
     justify-content: flex-end;
     margin: 0;
     text-align: right;
+  }
+  .badge.badge-light {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    font-size: 0.5rem;
+    min-width: 1.25rem;
   }
 }
 

@@ -1,17 +1,18 @@
 @extends('layouts.app')
 
 @section('hero')
-<x-hero title="El Plan" subtitle="Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas." />
+<x-hero title="El Plan" subtitle="Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas.">
+  <div class="mt-4">
+    <button type="button" class="btn btn-outline-light btn-sm" data-catalog-toggle aria-expanded="false">
+      <i class="fas fa-fw fa-expand-alt mr-1"></i><span>Expandir todo</span>
+    </button>
+  </div>
+</x-hero>
 @endsection
 
 @section('content')
 <div class="container">
   <div class="py-5">
-    <div class="mb-4 d-flex justify-content-end">
-      <button type="button" class="btn btn-outline-secondary btn-sm" data-catalog-toggle aria-expanded="false">
-        <i class="fas fa-fw fa-expand-alt mr-1"></i><span>Expandir todo</span>
-      </button>
-    </div>
 
     <div class="catalog-tree" role="tree" aria-label="Estructura del plan">
       @forelse($categories as $category)
@@ -19,9 +20,9 @@
           <summary>
             <span class="catalog-tree__label"><x-category-icon :icon="$category->icon" class="mr-2" />{{ $category->title }}</span>
             <div class="catalog-tree__stats_rows">
-              <p>Estrategias <span class="badge badge-light badge-pill">{{ $category->strategicObjectives->count() }}</span></p>
-              <p>Objetivos <span class="badge badge-light badge-pill">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->count()) }}</span></p>
-              <p>Metas <span class="badge badge-light badge-pill">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->sum(fn($o) => $o->goals->count())) }}</span></p>
+              <p>Estrategias <span class="badge badge-light">{{ $category->strategicObjectives->count() }}</span></p>
+              <p>Objetivos <span class="badge badge-light">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->count()) }}</span></p>
+              <p>Metas <span class="badge badge-light">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->sum(fn($o) => $o->goals->count())) }}</span></p>
             </div>
           </summary>
 
@@ -31,8 +32,8 @@
                 <summary>
                   <span class="catalog-tree__label"><i class="fas fa-compass fa-fw mr-2"></i>{{ $strategicObjective->title }}</span>
                   <div class="catalog-tree__stats_rows">
-                    <p>Objetivos <span class="badge badge-light badge-pill">{{ $strategicObjective->objectives->count() }}</span></p>
-                    <p>Metas <span class="badge badge-light badge-pill">{{ $strategicObjective->objectives->sum(fn($objective) => $objective->goals->count()) }}</span></p>
+                    <p>Objetivos <span class="badge badge-light">{{ $strategicObjective->objectives->count() }}</span></p>
+                    <p>Metas <span class="badge badge-light">{{ $strategicObjective->objectives->sum(fn($objective) => $objective->goals->count()) }}</span></p>
                   </div>
                 </summary>
 
@@ -44,10 +45,10 @@
                           <i class="fas fa-crosshairs fa-fw mr-2"></i>{{ $objective->title }}
                         </a>
                         <div class="catalog-tree__stats_rows">
-                          <p>Alcanzadas <span class="badge badge-light badge-pill">{{ $objective->goals->where('status', 'reached')->count() }}</span></p>
-                          <p>En progreso <span class="badge badge-light badge-pill">{{ $objective->goals->where('status', 'ongoing')->count() }}</span></p>
-                          <p>No cumplidas <span class="badge badge-light badge-pill">{{ $objective->goals->where('status', 'delayed')->count() }}</span></p>
-                          <p>Inactivas <span class="badge badge-light badge-pill">{{ $objective->goals->where('status', 'inactive')->count() }}</span></p>
+                          <p>Alcanzadas <span class="badge badge-light">{{ $objective->goals->where('status', 'reached')->count() }}</span></p>
+                          <p>En progreso <span class="badge badge-light">{{ $objective->goals->where('status', 'ongoing')->count() }}</span></p>
+                          <p>No cumplidas <span class="badge badge-light">{{ $objective->goals->where('status', 'delayed')->count() }}</span></p>
+                          <p>Inactivas <span class="badge badge-light">{{ $objective->goals->where('status', 'inactive')->count() }}</span></p>
                         </div>
                       </summary>
 
