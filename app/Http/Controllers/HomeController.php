@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Category;
 use App\Faq;
 use App\Services\Indicators\HomeStats;
 use Illuminate\Http\JsonResponse;
@@ -27,14 +26,7 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $categories = Category::with([
-            'strategicObjectives.objectives' => function ($query) {
-                $query->where('hidden', false)->withCount('goals');
-            },
-        ])->orderBy('order')->get();
-        return view('portal.home',[
-            'categories' => $categories,
-        ]);
+        return view('portal.home');
     }
 
     public function viewAboutGeneral()

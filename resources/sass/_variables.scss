@@ -66,7 +66,8 @@ $headings-font-family:        "Encode Sans", -apple-system, BlinkMacSystemFont, 
 $font-size-base:              0.875rem !default;
 // $font-size-base:              0.8125rem !default;
 
-$font-weight-normal: 400;
+$font-weight-normal: 500;
+$text-muted:                     $gray-700 !default;
 
 $h1-font-size:                3rem !default;
 $h2-font-size:                2.5rem !default;

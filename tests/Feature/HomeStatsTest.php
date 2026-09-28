@@ -96,6 +96,27 @@ class HomeStatsTest extends TestCase
         $this->assertSame([$this->firstCategory->id, $this->secondCategory->id, $this->emptyCategory->id], $categories->keys()->all());
     }
 
+    public function test_it_counts_strategic_and_specific_objectives_by_category_skipping_hidden_ones(): void
+    {
+        $hiddenObjective = $this->createObjective($this->firstCategory);
+        $hiddenObjective->hidden = true;
+        $hiddenObjective->save();
+        $this->createGoal($hiddenObjective, 'ongoing');
+        $this->createGoal($this->objective, 'ongoing');
+        $this->createGoal($this->objective, 'reached');
+
+        $categories = collect($this->getJson(route('apiService.home.stats'))->json('data.categories'))->keyBy('id');
+
+        $this->assertSame(
+            ['strategic_objectives_count' => 2, 'objectives_count' => 1, 'goals_total' => 2],
+            collect($categories[$this->firstCategory->id])->only(['strategic_objectives_count', 'objectives_count', 'goals_total'])->all(),
+        );
+        $this->assertSame(
+            ['strategic_objectives_count' => 0, 'objectives_count' => 0, 'goals_total' => 0],
+            collect($categories[$this->emptyCategory->id])->only(['strategic_objectives_count', 'objectives_count', 'goals_total'])->all(),
+        );
+    }
+
     public function test_inactive_goals_are_left_out_of_traffic_lights(): void
     {
         $this->createPeriodicGoal($this->objective, 'inactive');

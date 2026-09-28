@@ -35,18 +35,10 @@
 
 @section('content')
 <div class="container py-5">
-  <portal-home-stats fetch-url="{{route('apiService.home.stats')}}">
+  <portal-home-stats fetch-url="{{route('apiService.home.stats')}}" catalog-url="{{route('catalog')}}" objectives-url="{{route('objectives')}}">
     @include('partials.loading')
   </portal-home-stats>
-  @if(app_setting('app_homepage_show_categories_selector'))
-  <h4 class="is-400 mb-3">Explorá los ejes de los objetivos</h4>
-  @forelse($categories as $category)
-    @include('portal.partials.category-bar', ['category' => $category])
-  @empty
-    <div class="alert alert-info">No hay ejes cargados en la plataforma.</div>
-  @endforelse
   <p class="mb-4 text-right"><a href="{{route('catalog')}}" class="btn btn-outline-primary">Recorré el plan completo con todos los objetivos y metas <i class="fas fa-arrow-right"></i></a></p>
-  @endif
 
 
   @if(app_setting('app_homepage_show_latest_reports') && !app_setting('app_homepage_latest_reports_at_the_end'))

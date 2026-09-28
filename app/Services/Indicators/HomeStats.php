@@ -23,7 +23,7 @@ class HomeStats
      *     goals_delayed: int,
      *     goals_inactive: int,
      *     traffic_lights: array{green: int, yellow: int, red: int, measured: int, unmeasured: int},
-     *     categories: list<array{id: int, title: string, icon: ?string, icon_url: ?string, color: ?string, order: ?int, goals_total: int, goals_reached: int, measured: int, green: int}>
+     *     categories: list<array{id: int, title: string, icon: ?string, icon_url: ?string, color: ?string, order: ?int, strategic_objectives_count: int, objectives_count: int, goals_total: int, goals_reached: int, measured: int, green: int}>
      * }
      */
     public function compute(): array
@@ -44,7 +44,9 @@ class HomeStats
                 ];
             });
 
-        $categories = Category::orderBy('order')->get();
+        $categories = Category::with([
+            'strategicObjectives' => fn ($query) => $query->withCount(['objectives' => fn ($query) => $query->where('hidden', false)]),
+        ])->orderBy('order')->get();
         $statusCounts = $goals->countBy('status');
         $lightCounts = $goals->pluck('light')->filter()->countBy(fn (TrafficLight $light): string => $light->value);
         $measured = $lightCounts->sum();
@@ -76,6 +78,8 @@ class HomeStats
                     'icon_url' => $category->icon_url,
                     'color' => $category->color,
                     'order' => $category->order,
+                    'strategic_objectives_count' => $category->strategicObjectives->count(),
+                    'objectives_count' => (int) $category->strategicObjectives->sum('objectives_count'),
                     'goals_total' => $categoryGoals->count(),
                     'goals_reached' => $categoryGoals->where('status', 'reached')->count(),
                     'measured' => $categoryGoals->whereNotNull('light')->count(),

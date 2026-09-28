@@ -19,8 +19,6 @@
   <hr>
   @include('admin.settings.homepage.app_homepage_subtitle')
   <hr>
-  @include('admin.settings.homepage.app_homepage_show_categories_selector')
-  <hr>
   @include('admin.settings.homepage.app_homepage_show_latest_reports')
   <hr>
   @include('admin.settings.homepage.app_homepage_latest_reports_at_the_end')

@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-6 col-lg-3 mb-3">
         <div class="card rounded shadow-sm h-100">
-          <div class="card-body text-center">
+          <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="fas fa-layer-group text-primary"></i>&nbsp;{{ categoriesTotal }}</p>
             <p class="mb-0">Ejes</p>
           </div>
@@ -11,7 +11,7 @@
       </div>
       <div class="col-6 col-lg-3 mb-3">
         <div class="card rounded shadow-sm h-100">
-          <div class="card-body text-center">
+          <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="fas fa-flag text-info"></i>&nbsp;{{ strategicObjectivesTotal }}</p>
             <p class="mb-0">Objetivos estratégicos</p>
           </div>
@@ -19,7 +19,7 @@
       </div>
       <div class="col-6 col-lg-3 mb-3">
         <div class="card rounded shadow-sm h-100">
-          <div class="card-body text-center">
+          <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="fas fa-bullseye text-info"></i>&nbsp;{{ objectivesTotal }}</p>
             <p class="mb-0">Objetivos específicos</p>
           </div>
@@ -27,7 +27,7 @@
       </div>
       <div class="col-6 col-lg-3 mb-3">
         <div class="card rounded shadow-sm h-100">
-          <div class="card-body text-center">
+          <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="fas fa-medal text-reached"></i>&nbsp;{{ goalsTotal }}</p>
             <p class="mb-0">Metas</p>
             <p class="text-smaller text-muted mb-0">{{ goalsReached }} alcanzadas</p>
@@ -66,25 +66,31 @@
         </div>
       </div>
     </div>
-    <div class="card rounded shadow-sm mb-4" v-if="categories.length > 0">
-      <div class="card-body">
-        <p><b>Avance por eje</b></p>
-        <a v-for="category in categories" :key="`category-progress-${category.id}`" :href="`/objetivos?category=${category.id}`" class="d-block text-reset text-decoration-none py-2 border-top">
-          <div class="d-flex flex-wrap justify-content-between align-items-baseline mb-1">
-            <span :style="`color: ${category.color}`"><category-icon :url="category.icon_url"></category-icon>&nbsp;<b>Eje #{{ category.order }}</b>&nbsp;{{ category.title }}</span>
-            <span class="text-smaller text-muted" v-if="category.goals_total > 0">
-              {{ category.goals_reached }}/{{ category.goals_total }} alcanzadas
-              <template v-if="category.measured > 0">&middot; {{ percent(category.green, category.measured) }}% en verde (de {{ category.measured }} medidas)</template>
-              &nbsp;<i class="fas fa-arrow-right"></i>
-            </span>
-            <span class="text-smaller text-muted" v-else>Sin metas publicadas</span>
-          </div>
-          <div class="progress" style="height: 8px">
-            <div class="progress-bar" role="progressbar" :style="`width: ${percent(category.goals_reached, category.goals_total)}%; background-color: ${category.color}`"></div>
-          </div>
-        </a>
-      </div>
+    <h4 class="is-400 mb-3">Explorá los ejes de los objetivos</h4>
+    <div v-for="category in categories" :key="`category-card-${category.id}`" class="catalog-tree__card" :style="`--catalog-color: ${category.color}`">
+      <a :href="`${catalogUrl}#eje-${category.id}`" class="catalog-tree__bar catalog-tree__bar--header">
+        <span class="catalog-tree__label"><category-icon :url="category.icon_url" class="mr-2"></category-icon>{{ category.title }}</span>
+        <div class="catalog-tree__stats_rows">
+          <p>Estrategias <span class="badge badge-light badge-pill">{{ category.strategic_objectives_count }}</span></p>
+          <p>Objetivos <span class="badge badge-light badge-pill">{{ category.objectives_count }}</span></p>
+          <p>Metas <span class="badge badge-light badge-pill">{{ category.goals_total }}</span></p>
+        </div>
+      </a>
+      <a :href="`${objectivesUrl}?category=${category.id}`" class="catalog-tree__card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline mb-1">
+          <span class="text-smaller" v-if="category.goals_total > 0">
+            <b>{{ percent(category.goals_reached, category.goals_total) }}%</b> de avance &middot; {{ category.goals_reached }}/{{ category.goals_total }} alcanzadas
+            <template v-if="category.measured > 0">&middot; {{ percent(category.green, category.measured) }}% en verde (de {{ category.measured }} medidas)</template>
+          </span>
+          <span class="text-smaller text-muted" v-else>Sin metas publicadas</span>
+          <span class="text-smaller text-muted">Ver objetivos&nbsp;<i class="fas fa-arrow-right"></i></span>
+        </div>
+        <div class="progress" style="height: 8px">
+          <div class="progress-bar" role="progressbar" :style="`width: ${percent(category.goals_reached, category.goals_total)}%; background-color: ${category.color}`"></div>
+        </div>
+      </a>
     </div>
+    <div class="alert alert-info" v-if="categories.length === 0">No hay ejes cargados en la plataforma.</div>
   </section>
   <div class="card rounded shadow-sm mb-4" v-else>
     <div class="card-body">
@@ -97,6 +103,14 @@
 export default {
   props: {
     fetchUrl: {
+      type: String,
+      required: true
+    },
+    catalogUrl: {
+      type: String,
+      required: true
+    },
+    objectivesUrl: {
       type: String,
       required: true
     }
