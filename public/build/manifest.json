@@ -1,37 +1,37 @@
 {
-  "_Stats-B4R00HiR.css": {
-    "file": "assets/Stats-B4R00HiR.css",
-    "src": "_Stats-B4R00HiR.css"
+  "_Stats-C4ExUq4y.css": {
+    "file": "assets/Stats-C4ExUq4y.css",
+    "src": "_Stats-C4ExUq4y.css"
   },
-  "_Stats-DE45A1LE.js": {
-    "file": "assets/Stats-DE45A1LE.js",
+  "_Stats-DZC61ow0.js": {
+    "file": "assets/Stats-DZC61ow0.js",
     "name": "Stats",
     "css": [
-      "assets/Stats-B4R00HiR.css"
+      "assets/Stats-C4ExUq4y.css"
     ]
   },
   "resources/js/admin-app.js": {
-    "file": "assets/admin-app-UvFyg3vM.js",
+    "file": "assets/admin-app-BbBW9RD_.js",
     "name": "admin-app",
     "src": "resources/js/admin-app.js",
     "isEntry": true,
     "imports": [
-      "_Stats-DE45A1LE.js"
+      "_Stats-DZC61ow0.js"
     ],
     "css": [
       "assets/admin-app-BAMniqtx.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D-7SCemc.js",
+    "file": "assets/app-DVJIS0Ai.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_Stats-DE45A1LE.js"
+      "_Stats-DZC61ow0.js"
     ],
     "css": [
-      "assets/app-C1EGZtKO.css"
+      "assets/app-BzduWFET.css"
     ]
   }
 }
