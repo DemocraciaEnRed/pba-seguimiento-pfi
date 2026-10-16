@@ -16,14 +16,14 @@
     </section>
 
     <div class="form-row mt-3">
-      <div class="col-md-6 col-lg-3 mb-2" v-if="fixedObjective == null">
+      <div class="col-md-6 col-lg-3 mb-2" v-if="!isScoped">
         <label class="text-smaller is-700 mb-1" for="filter-category">Eje</label>
         <select id="filter-category" class="custom-select shadow-sm" v-model="categorySelected">
           <option :value="null">Todos los ejes</option>
           <option v-for="category in categories" :key="`category-${category.id}`" :value="category.id">{{category.title}}</option>
         </select>
       </div>
-      <div class="col-md-6 col-lg-3 mb-2" v-if="fixedObjective == null">
+      <div class="col-md-6 col-lg-3 mb-2" v-if="!isScoped">
         <label class="text-smaller is-700 mb-1" for="filter-objective">Objetivo</label>
         <select id="filter-objective" class="custom-select shadow-sm" v-model="objectiveSelected">
           <option :value="null">Todos los objetivos</option>
@@ -57,7 +57,7 @@
     </div>
     <hr>
     <div class="reports-grid reports-grid--uniform mb-3" :class="{'reports-grid--loading': isLoading}" v-if="reports.length > 0">
-      <report-tile v-for="report in reports" :key="`report-${report.id}`" :report="report" :context="fixedObjective == null ? 'hierarchy' : 'goal'"></report-tile>
+      <report-tile v-for="report in reports" :key="`report-${report.id}`" :report="report" :context="tileContext"></report-tile>
     </div>
     <div class="card shadow-sm" v-else>
       <div class="card-body p-5 text-center">
@@ -91,6 +91,10 @@ export default {
       default: () => []
     },
     fixedObjective: {
+      type: Number,
+      default: null
+    },
+    fixedGoal: {
       type: Number,
       default: null
     }
@@ -146,7 +150,7 @@ export default {
     }
   },
   created: function(){
-    if (this.fixedObjective == null) {
+    if (!this.isScoped) {
       this.readFiltersFromUrl()
     }
     this.fetchReports()
@@ -165,7 +169,7 @@ export default {
       this.objectiveSelected = this.findObjectiveCategory(toId(params.get('objective'))) ? toId(params.get('objective')) : null
     },
     writeFiltersToUrl: function(){
-      if (this.fixedObjective != null) return
+      if (this.isScoped) return
       const params = new URLSearchParams()
       if (this.searchableString != null) params.set('s', this.searchableString)
       if (this.typeSelected != null) params.set('type', this.typeSelected)
@@ -223,8 +227,15 @@ export default {
     categoriesWithObjectives: function(){
       return this.categories.filter(category => category.objectives.length > 0)
     },
+    isScoped: function(){
+      return this.fixedObjective != null || this.fixedGoal != null
+    },
+    tileContext: function(){
+      if (this.fixedGoal != null) return 'none'
+      return this.fixedObjective == null ? 'hierarchy' : 'goal'
+    },
     filterColumnClass: function(){
-      return this.fixedObjective == null ? 'col-md-6 col-lg-3' : 'col-md-6'
+      return this.isScoped ? 'col-md-6' : 'col-md-6 col-lg-3'
     },
     hasActiveFilters: function(){
       return this.nameToSearch !== ''
@@ -249,6 +260,7 @@ export default {
       if (this.typeSelected != null) params.set('type', this.typeSelected)
       if (this.categorySelected != null) params.set('category', this.categorySelected)
       if (this.objectiveSelected != null) params.set('objective', this.objectiveSelected)
+      if (this.fixedGoal != null) params.set('goal', this.fixedGoal)
       if (this.dateRange != null) params.set('date_range', this.dateRange)
       return `${this.fetchUrl}?${params.toString()}`
     }

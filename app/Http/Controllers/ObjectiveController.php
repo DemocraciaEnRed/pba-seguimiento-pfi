@@ -8,12 +8,21 @@ use App\Category;
 use App\Services\Indicators\ObjectiveStats;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Http\Resources\Objective as ObjectiveResource;
 use App\Http\Resources\Report as ReportResource;
 use App\Http\Resources\SimpleReport as SimpleReportResource;
 
 class ObjectiveController extends Controller
 {
+    /** @var array<string, array{0: string, 1: string}> */
+    private const LIST_SORTS = [
+        'title' => ['title', 'asc'],
+        'last_report' => ['last_report_date', 'desc'],
+        'most_reports' => ['reports_count', 'desc'],
+        'most_reached' => ['goals_reached_count', 'desc'],
+    ];
+
     /**
      * Create a new controller instance.
      *
@@ -34,7 +43,10 @@ class ObjectiveController extends Controller
     }
 
     public function viewList(Request $request){
-        $categories = Category::orderBy('order')->get();
+        $categories = Category::query()
+            ->with(['strategicObjectives' => fn ($query) => $query->select(['id', 'category_id', 'codigo', 'title'])->orderBy('codigo')])
+            ->orderBy('order')
+            ->get();
         return view('portal.catalogs.objectives',[
             'categories' => $categories
         ]);
@@ -61,32 +73,45 @@ class ObjectiveController extends Controller
 
     public function fetch(Request $request)
     {
-        $pageSize = $request->query('size',10);
-        $orderBy = $request->query('order_by');
-        $hidden = $request->query('hidden',false);
-        $category = $request->query('category',null);
-        $title = $request->query('s',null);
+        $validated = $request->validate([
+            'size' => 'nullable|integer|min:1|max:50',
+            'category' => 'nullable|integer',
+            'strategic_objective' => 'nullable|integer',
+            'sort' => ['nullable', 'string', Rule::in(array_keys(self::LIST_SORTS))],
+            'order_by' => ['nullable', 'string', 'regex:/^(title|created_at|updated_at),(asc|desc)$/i'],
+        ]);
+        $title = $request->query('s');
 
-        $objectives = Objective::with('strategicObjective.category');
-        if(!is_null($orderBy)){
-            $orderByParams = explode(',',$orderBy);
-            $objectives->orderBy($orderByParams[0],$orderByParams[1]);
-        }
-        if(!is_null($category)){
-            $objectives->whereHas('strategicObjective', function ($query) use ($category) {
-                $query->where('category_id', $category);
-            });
-        }
-        if(!is_null($title)){
-            $titleExploded = explode(' ', $title);
-            $objectives->where(function ($query) use ($titleExploded) {
-                foreach ($titleExploded as $keyword) {
-                $query->orWhere('trace', 'like', "%{$keyword}%");
+        $objectives = Objective::query()
+            ->with('strategicObjective.category')
+            ->where('hidden', false)
+            ->withCount(['goals', 'reports'])
+            ->withCount(collect(array_keys(Goal::STATUSES))->mapWithKeys(fn (string $status): array => [
+                "goals as goals_{$status}_count" => fn ($goals) => $goals->where('status', $status),
+            ])->all())
+            ->withMax('reports as last_report_date', 'reports.date')
+            ->when($validated['category'] ?? null, fn ($query, $category) => $query->whereHas('strategicObjective', fn ($strategicObjectives) => $strategicObjectives->where('category_id', $category)))
+            ->when($validated['strategic_objective'] ?? null, fn ($query, $strategicObjective) => $query->where('strategic_objective_id', $strategicObjective));
+
+        if (! is_null($title)) {
+            $keywords = explode(' ', $title);
+            $objectives->where(function ($query) use ($keywords) {
+                foreach ($keywords as $keyword) {
+                    $query->orWhere('trace', 'like', "%{$keyword}%");
                 }
             });
         }
-        $objectives->where('hidden',false);
-        $objectives = $objectives->paginate($pageSize)->withQueryString();
+
+        if (isset($validated['sort'])) {
+            [$column, $direction] = self::LIST_SORTS[$validated['sort']];
+            $objectives->orderBy($column, $direction)->orderBy('title');
+        } elseif (isset($validated['order_by'])) {
+            [$column, $direction] = explode(',', $validated['order_by']);
+            $objectives->orderBy($column, strtolower($direction));
+        }
+
+        $objectives = $objectives->paginate($validated['size'] ?? 10)->withQueryString();
+
         return ObjectiveResource::collection($objectives);
     }
 

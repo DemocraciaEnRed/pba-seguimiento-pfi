@@ -86,11 +86,20 @@
   }
 }
 
+// Uniform badge for the category icon: fixed square, icon centered and sized consistently everywhere.
 .category-icon-container{
-  padding: 8px 5px 5px;
-  border-radius: 6px;
-  width: 50px;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: .5rem;
+
+  .category-icon {
+    font-size: 1.5rem;
+    vertical-align: middle;
+  }
 }
 
 // Mask keeps the SVG shape and paints it with the current text color.
@@ -313,8 +322,52 @@
     font-weight: 600;
     font-family: $headings-font-family;
   }
-  a.category:hover{
+  a.category:hover,
+  a.category.is-active{
     color: $primary;
+  }
+  .side-menu__group + .side-menu__group {
+    margin-top: .75rem;
+    padding-top: .75rem;
+    border-top: 1px solid $gray-200;
+  }
+  .side-menu__group-label {
+    margin-bottom: .25rem;
+    color: $gray-600;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .side-menu__heading {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+
+    .category {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+  .side-menu__add {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    color: $gray-600;
+    font-size: .7rem;
+
+    &:hover,
+    &:focus,
+    &.is-active {
+      border-color: $primary;
+      background-color: $primary;
+      color: $white;
+    }
   }
   .menu-link {
     margin-bottom: 5px;

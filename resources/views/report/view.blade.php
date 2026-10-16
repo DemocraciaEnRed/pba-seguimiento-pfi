@@ -64,7 +64,7 @@
 @section('content')
 <div class="container py-4">
   <div class="card shadow-sm mb-3">
-    <div class="card-body p-3 p-lg-5 is-size-5">
+    <div class="card-body p-3 p-lg-4 is-size-5">
       {!! nl2br(e($report->content)) !!}
     </div>
   </div>

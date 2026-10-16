@@ -1,6 +1,6 @@
 @if(!is_null($report->status))
   <div class="card shadow-sm my-3">
-    <div class="card-body p-3 p-lg-5 d-flex justify-content-between align-items-center">
+    <div class="card-body p-3 p-lg-4 d-flex justify-content-between align-items-center">
       <div class="align-self-center animate__animated animate__flipInX">
         <h4 class="is-700 m-0">Cambio de estado</h4>
         <p class="mb-0 mt-1">El reporte ha cambiado el estado de la meta de <span class="is-600 text-{{$report->previous_status}}"><i class="far fa-circle-dot"></i>&nbsp;{{$report->previousstatus_label}}</span> a <span class="is-600 text-{{$report->status}}"><i class="far fa-circle-dot"></i>&nbsp;{{$report->status_label}}</span></p>

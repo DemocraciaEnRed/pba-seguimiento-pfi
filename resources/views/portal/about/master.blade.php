@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('hero')
-<x-hero title="¿Cómo funciona?" />
+<x-hero title="Acerca de" />
 @endsection
 
 @section('content')
@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="col-md-8 col-lg-9">
-      <div id="about-content" class="bg-white rounded shadow p-3 p-lg-5">
+      <div id="about-content" class="bg-white rounded shadow p-3 p-lg-4">
         @yield('aboutContent')
       </div>
     </div>

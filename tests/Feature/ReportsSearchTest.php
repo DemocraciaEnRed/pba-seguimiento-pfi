@@ -88,6 +88,27 @@ class ReportsSearchTest extends TestCase
         $this->assertNotContains($hidden->id, $this->fetchIds());
     }
 
+    public function test_filters_by_goal(): void
+    {
+        $sameObjectiveGoal = $this->createGoal($this->firstGoal->objective);
+        $first = $this->createReport($this->firstGoal);
+        $this->createReport($sameObjectiveGoal);
+        $this->createReport($this->secondGoal);
+
+        $this->assertSame([$first->id], $this->fetchIds(['goal' => $this->firstGoal->id]));
+    }
+
+    public function test_goal_filter_respects_objective_visibility(): void
+    {
+        $hidden = $this->createReport($this->hiddenGoal);
+        $this->hiddenGoal->objective->members()->attach($this->author, ['role' => 'reporter']);
+
+        $this->assertSame([], $this->fetchIds(['goal' => $this->hiddenGoal->id]));
+
+        $this->actingAs($this->author);
+        $this->assertSame([$hidden->id], $this->fetchIds(['goal' => $this->hiddenGoal->id]));
+    }
+
     public function test_filters_by_date_range(): void
     {
         $lastWeek = $this->createReport($this->firstGoal, ['date' => '2026-09-21']);
@@ -134,6 +155,7 @@ class ReportsSearchTest extends TestCase
         $this->getJson(route('apiService.reports', ['sort' => 'title']))->assertUnprocessable();
         $this->getJson(route('apiService.reports', ['date_range' => 'forever']))->assertUnprocessable();
         $this->getJson(route('apiService.reports', ['category' => 'abc']))->assertUnprocessable();
+        $this->getJson(route('apiService.reports', ['goal' => 'abc']))->assertUnprocessable();
     }
 
     public function test_page_offers_categories_with_their_visible_objectives(): void

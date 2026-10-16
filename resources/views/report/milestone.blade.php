@@ -1,6 +1,6 @@
 @if($report->type == 'milestone')
   <div class="card shadow-sm my-3">
-    <div class="card-body p-3 p-lg-5 d-flex justify-content-between align-items-center">
+    <div class="card-body p-3 p-lg-4 d-flex justify-content-between align-items-center">
       <div class="align-self-center animate__animated animate__flipInX">
         <h4 class="is-700 m-0">Hito completado</h4>
         <p class="my-1">Hito #{{$report->milestone->order}} - {{$report->milestone->title}}</p>

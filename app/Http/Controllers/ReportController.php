@@ -86,6 +86,7 @@ class ReportController extends Controller
         $validated = $request->validate([
             'category' => 'nullable|integer',
             'objective' => 'nullable|integer',
+            'goal' => 'nullable|integer',
             'date_range' => 'nullable|string|in:last_30_days,last_3_months,last_year',
             'sort' => 'nullable|string|in:recent,oldest,most_commented,most_liked',
         ]);
@@ -97,12 +98,14 @@ class ReportController extends Controller
         $title = $request->query('s',null);
         $category = $validated['category'] ?? null;
         $objective = $validated['objective'] ?? null;
+        $goal = $validated['goal'] ?? null;
         $dateRange = $validated['date_range'] ?? null;
         $sort = $validated['sort'] ?? null;
 
         $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
         $isVisibleObjectiveFilter = ! is_null($objective) && (bool) Objective::find($objective)?->isVisibleTo($request->user());
-        if(! $isVisibleObjectiveFilter){
+        $isVisibleGoalFilter = ! is_null($goal) && (bool) Goal::with('objective')->find($goal)?->objective?->isVisibleTo($request->user());
+        if(! $isVisibleObjectiveFilter && ! $isVisibleGoalFilter){
             $reports->fromVisibleObjectives();
         }
         if(!is_null($sort)){
@@ -122,6 +125,9 @@ class ReportController extends Controller
         }
         if(!is_null($objective)){
             $reports->whereHas('goal', fn ($goals) => $goals->where('objective_id', $objective));
+        }
+        if(!is_null($goal)){
+            $reports->where('goal_id', $goal);
         }
         if(!is_null($dateRange)){
             $reports->where('date', '>=', match ($dateRange) {

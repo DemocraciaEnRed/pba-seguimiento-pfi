@@ -9,7 +9,7 @@
     $toDateLight = TrafficLight::fromCompliance($summary->toDateCompliance);
   @endphp
   <div class="card shadow-sm my-3">
-    <div class="card-body p-3 p-lg-5">
+    <div class="card-body p-3 p-lg-4">
       <div class="d-flex justify-content-between align-items-start mb-3">
         <div class="animate__animated animate__flipInX">
           <h4 class="is-700 m-0">Medición del {{ $report->period->label() }}</h4>
@@ -52,7 +52,7 @@
   </div>
 @elseif($report->type == 'progress' && $goal->isSimple())
   <div class="card shadow-sm my-3">
-    <div class="card-body p-3 p-lg-5 d-flex justify-content-between align-items-center">
+    <div class="card-body p-3 p-lg-4 d-flex justify-content-between align-items-center">
       <div class="align-self-center animate__animated animate__flipInX">
         <h4 class="is-700 m-0">Progreso declarado</h4>
         <p class="mb-0 mt-1">Unidad del indicador: {{$goal->indicator_unit}}</p>

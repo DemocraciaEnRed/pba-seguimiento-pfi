@@ -4,6 +4,8 @@ namespace App\Http\Resources;
 
 use Auth;
 use DB;
+use App\Goal;
+use Carbon\Carbon;
 use App\Http\Resources\Goal as GoalResource;
 use App\Http\Resources\Category as CategoryResource;
 use App\Http\Resources\Report as ReportResource;
@@ -66,9 +68,15 @@ class Objective extends JsonResource
                 ] : null;
                 break;
               case 'objective_stats':
-                $res['reports_count'] = $this->reports()->count();
-                $res['goals_count'] = $this->goals()->count();
-                $res['goals_status'] = $this->goals()->select('status',DB::raw('COUNT(*) AS total'))->groupBy('status')->get()->pluck('total','status');
+                $res['reports_count'] = $this->reports_count ?? $this->reports()->count();
+                $res['goals_count'] = $this->goals_count ?? $this->goals()->count();
+                $res['goals_status'] = $this->resource->hasAttribute('goals_reached_count')
+                    ? collect(array_keys(Goal::STATUSES))->mapWithKeys(fn (string $status): array => [$status => (int) $this->{"goals_{$status}_count"}])
+                    : $this->goals()->select('status',DB::raw('COUNT(*) AS total'))->groupBy('status')->get()->pluck('total','status');
+                $lastReportDate = $this->resource->hasAttribute('last_report_date')
+                    ? $this->last_report_date
+                    : $this->reports()->max('reports.date');
+                $res['last_report_when'] = $lastReportDate ? Carbon::parse($lastReportDate)->diffForHumans() : null;
                 break;
               case 'objective_strategic_objective':
                 $res['strategic_objective'] = [

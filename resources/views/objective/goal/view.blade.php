@@ -112,14 +112,15 @@
 							@endforelse
 					</div>
 					@endif
-          <hr>
-					<h5 class="is-700 mt-2 mb-4">Reportes</h5>
-					<report-list fetch-url="{{route('apiService.goals.reports',['goalId'=> $goal->id, 'size' => 3, 'with' =>'report_hierarchy,report_cover,report_excerpt,report_highlights', 'order_by'=>'date,DESC'])}}" context="none">
-						@include('partials.loading')
-					</report-list>
 				</div>
 			</div>
 		</div>
 	</div>
+	<section class="mt-5" id="reportes">
+		<h3 class="is-700 mb-3">Reportes</h3>
+		<search-reports fetch-url="{{route('apiService.reports')}}" :fixed-goal="{{ $goal->id }}">
+			@include('partials.loading')
+		</search-reports>
+	</section>
 </div>
 @endsection

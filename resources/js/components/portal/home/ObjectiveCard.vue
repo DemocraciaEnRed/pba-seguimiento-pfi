@@ -2,16 +2,16 @@
   <div class="card rounded shadow-sm objective-card" :style="{'--objective-accent': objective.category.color || null}">
     <div class="card-body">
       <div class="d-flex flex-column flex-md-row align-items-md-center">
-        <div class="d-flex align-items-center w-100 mb-3 mb-md-0">
-          <div class="mr-3 category-icon-container flex-shrink-0" :style="`background-color: ${objective.category.background_color}`">
-            <category-icon :url="objective.category.icon_url" size="lg" :style="`color: ${objective.category.color}`"></category-icon>
+        <div class="d-flex align-items-center w-100 min-w-0 mb-3 mb-md-0">
+          <div class="mr-3 category-icon-container" :style="`background-color: ${objective.category.background_color}`">
+            <category-icon :url="objective.category.icon_url" :style="`color: ${objective.category.color}`"></category-icon>
           </div>
-          <div class="objective-card__heading">
-            <p class="my-1 text-smaller">
+          <div class="objective-card__heading flex-grow-1">
+            <p class="mb-1 text-smaller text-truncate">
               <span :style="`color:${objective.category.color}`">{{objective.category.title}}</span>
-              <span class="text-muted" v-if="objective.strategic_objective">&nbsp;•&nbsp;<i class="fas fa-compass fa-fw"></i> {{objective.strategic_objective.title}}</span>
+              <span class="text-muted" v-if="objective.strategic_objective" :title="objective.strategic_objective.title">&nbsp;•&nbsp;<span class="is-700">{{objective.strategic_objective.codigo}}</span> {{objective.strategic_objective.title}}</span>
             </p>
-            <a :href="objective.url" class="objective-card__title text-dark h5 is-700 d-block mb-0">{{objective.title}}</a>
+            <a :href="objective.url" class="objective-card__title text-dark is-700 d-block mb-0">{{objective.title}}</a>
           </div>
         </div>
         <div class="d-flex align-items-center flex-shrink-0 ml-md-3 text-center">
@@ -32,7 +32,7 @@
           <div v-for="segment in statusSegments" :key="segment.status" class="progress-bar" :class="`bg-${segment.status}`" role="progressbar" :style="`width: ${segment.percentage}%`" :title="`${segment.total} ${segment.label}`" :aria-label="`${segment.total} ${segment.label}`"></div>
         </div>
         <p class="mb-0 mt-1 text-smallest text-muted">
-          <span v-for="segment in statusSegments" :key="`legend-${segment.status}`" class="mr-3"><i :class="`fas fa-circle text-${segment.status}`"></i> {{segment.total}} {{segment.label}}</span>
+          <span v-for="segment in statusSegments" :key="`legend-${segment.status}`" class="mr-3"><i :class="`fas fa-circle text-${segment.status}`"></i> {{segment.total}} {{segment.total === 1 ? segment.singular : segment.label}}</span>
         </p>
       </div>
 
@@ -65,10 +65,10 @@
 
 <script>
 const STATUSES = [
-  {status: 'reached', label: 'alcanzadas'},
-  {status: 'ongoing', label: 'en progreso'},
-  {status: 'delayed', label: 'no cumplidas'},
-  {status: 'inactive', label: 'inactivas'},
+  {status: 'reached', singular: 'alcanzada', label: 'alcanzadas'},
+  {status: 'ongoing', singular: 'en progreso', label: 'en progreso'},
+  {status: 'delayed', singular: 'no cumplida', label: 'no cumplidas'},
+  {status: 'inactive', singular: 'inactiva', label: 'inactivas'},
 ]
 
 export default {
@@ -100,8 +100,11 @@ export default {
     text-decoration: none;
     opacity: .8;
   }
+  .objective-card__title {
+    font-size: 1.05rem;
+  }
   .objective-card__status-bar {
-    height: 10px;
+    height: 8px;
   }
   .objective-card__report-title {
     -webkit-box-orient: vertical;

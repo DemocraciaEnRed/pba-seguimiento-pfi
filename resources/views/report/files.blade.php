@@ -1,6 +1,6 @@
 @if(!$report->files->isEmpty())
   <div class="card shadow-sm my-3">
-    <div class="card-body p-3 p-lg-5">
+    <div class="card-body p-3 p-lg-4">
       <h3 class="is-600 mb-3">Archivos adjuntos</h3>
       @forelse ($report->files as $file)
       <div class="card my-2 shadow-sm">

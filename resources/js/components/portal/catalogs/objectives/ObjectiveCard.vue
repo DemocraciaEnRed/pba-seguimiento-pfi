@@ -1,78 +1,62 @@
 <template>
-  <div class="card rounded shadow-sm">
-    <div class="card-body">
-      <div class="d-flex align-items-center">
-        <div class="mr-4 category-icon-container d-none d-md-block" :style="`background-color: ${objective.category.background_color}`">
-          <category-icon :url="objective.category.icon_url" size="lg" :style="`color: ${objective.category.color}`"></category-icon>
-        </div>
-        <div class="w-100">
-          <p class="my-1 text-smaller">
-            <span :style="`color:${objective.category.color}`"><category-icon class="d-inline-block d-md-none" :url="objective.category.icon_url"></category-icon> {{objective.category.title}}</span>
-            <span class="text-muted" v-if="objective.strategic_objective">&nbsp;•&nbsp;<i class="fas fa-compass fa-fw"></i> {{objective.strategic_objective.title}}</span>
-          </p>
-          <h5 class="my-1"><a :href="objective.url" class="text-dark is-700">{{objective.title}}</a></h5>
-          <p class="m-0 text-muted text-smaller" v-if="objective.tags && objective.tags.length > 0">Tags: {{objective.tags.join(' / ')}}</p>
-          <p class="m-0 text-muted text-smaller" v-else>Tags: Sin tags cargados</p>
-          <p class="m-0 text-muted text-smaller">Publicado {{objective.published_at}}</p>
-          </div>
-        <div class="mx-1 d-flex flex-column flex-md-row">
-          <div class="text-center m-2">
-            <span class="is-700 is-size-5"><i class="fas fa-medal fa-fw text-primary"></i>{{objective.goals_count}}</span><br><span class="text-smaller">metas</span>
-          </div>
-          <div class="m-2">
-          <goals-doughnut :chartData="chartData" :styles="chartStyle"></goals-doughnut>
-          </div>
-          <div class="text-center m-2">
-            <span class="is-700 is-size-5"><i class="far fa-file fa-fw text-primary"></i>{{objective.reports_count}}</span><br><span class="text-smaller">reportes</span>
-          </div>
-        </div>
-          <div class="ml-2">
-            <a :href="objective.url" class="text-primary"><i class="fas fa-2x fa-fw fa-circle-right"></i></a>
-          </div>
-      </div>
+  <a :href="objective.url" class="list-group-item list-group-item-action d-flex align-items-start gap-3 py-3">
+    <div class="category-icon-container d-none d-md-flex" :style="`background-color: ${objective.category.background_color}`">
+      <category-icon :url="objective.category.icon_url" :style="`color: ${objective.category.color}`"></category-icon>
     </div>
-  </div>
+    <div class="flex-grow-1 min-w-0">
+      <p class="mb-1 text-smaller text-truncate">
+        <span :style="`color:${objective.category.color}`"><category-icon class="d-inline-block d-md-none" :url="objective.category.icon_url"></category-icon> {{objective.category.title}}</span>
+        <span class="text-muted" v-if="objective.strategic_objective" :title="objective.strategic_objective.title">&nbsp;•&nbsp;<span class="is-700">{{objective.strategic_objective.codigo}}</span> {{objective.strategic_objective.title}}</span>
+      </p>
+      <h6 class="mb-2 text-dark is-700 objective-title">{{objective.title}}</h6>
+      <div class="progress objective-status-bar mb-1" v-if="objective.goals_count > 0" :title="statusSummary">
+        <div v-for="segment in visibleSegments" :key="segment.key" class="progress-bar" :class="`bg-${segment.key}`" :style="`width: ${segment.percent}%`"></div>
+      </div>
+      <p class="mb-0 text-smallest text-muted d-flex flex-wrap gap-3" v-if="objective.goals_count > 0">
+        <span v-for="segment in visibleSegments" :key="`label-${segment.key}`"><i :class="`fas fa-circle text-${segment.key}`"></i> {{segment.count}} {{segment.count === 1 ? segment.singular : segment.label}}</span>
+      </p>
+      <p class="mb-0 text-smallest text-muted" v-else>Sin metas cargadas</p>
+    </div>
+    <div class="text-right text-smaller text-nowrap flex-shrink-0">
+      <div><i class="fas fa-medal fa-fw text-primary"></i><span class="is-700">{{objective.goals_count}}</span> {{objective.goals_count === 1 ? 'meta' : 'metas'}}</div>
+      <div><i class="far fa-file fa-fw text-primary"></i><span class="is-700">{{objective.reports_count}}</span> {{objective.reports_count === 1 ? 'reporte' : 'reportes'}}</div>
+      <div class="text-muted" v-if="objective.last_report_when">Último reporte {{objective.last_report_when}}</div>
+    </div>
+  </a>
 </template>
 
 <script>
-import GoalsDoughnut from '../../home/GoalsDoughnut';
+const SEGMENTS = [
+  {key: 'reached', singular: 'alcanzada', label: 'alcanzadas', color: '#2eda54'},
+  {key: 'ongoing', singular: 'en progreso', label: 'en progreso', color: '#ffa51e'},
+  {key: 'delayed', singular: 'no cumplida', label: 'no cumplidas', color: '#f15454'},
+  {key: 'inactive', singular: 'inactiva', label: 'inactivas', color: '#7e7e7e'},
+]
 
 export default {
   props: ['objective'],
-  data(){
-    return {
-      styles: {
-        height: 45
-      }
-    }
-  },
-  components: {
-    GoalsDoughnut
-  },
   computed: {
-    chartData: function(){
-      return {
-        labels: ['Alcanzadas','En progreso','No cumplida','Inactivas'],
-        data: [
-          this.objective.goals_status.reached ?? 0,
-          this.objective.goals_status.ongoing ?? 0,
-          this.objective.goals_status.delayed ?? 0,
-          this.objective.goals_status.inactive ?? 0,
-        ],
-        labelsColors: ['#2eda54','#ffa51e','#f15454','#7e7e7e']
-      }
+    visibleSegments: function(){
+      const status = this.objective.goals_status || {}
+      const total = this.objective.goals_count || 0
+      return SEGMENTS
+        .map(segment => ({...segment, count: Number(status[segment.key] ?? 0)}))
+        .filter(segment => segment.count > 0)
+        .map(segment => ({...segment, percent: total > 0 ? (segment.count / total) * 100 : 0}))
     },
-    chartStyle: function(){
-      return {
-        height: `${this.styles.height}px`,
-        width: `${this.styles.height}px`,
-        position: 'relative'
-      }
+    statusSummary: function(){
+      return this.visibleSegments.map(segment => `${segment.count} ${segment.count === 1 ? segment.singular : segment.label}`).join(' · ')
     }
   }
 }
 </script>
 
-<style>
-
+<style scoped>
+.objective-title{
+  font-size: 1.05rem;
+}
+.objective-status-bar{
+  height: 8px;
+  max-width: 28rem;
+}
 </style>
