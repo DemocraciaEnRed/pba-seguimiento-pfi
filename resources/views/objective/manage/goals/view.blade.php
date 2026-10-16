@@ -1,83 +1,57 @@
 @extends('objective.manage.goals.master')
 
 @section('panelContent')
-  <div class="d-flex align-items-start mb-3">
-    <div class="mr-3 category-icon-container text-center">
-      <i class="far fa-2x fa-fw fa-circle-dot text-{{$goal->status}}"></i>
-      <span class="text-{{$goal->status}} rounded-circle is-700 text-smallest ">{{$goal->progress_label}}</span>
-    </div>
-    <div class="w-100">
-      <span class="text-{{$goal->status}}">Meta {{$goal->status_label}}</span>
-      <h3 class="is-700">
-        {{$goal->title}}
-      </h3>
-    </div>
+  <h3 class="is-700">Resumen de la meta</h3>
+  <p class="lead">Avance, indicador y actividad de la meta.</p>
+  @php
+    $milestonesCompleted = $goal->milestones->whereNotNull('completed')->count();
+  @endphp
+  <div class="d-grid grid-cols-2 grid-cols-md-4 gap-2 mb-3">
+    <x-stat label="Estado" :value="$goal->status_label" icon="far fa-circle-dot" :tone="$goal->status" :hint="$goal->isSimple() ? 'Progreso '.$goal->progress_label : null" />
+    <x-stat label="Reportes" :value="$goal->reports->count()" icon="far fa-file-lines" tone="primary" :href="route('objectives.manage.goals.reports', ['objectiveId' => $objective->id, 'goalId' => $goal->id])" />
+    <x-stat label="Hitos" :value="$milestonesCompleted.' / '.$goal->milestones->count()" icon="far fa-star" tone="warning" hint="completados" :href="route('objectives.manage.goals.milestones', ['objectiveId' => $objective->id, 'goalId' => $goal->id])" />
+    <x-stat label="Comentarios" :value="$commentsCount" icon="far fa-comments" tone="secondary" :href="route('objectives.manage.goals.comments', ['objectiveId' => $objective->id, 'goalId' => $goal->id])" />
   </div>
-  <div class="card border-light my-3">
-    <div class="card-body py-4 row justify-content-between">
-      <div class="col-6 text-center">
-        <h6 class="font-weight-bold">Reportes</h6>
-        <span class="h6"><i class="far fa-file-lines fa-fw"></i> {{$goal->reports()->count()}}</span>
-      </div>
-      <div class="col-6 text-center">
-        <h6 class="font-weight-bold">Hitos</h6>
-        <span class="h6"><i class="far fa-star fa-fw"></i> {{$goal->milestones()->count()}}</span>
-      </div>
-    </div>
- </div>
   @if($goal->isSimple())
-    <h5 class="font-weight-bold">Progreso de la meta</h6>
-    <div class="progress mb-3">
-      <div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{ min(100, $goal->progress_percentage ?? 0) }}%;" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100">{{$goal->progress_label}}</div>
-    </div>
+  <div class="progress mb-3">
+    <div class="progress-bar bg-{{$goal->status}}" role="progressbar" style="width: {{ min(100, $goal->progress_percentage ?? 0) }}%;" aria-valuenow="{{$goal->progress_percentage}}" aria-valuemin="0" aria-valuemax="100">{{$goal->progress_label}}</div>
+  </div>
   @endif
-  <div class="row">
-    <div class="col md-6">
-          <h5 class="font-weight-bold">Indicador</h6>
-    <p>{{$goal->indicator ?: 'Meta sin indicador numérico'}}</p>
+  <dl class="d-grid grid-cols-1 grid-cols-md-2 gap-2 mb-3">
+    <div>
+      <dt class="text-smaller text-muted">Indicador</dt>
+      <dd class="mb-0">{{$goal->indicator ?: 'Meta sin indicador numérico'}}</dd>
     </div>
-    <div class="col md-6">
-         <h5 class="font-weight-bold">Estado</h6>
-          <p class="text-{{$goal->status}}"><i class="far fa-fw fa-circle-dot text-{{$goal->status}}"></i>{{$goal->status_label}}</p>
+    <div>
+      <dt class="text-smaller text-muted">Unidad del indicador</dt>
+      <dd class="mb-0">{{$goal->indicator_unit ?: '—'}}</dd>
     </div>
-  </div>
-  @if($goal->isSimple())
-  <div class="row">
-    <div class="col md-6">
-      <h5 class="font-weight-bold">Valor a alcanzar</h6>
-      <p>{{ indicator_number($goal->indicator_goal) }}</p>
+    @if($goal->isSimple())
+    <div>
+      <dt class="text-smaller text-muted">Valor a alcanzar</dt>
+      <dd class="mb-0">{{ indicator_number($goal->indicator_goal) }}</dd>
     </div>
-    <div class="col md-6">
-      <h5 class="font-weight-bold">Valor actual</h6>
-      <p>{{ indicator_number($goal->indicator_progress) }} <small class="text-secondary">({{$goal->progress_label}})</small></p>
+    <div>
+      <dt class="text-smaller text-muted">Valor actual</dt>
+      <dd class="mb-0">{{ indicator_number($goal->indicator_progress) }} <small class="text-muted">({{$goal->progress_label}})</small></dd>
     </div>
-  </div>
-  <div class="row">
-    <div class="col md-6">
-      <h5 class="font-weight-bold">Unidad del indicador</h6>
-      <p>{{$goal->indicator_unit}}</p>
+    <div>
+      <dt class="text-smaller text-muted">Frecuencia</dt>
+      <dd class="mb-0">{{$goal->indicator_frequency ?: '—'}}</dd>
     </div>
-    <div class="col md-6">
-      <h5 class="font-weight-bold">Frecuencia</h6>
-      <p>{{$goal->indicator_frequency ?: '- Sin Datos -'}}</p>
+    @elseif($goal->isPeriodic())
+    <div>
+      <dt class="text-smaller text-muted">Lectura</dt>
+      <dd class="mb-0">{{ $goal->indicator_direction->label() }}</dd>
     </div>
-  </div>
-  @elseif($goal->isPeriodic())
-  <div class="row">
-    <div class="col md-6">
-      <h5 class="font-weight-bold">Unidad del indicador</h6>
-      <p>{{$goal->indicator_unit}}</p>
-    </div>
-    <div class="col md-6">
-      <h5 class="font-weight-bold">Lectura</h6>
-      <p>{{ $goal->indicator_direction->label() }}</p>
-    </div>
-  </div>
-  <h5 class="font-weight-bold">Seguimiento por períodos</h5>
-  @include('partials.indicatorPeriods', ['goal' => $goal, 'summary' => $goal->indicatorSummary(), 'objective' => $objective, 'canSkip' => Auth::user()->hasRole('admin')])
+    @endif
+  </dl>
+  @if($goal->isPeriodic())
+  <h5 class="is-700">Seguimiento por períodos</h5>
+  @include('partials.indicatorPeriods', ['goal' => $goal, 'summary' => $goal->indicatorSummary(), 'objective' => $objective, 'canSkip' => Auth::user()->hasRole('admin'), 'reportLinks' => 'panel'])
   <br>
   @endif
-  <h5 class="font-weight-bold">Fuente</h6>
+  <h5 class="is-700">Fuente</h5>
   @if ($goal->source)
     <p>{{$goal->source}}</p>
   @else
@@ -99,4 +73,8 @@
     </div>
   </div>
   @endif
+  @include('objective.manage.partials.latest-comments', [
+    'listUrl' => route('objectives.manage.goals.comments', ['objectiveId' => $objective->id, 'goalId' => $goal->id]),
+    'showGoal' => false,
+  ])
 @endsection

@@ -4,6 +4,10 @@
   use App\Services\Indicators\TrafficLight;
 
   $canSkip = $canSkip ?? false;
+  $reportLinks = $reportLinks ?? 'portal';
+  $periodReportUrl = fn ($report) => $reportLinks === 'panel'
+    ? route('objectives.manage.goals.reports.index', ['objectiveId' => $goal->objective_id, 'goalId' => $goal->id, 'reportId' => $report->id])
+    : route('reports.index', ['reportId' => $report->id]);
   $toDateLight = TrafficLight::fromCompliance($summary->toDateCompliance);
   $stateColors = [
     PeriodState::Reported->value => 'primary',
@@ -73,6 +77,7 @@
         <th class="text-right">Desvío</th>
         <th class="text-right">Diferencia</th>
         <th>Estado</th>
+        <th class="text-center">Reporte</th>
         @if($canSkip)<th></th>@endif
       </tr>
     </thead>
@@ -104,6 +109,13 @@
             <span class="badge badge-{{ $stateColors[$result->state->value] }}">{{ $result->state->label() }}</span>
             @if($period->isSkipped())
               <small class="d-block text-muted" title="Omitido por {{ $period->skippedBy?->fullname }}">{{ $period->skip_reason }}</small>
+            @endif
+          </td>
+          <td class="align-middle text-center">
+            @if($period->progressReport)
+              <a href="{{ $periodReportUrl($period->progressReport) }}" class="btn btn-outline-primary btn-sm text-nowrap" title="{{ $period->progressReport->title }}"><i class="far fa-file-lines fa-fw"></i> Ver</a>
+            @else
+              <span class="text-muted">—</span>
             @endif
           </td>
           @if($canSkip)

@@ -1,40 +1,25 @@
 @php
-$currentRoute = Route::currentRouteName();
+$reportParams = ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id];
 @endphp
-<p class="text-smaller text-muted mb-0">Reporte</p>
-<h6 class="font-weight-bold">
-  <a href="{{route('reports.index',['reportId' => $report->id])}}">
-{{$report->title}}
-  </a>
-</h6>
-<p class="text-smaller text-muted mb-0">Meta</p>
-<h6 class="font-weight-bold text-smaller">
-  <a href="{{route('goals.index',['goalId' => $goal->id])}}">
-  {{$goal->title}}
-  </a>
-</h6>
-<p class="text-smaller text-muted mb-0">Objetivo</p>
-<h6 class="font-weight-bold text-smaller">
-<a href="{{route('objectives.index',['objectiveId' => $objective->id])}}">
-  {{$objective->title}}
-  </a>
-</h6>
 <ul class="list-unstyled mb-0">
 <li><a href="{{ route('objectives.manage.goals.reports', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}" class="text-smaller text-dark"><i class="fas fa-arrow-left"></i>&nbsp;Volver a los reportes</a></li>
-<li><a href="{{ route('objectives.manage.goals.index', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}" class="text-smaller text-dark"><i class="fas fa-arrow-left"></i>&nbsp;Volver a las meta</a></li>
+<li><a href="{{ route('objectives.manage.goals.index', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}" class="text-smaller text-dark"><i class="fas fa-arrow-left"></i>&nbsp;Volver a la meta</a></li>
 <li><a href="{{ route('objectives.manage.index', ['objectiveId' => $objective->id]) }}" class="text-smaller text-dark"><i class="fas fa-arrow-left"></i>&nbsp;Volver al objetivo</a></li>
 </ul>
 <hr>
-<a href="{{ route('objectives.manage.goals.reports.index', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="category {{ $currentRoute == 'objective.manage.goals.reports.index'  ? 'is-active' : null }}"><i class="fas fa-gauge-high fa-fw"></i>&nbsp;Inicio</a>
-<h6 class="category"><i class="fas fa-gear fa-fw"></i>&nbsp;Administrar</h6>
-<div class="menu-link">
-<a href="{{ route('objectives.manage.goals.reports.edit', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.edit'  ? 'is-active' : null }}">Editar reporte</a>
-<a href="{{ route('objectives.manage.goals.reports.configuration', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.configuration'  ? 'is-active' : null }}">Configuración</a>
-<a href="{{ route('objectives.manage.goals.reports.comments', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.comments'  ? 'is-active' : null }}">Comentarios</a>
-<a href="{{ route('objectives.manage.goals.reports.testimonies', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.testimonies'  ? 'is-active' : null }}">Me gusta</a>
-<a href="{{ route('objectives.manage.goals.reports.album', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.album'  ? 'is-active' : null }}">Album de fotos</a>
-<a href="{{ route('objectives.manage.goals.reports.files', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.files'  ? 'is-active' : null }}">Repositorio de archivos</a>
-@if(app_setting('app_map_enabled'))
-<a href="{{ route('objectives.manage.goals.reports.map', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.reports.map'  ? 'is-active' : null }}">Mapa</a>
-@endif
-</div>
+<x-side-menu.group>
+  <x-side-menu.category label="Inicio" icon="fas fa-gauge-high" :href="route('objectives.manage.goals.reports.index', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.index')" />
+</x-side-menu.group>
+<x-side-menu.group label="Participación">
+  <x-side-menu.category label="Comentarios" icon="far fa-comments" :href="route('objectives.manage.goals.reports.comments', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.comments')" />
+  <x-side-menu.category label="Me gusta" icon="far fa-thumbs-up" :href="route('objectives.manage.goals.reports.testimonies', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.testimonies')" />
+</x-side-menu.group>
+<x-side-menu.group label="Contenido">
+  <x-side-menu.category label="Editar reporte" icon="fas fa-pen" :href="route('objectives.manage.goals.reports.edit', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.edit')" />
+  <x-side-menu.category label="Álbum de fotos" icon="far fa-images" :href="route('objectives.manage.goals.reports.album', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.album')" />
+  <x-side-menu.category label="Repositorio de archivos" icon="far fa-folder-open" :href="route('objectives.manage.goals.reports.files', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.files')" />
+  @if(app_setting('app_map_enabled'))
+  <x-side-menu.category label="Mapa" icon="fas fa-map-location-dot" :href="route('objectives.manage.goals.reports.map', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.map')" />
+  @endif
+  <x-side-menu.category label="Configuración" icon="fas fa-gear" :href="route('objectives.manage.goals.reports.configuration', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.configuration')" />
+</x-side-menu.group>

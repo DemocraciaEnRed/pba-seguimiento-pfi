@@ -382,7 +382,7 @@ class PeriodicGoalReportsTest extends TestCase
 
         $objectiveParameters = ['objectiveId' => $this->objective->id];
         $this->actingAs($this->admin)->get(route('objectives.manage.goals', $objectiveParameters))
-            ->assertOk()->assertSee('25%')->assertSee('—');
+            ->assertOk()->assertSee('25%')->assertSee('Sin indicador numérico');
         $this->actingAs($this->admin)->get(route('objectives.manage.goals.add', $objectiveParameters))
             ->assertOk()->assertSee('input-goal-indicator', false);
         $this->get(route('objectives.index', ['objectiveId' => $this->objective->id]))->assertOk();
@@ -493,7 +493,7 @@ class PeriodicGoalReportsTest extends TestCase
         ]))
             ->assertOk()
             ->assertSee('Sin meta')
-            ->assertSee('>Objetivo</p>', false)
+            ->assertSee('Panel de la meta')
             ->assertSee($this->objective->title)
             ->assertDontSee('Sin objetivo');
 
@@ -517,6 +517,38 @@ class PeriodicGoalReportsTest extends TestCase
     /**
      * @param  array<int, ?float>  $targets
      */
+    public function test_the_panel_periods_table_links_each_period_to_its_panel_report(): void
+    {
+        $this->withoutVite();
+        $goal = $this->createPeriodicGoal();
+        $report = $this->createProgressReport($goal, $goal->periods->firstWhere('number', 1), 26);
+        $panelReportUrl = route('objectives.manage.goals.reports.index', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]);
+
+        $this->actingAs($this->manager)
+            ->get(route('objectives.manage.goals.index', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]))
+            ->assertOk()
+            ->assertSee('<th class="text-center">Reporte</th>', false)
+            ->assertSee('href="'.$panelReportUrl.'"', false)
+            ->assertDontSee('href="'.route('reports.index', ['reportId' => $report->id]).'"', false);
+    }
+
+    public function test_the_portal_periods_table_links_each_period_to_its_public_report(): void
+    {
+        $this->withoutVite();
+        $this->objective->hidden = false;
+        $this->objective->save();
+        $goal = $this->createPeriodicGoal();
+        $report = $this->createProgressReport($goal, $goal->periods->firstWhere('number', 1), 26);
+
+        $response = $this->get(route('goals.index', ['goalId' => $goal->id]))
+            ->assertOk()
+            ->assertSee('href="'.route('reports.index', ['reportId' => $report->id]).'"', false);
+
+        // Only period 1 was reported; the other three show a dash in the report column.
+        $this->assertSame(1, substr_count($response->getContent(), '<i class="far fa-file-lines fa-fw"></i> Ver</a>'));
+        $this->assertSame(3, substr_count($response->getContent(), '<span class="text-muted">—</span>'));
+    }
+
     private function createPeriodicGoal(array $targets = [1 => 27, 2 => 27, 3 => 25, 4 => 21]): Goal
     {
         $goal = new Goal();

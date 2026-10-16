@@ -29,6 +29,8 @@ use App\Rules\MatchOldPassword;
 use App\Services\Indicators\GoalIndicatorConfigurator;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use App\Services\Comments\CommentModeration;
+use App\Exports\CommentsExport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -85,8 +87,42 @@ class GoalPanelController extends Controller
       return $period;
     }
 
-    public function viewGoal(Request $request, $objectiveId, $goalId){
-      return view('objective.manage.goals.view',['objective' => $request->objective, 'goal' => $request->goal]);
+    public function viewGoal(Request $request, CommentModeration $commentModeration, $objectiveId, $goalId){
+      return view('objective.manage.goals.view',[
+        'objective' => $request->objective,
+        'goal' => $request->goal->loadMissing(['milestones', 'reports']),
+        'commentsCount' => $commentModeration->search(goalId: $request->goal->id)->count(),
+        'latestComments' => $commentModeration->search(goalId: $request->goal->id)->take(3)->get(),
+      ]);
+    }
+
+    public function viewListGoalComments(Request $request, CommentModeration $commentModeration, $objectiveId, $goalId){
+      $search = $request->query('q');
+      $type = $request->query('tipo');
+
+      return view('objective.manage.goals.comments', [
+        'objective' => $request->objective,
+        'goal' => $request->goal,
+        'comments' => $commentModeration->search($search, $type, goalId: $request->goal->id)->paginate(20)->withQueryString(),
+        'search' => $search,
+        'type' => $type,
+      ]);
+    }
+
+    public function downloadGoalComments(Request $request, CsvDownload $csvDownload, $objectiveId, $goalId){
+      $this->hasManagerPrivileges($request);
+
+      return $csvDownload->download(
+        new CommentsExport($request->query('q'), $request->query('tipo'), goalId: $request->goal->id),
+        Carbon::now()->format('Ymd').'-comentarios-meta-'.$request->goal->id.'.csv',
+      );
+    }
+
+    public function formDeleteGoalComment(Request $request, CommentModeration $commentModeration, $objectiveId, $goalId, $commentId){
+      $comment = $commentModeration->search(goalId: $request->goal->id)->findOrFail($commentId);
+      $commentModeration->delete($comment, $request->user(), $request->user()->hasRole('admin') ? 'Administrador' : 'Miembro del equipo');
+
+      return redirect()->back()->with('success', CommentModeration::deletedMessage($comment));
     }
 
     public function viewEditGoal(Request $request, $objectiveId, $goalId){
@@ -137,7 +173,7 @@ class GoalPanelController extends Controller
     }
 
     public function viewListGoalMilestones(Request $request, $objectiveId, $goalId){
-      return view('objective.manage.goals.milestones.list',['objective' => $request->objective, 'goal' => $request->goal]);
+      return view('objective.manage.goals.milestones.list',['objective' => $request->objective, 'goal' => $request->goal->load('milestones.report')]);
     }
 
     public function viewAddGoalMilestone(Request $request, $objectiveId, $goalId){
@@ -233,9 +269,27 @@ class GoalPanelController extends Controller
     }
 
     public function viewListGoalReports(Request $request, $objectiveId, $goalId){
-      $goal = $request->goal;
-      $reports = Report::where('goal_id',$goalId)->orderBy('date','DESC')->paginate(10);
-      return view('objective.manage.goals.reports.list',['objective' => $request->objective, 'goal' => $request->goal, 'reports' => $reports]);
+      $filters = [
+        'q' => trim((string) $request->query('q')) ?: null,
+        'tipo' => array_key_exists((string) $request->query('tipo'), Report::TYPES) ? $request->query('tipo') : null,
+      ];
+      $reports = Report::where('goal_id', $goalId)
+        ->with(['period', 'milestone', 'author'])
+        ->withCount(['comments', 'positiveTestimonies'])
+        ->when($filters['q'], fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
+        ->when($filters['tipo'], fn ($query, $type) => $query->where('type', $type))
+        ->orderBy('date', 'DESC')
+        ->orderBy('id', 'DESC')
+        ->paginate(10)
+        ->withQueryString();
+
+      return view('objective.manage.goals.reports.list', [
+        'objective' => $request->objective,
+        'goal' => $request->goal,
+        'reports' => $reports,
+        'hasReports' => $request->goal->reports()->exists(),
+        'filters' => $filters,
+      ]);
     }
 
     public function downloadListGoalReports(Request $request, CsvDownload $csvDownload, $objectiveId, $goalId){

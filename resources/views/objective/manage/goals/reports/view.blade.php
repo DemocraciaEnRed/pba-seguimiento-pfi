@@ -1,42 +1,18 @@
-@php
-@endphp
-
 @extends('objective.manage.goals.reports.master')
 
 @section('panelContent')
-  <div class="d-flex align-items-start mb-3">
-    <div class="mr-3 text-center">
-      <i class="fa-2x text-primary {{$report->type_icon}}"></i>
-    </div>
-    <div class="w-100">
-      <span class="text-muted">Reporte de {{$report->type_label}}</span>
-      <h3 class="is-700">
-        {{$report->title}}
-      </h3>
-    </div>
+  <h3 class="is-700">Resumen del reporte</h3>
+  <p class="lead"><i class="text-primary {{$report->type_icon}} fa-fw"></i> Reporte de {{$report->type_label}} &middot; <span class="text-muted">@justdate($report->date)</span></p>
+  <div class="d-grid grid-cols-2 grid-cols-md-4 gap-2 mb-3">
+    <x-stat label="Me gusta" :value="$report->positive_testimonies" icon="far fa-thumbs-up" tone="primary" :href="route('objectives.manage.goals.reports.testimonies', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])" />
+    <x-stat label="Comentarios" :value="$report->comments->count()" icon="far fa-comments" tone="secondary" :href="route('objectives.manage.goals.reports.comments', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])" />
+    <x-stat label="Fotos" :value="$report->photos->count()" icon="far fa-images" tone="info" :href="route('objectives.manage.goals.reports.album', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])" />
+    <x-stat label="Archivos" :value="$report->files->count()" icon="far fa-copy" tone="info" :href="route('objectives.manage.goals.reports.files', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])" />
   </div>
- <div class="card border-light my-3">
-    <div class="card-body py-4 row justify-content-between">
-      <div class="col-4 col-lg-2 text-center my-2 my-lg-0">
-        <h6 class="font-weight-bold">Me gusta</h6>
-        <span class="h6"><i class="far fa-thumbs-up fa-fw"></i> {{$report->positive_testimonies}}</span>
-      </div>
-      <div class="col-4 col-lg-2 text-center my-2 my-lg-0">
-        <h6 class="font-weight-bold">Comentarios</h6>
-        <span class="h6"><i class="far fa-comments fa-fw"></i> {{$report->comments->count()}}</span>
-      </div>
-      <div class="col-4 col-lg-2 text-center my-2 my-lg-0">
-        <h6 class="font-weight-bold">Mapa</h6>
-        <span class="h6"><i class="fas fa-map-location-dot fa-fw"></i> {{!is_null($report->map_lat) ? 'Si' : 'No'}}</span>
-      </div>
-      <div class="col-6 col-lg-2 text-center my-2 my-lg-0">
-        <h6 class="font-weight-bold">Fotos</h6>
-        <span class="h6"><i class="far fa-images fa-fw"></i> {{$report->photos->count()}}</span>
-      </div>
-      <div class="col-6 col-lg-2 text-center my-2 my-lg-0">
-        <h6 class="font-weight-bold">Archivos</h6>
-        <span class="h6"><i class="far fa-copy fa-fw"></i> {{$report->files->count()}}</span>
-      </div>
-    </div>
- </div>
+  @if($report->period)
+  <p class="mb-2"><i class="far fa-calendar fa-fw text-muted"></i>&nbsp;Informa el período <b>{{ $report->period->label() }}</b> <small class="text-muted">({{ $report->period->rangeLabel() }})</small></p>
+  @endif
+  @if($report->milestone)
+  <p class="mb-2"><i class="far fa-star fa-fw text-muted"></i>&nbsp;Completa el hito <b>#{{ $report->milestone->order }} {{ $report->milestone->title }}</b></p>
+  @endif
 @endsection

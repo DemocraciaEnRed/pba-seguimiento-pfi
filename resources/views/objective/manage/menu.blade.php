@@ -1,56 +1,36 @@
 @php
-$currentRoute = Route::currentRouteName();
+$objectiveParams = ['objectiveId' => $objective->id];
+$canManage = Auth::user()->hasRole('admin') || Auth::user()->isManagerObjective($objective->id);
 @endphp
-<p class="text-smaller text-muted mb-0">Objetivo General</p>
-<h6 class="font-weight-bold">
-<a href="{{route('objectives.index',['objectiveId' => $objective->id])}}">
-  {{$objective->title}}
-  </a>
-</h6>
 @hasRole('admin')
 <ul class="list-unstyled mb-0">
 <li><a href="{{ route('admin.objectives') }}" class="text-smaller text-dark"><i class="fas fa-arrow-left"></i>&nbsp;Volver a los objetivos</a></li>
 </ul>
-@endhasRole
 <hr>
-<a href="{{route('objectives.manage.index', ['objectiveId' => $objective->id]) }}" class="category {{ $currentRoute == 'objectives.manage.index'  ? 'is-active' : null }}"><i class="fas fa-gauge-high fa-fw"></i>&nbsp;Inicio</a>
-<h6 class="category"><i class="fas fa-medal fa-fw"></i>&nbsp;Metas del objetivo</h6>
-<div class="menu-link">
-@isManager($objective->id)
-<a href="{{ route('objectives.manage.goals.add', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals.add' ? 'is-active' : null }}"><i class="fas fa-plus fa-fw"></i>&nbsp;Nuevo</a>
-@endisManager
-<a href="{{ route('objectives.manage.goals', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.goals' ? 'is-active' : null }}">Listar</a>
-</div>
-<h6 class="category"><i class="fas fa-icons fa-fw"></i>&nbsp;Comunidades</h6>
-<div class="menu-link">
-@isManager($objective->id)
-<a href="{{ route('objectives.manage.communities.add', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.communities.add' ? 'is-active' : null }}"><i class="fas fa-plus fa-fw"></i>&nbsp;Nuevo</a>
-@endisManager
-<a href="{{ route('objectives.manage.communities', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.communities' ? 'is-active' : null }}">Listar</a>
-</div>
-
-<h6 class="category"><i class="fas fa-users fa-fw"></i>&nbsp;Equipo del equipo</h6>
-<div class="menu-link">
-@isManager($objective->id)
-<a href="{{ route('objectives.manage.team.add', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.team.add' ? 'is-active' : null }}"><i class="fas fa-plus fa-fw"></i>&nbsp;Agregar</a>
-@endisManager
-<a href="{{ route('objectives.manage.team', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.team' ? 'is-active' : null }}">Ver miembros</a>
-</div>
-<h6 class="category"><i class="fas fa-user-tag fa-fw"></i>&nbsp;Suscriptores</h6>
-<div class="menu-link">
-<a href="{{route('objectives.manage.subscribers', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.subscribers'  ? 'is-active' : null }}">Listar</a>
-</div>
-
-@isManager($objective->id)
-<h6 class="category"><i class="fas fa-gear fa-fw"></i>&nbsp;Administrar</h6>
-<div class="menu-link">
-<a href="{{route('objectives.manage.edit', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.edit'  ? 'is-active' : null }}">Editar objetivo general</a>
-<a href="{{route('objectives.manage.cover', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.cover'  ? 'is-active' : null }}">Imagen de portada</a>
-<a href="{{route('objectives.manage.files', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.files'  ? 'is-active' : null }}">Repositorio de archivos</a>
-@if(app_setting('app_map_enabled'))
-<a href="{{route('objectives.manage.map', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.map'  ? 'is-active' : null }}">Mapa de reportes</a>
+@endhasRole
+<x-side-menu.group>
+  <x-side-menu.category label="Inicio" icon="fas fa-gauge-high" :href="route('objectives.manage.index', $objectiveParams)" :active="request()->routeIs('objectives.manage.index')" />
+</x-side-menu.group>
+<x-side-menu.group label="Seguimiento">
+  <x-side-menu.category label="Metas" icon="fas fa-medal" :href="route('objectives.manage.goals', $objectiveParams)" :active="request()->routeIs('objectives.manage.goals')" :create-href="$canManage ? route('objectives.manage.goals.add', $objectiveParams) : null" :create-active="request()->routeIs('objectives.manage.goals.add')" create-label="Nueva meta" />
+</x-side-menu.group>
+<x-side-menu.group label="Participación">
+  <x-side-menu.category label="Comentarios" icon="far fa-comments" :href="route('objectives.manage.comments', $objectiveParams)" :active="request()->routeIs('objectives.manage.comments')" />
+  <x-side-menu.category label="Comunidades" icon="fas fa-icons" :href="route('objectives.manage.communities', $objectiveParams)" :active="request()->routeIs('objectives.manage.communities', 'objectives.manage.communities.edit')" :create-href="$canManage ? route('objectives.manage.communities.add', $objectiveParams) : null" :create-active="request()->routeIs('objectives.manage.communities.add')" create-label="Nueva comunidad" />
+  <x-side-menu.category label="Suscriptores" icon="fas fa-user-tag" :href="route('objectives.manage.subscribers', $objectiveParams)" :active="request()->routeIs('objectives.manage.subscribers')" />
+</x-side-menu.group>
+<x-side-menu.group label="Equipo">
+  <x-side-menu.category label="Miembros" icon="fas fa-users" :href="route('objectives.manage.team', $objectiveParams)" :active="request()->routeIs('objectives.manage.team')" :create-href="$canManage ? route('objectives.manage.team.add', $objectiveParams) : null" :create-active="request()->routeIs('objectives.manage.team.add')" create-label="Agregar miembro" />
+</x-side-menu.group>
+@if($canManage)
+<x-side-menu.group label="Configuración">
+  <x-side-menu.category label="Editar objetivo" icon="fas fa-pen" :href="route('objectives.manage.edit', $objectiveParams)" :active="request()->routeIs('objectives.manage.edit')" />
+  <x-side-menu.category label="Imagen de portada" icon="far fa-image" :href="route('objectives.manage.cover', $objectiveParams)" :active="request()->routeIs('objectives.manage.cover')" />
+  <x-side-menu.category label="Repositorio de archivos" icon="far fa-folder-open" :href="route('objectives.manage.files', $objectiveParams)" :active="request()->routeIs('objectives.manage.files')" />
+  @if(app_setting('app_map_enabled'))
+  <x-side-menu.category label="Mapa de reportes" icon="fas fa-map-location-dot" :href="route('objectives.manage.map', $objectiveParams)" :active="request()->routeIs('objectives.manage.map')" />
+  @endif
+  <x-side-menu.category label="Configuración" icon="fas fa-gear" :href="route('objectives.manage.configuration', $objectiveParams)" :active="request()->routeIs('objectives.manage.configuration')" />
+  <x-side-menu.category label="Bitácora de acciones" icon="fas fa-list-check" :href="route('objectives.manage.logs', $objectiveParams)" :active="request()->routeIs('objectives.manage.logs')" />
+</x-side-menu.group>
 @endif
-<a href="{{route('objectives.manage.configuration', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.configuration'  ? 'is-active' : null }}">Configuración</a>
-<a href="{{route('objectives.manage.logs', ['objectiveId' => $objective->id]) }}" class="item-link {{ $currentRoute == 'objectives.manage.logs'  ? 'is-active' : null }}">Bitácora de acciones</a>
-</div>
-@endisManager

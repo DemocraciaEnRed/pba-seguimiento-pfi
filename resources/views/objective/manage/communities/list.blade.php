@@ -4,32 +4,31 @@
 
 <section>
   <h3 class="is-700">Comunidades</h3>
-  <p class="lead">Las comunidades de los objetivos son puntos de acceso para que los ciudadanos puedan interactuar en otros. Estos son los "Botones" para invitar a ser parte de la comunidad</p>
-  @forelse ($communities as $community)
-  <div class="card my-3 shadow-sm">
-    <div class="card-body d-flex align-items-center">
-      <div class="w-100">
-        <a href="{{$community->url}}" target="_blank" class="py-1 px-3 rounded d-inline-block" style="border: 2px solid {{$community->color}}; color: {{$community->color}}"><i class="{{$community->icon}}"></i>&nbsp;{{$community->label}}</a>
-      </div>
-      <div class="text-right">
-        <a href="#" onclick="event.preventDefault();document.getElementById('delete-community-{{$community->id}}').submit();" class="btn btn-link btn-sm"><i class="fas fa-trash-can fa-fw"></i>Eliminar</a>
-        <form id="delete-community-{{$community->id}}" action="{{ route('objectives.manage.communities.remove.form',['objectiveId' => $objective->id, 'communityId' => $community->id]) }}" method="POST" style="display: none;">
-            @method('DELETE')
-            @csrf
-        </form>
-      </div>
-    </div>
+  <p class="lead">Las comunidades de los objetivos son puntos de acceso para que los ciudadanos puedan interactuar en otros espacios. Estos son los "botones" para invitar a ser parte de la comunidad.</p>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <span class="text-smaller text-muted">{{ $communities->total() }} comunidad(es)</span>
+    <a href="{{ route('objectives.manage.communities.add', ['objectiveId' => $objective->id]) }}" class="btn btn-primary btn-sm"><i class="fas fa-plus fa-fw"></i>Nueva comunidad</a>
   </div>
-  @empty
-  <div class="card shadow-sm my-3">
-    <div class="card-body text-center">
+
+  <div class="list-group shadow-sm mb-3">
+    @forelse($communities as $community)
+    <div class="list-group-item d-flex align-items-center gap-3">
+      <a href="{{ $community->url }}" target="_blank" rel="noopener" class="py-1 px-3 rounded d-inline-block text-nowrap" style="border: 2px solid {{ $community->color }}; color: {{ $community->color }}"><i class="{{ $community->icon }}"></i>&nbsp;{{ $community->label }}</a>
+      <span class="flex-grow-1 min-w-0 text-smaller text-muted text-truncate" title="{{ $community->url }}">{{ $community->url }}</span>
+      <form action="{{ route('objectives.manage.communities.remove.form', ['objectiveId' => $objective->id, 'communityId' => $community->id]) }}" method="POST">
+        @method('DELETE')
+        @csrf
+        <button type="submit" class="btn btn-link btn-sm text-danger p-0 text-nowrap"><i class="fas fa-trash-can fa-fw"></i>Eliminar</button>
+      </form>
+    </div>
+    @empty
+    <div class="list-group-item text-center text-muted py-4">
       <i class="far fa-face-surprise"></i>&nbsp;¡No hay comunidades del objetivo!
     </div>
+    @endforelse
   </div>
-  @endforelse
-
-   <a href="{{ route('objectives.manage.communities.add', ['objectiveId' => $objective->id]) }}" class="btn btn-block btn-primary">Crear una nueva comunidad <i class="fas fa-plus"></i></a>
-  
+  {{ $communities->links() }}
 </section>
 
 @endsection

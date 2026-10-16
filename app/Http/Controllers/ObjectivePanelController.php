@@ -31,7 +31,11 @@ use App\Notifications\JoinObjectiveTeam;
 use App\Notifications\RemoveObjectiveTeam;
 use App\Rules\MatchOldPassword;
 use App\Services\Indicators\GoalIndicatorConfigurator;
+use App\Services\Indicators\ObjectiveStats;
+use App\Services\Indicators\MeasurementMode;
 use Illuminate\Http\Request;
+use App\Services\Comments\CommentModeration;
+use App\Exports\CommentsExport;
 
 class ObjectivePanelController extends Controller
 {
@@ -102,8 +106,44 @@ class ObjectivePanelController extends Controller
       return redirect()->route('objectives.manage.index',['objectiveId' => $objective->id])->with('success','El objetivo ha sido editado correctamente');
     }
 
-    public function index(Request $request){
-      return view('objective.manage.index', ['objective' => $request->objective]);
+    public function index(Request $request, CommentModeration $commentModeration, ObjectiveStats $objectiveStats){
+      return view('objective.manage.index', [
+        'objective' => $request->objective,
+        'stats' => $objectiveStats->compute($request->objective),
+        'commentsCount' => $commentModeration->search(objectiveId: $request->objective->id)->count(),
+        'latestComments' => $commentModeration->search(objectiveId: $request->objective->id)->take(3)->get(),
+      ]);
+    }
+
+    public function viewListComments(Request $request, CommentModeration $commentModeration, $objectiveId)
+    {
+      $search = $request->query('q');
+      $type = $request->query('tipo');
+
+      return view('objective.manage.comments', [
+        'objective' => $request->objective,
+        'comments' => $commentModeration->search($search, $type, objectiveId: $request->objective->id)->paginate(20)->withQueryString(),
+        'search' => $search,
+        'type' => $type,
+      ]);
+    }
+
+    public function downloadComments(Request $request, CsvDownload $csvDownload, $objectiveId)
+    {
+      $this->hasManagerPrivileges($request);
+
+      return $csvDownload->download(
+        new CommentsExport($request->query('q'), $request->query('tipo'), objectiveId: $request->objective->id),
+        Carbon::now()->format('Ymd').'-comentarios-objetivo-'.$request->objective->id.'.csv',
+      );
+    }
+
+    public function formDeleteComment(Request $request, CommentModeration $commentModeration, $objectiveId, $commentId)
+    {
+      $comment = $commentModeration->search(objectiveId: $request->objective->id)->findOrFail($commentId);
+      $commentModeration->delete($comment, $request->user(), $request->user()->hasRole('admin') ? 'Administrador' : 'Miembro del equipo');
+
+      return redirect()->back()->with('success', CommentModeration::deletedMessage($comment));
     }
 
     public function viewListCommunities(Request $request, $objectiveId)
@@ -150,7 +190,18 @@ class ObjectivePanelController extends Controller
     }
 
     public function viewListTeam(Request $request){
-      return view('objective.manage.team.list', ['objective' => $request->objective]);
+      $role = in_array($request->query('rol'), ['manager', 'reporter'], true) ? $request->query('rol') : null;
+      $members = $request->objective->members()->orderBy('surname')->orderBy('name');
+      if ($role) {
+        $members->wherePivot('role', $role);
+      }
+      $members = $members->get();
+
+      return view('objective.manage.team.list', [
+        'objective' => $request->objective,
+        'members' => $members,
+        'filters' => ['rol' => $role],
+      ]);
     }
 
     public function viewListSubscribers(Request $request){
@@ -217,7 +268,25 @@ class ObjectivePanelController extends Controller
       return redirect()->route('objectives.manage.team', ['objectiveId' => $request->objective->id])->with('success','Se ha quitado al miembro del equipo');
     }
     public function viewListGoals(Request $request){
-      return view('objective.manage.goals.list',['objective' => $request->objective]);
+      $filters = [
+        'q' => trim((string) $request->query('q')) ?: null,
+        'estado' => array_key_exists((string) $request->query('estado'), Goal::STATUSES) ? $request->query('estado') : null,
+        'tipo' => MeasurementMode::tryFrom((string) $request->query('tipo'))?->value,
+      ];
+      $goals = $request->objective->goals()
+        ->with('periods.progressReport')
+        ->withCount(['reports', 'milestones'])
+        ->when($filters['q'], fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
+        ->when($filters['estado'], fn ($query, $status) => $query->where('status', $status))
+        ->when($filters['tipo'], fn ($query, $mode) => $query->where('measurement_mode', $mode))
+        ->get();
+
+      return view('objective.manage.goals.list', [
+        'objective' => $request->objective,
+        'goals' => $goals,
+        'hasGoals' => $request->objective->goals()->exists(),
+        'filters' => $filters,
+      ]);
     }
 
      public function downloadListGoals(Request $request, CsvDownload $csvDownload, $objectiveId){
