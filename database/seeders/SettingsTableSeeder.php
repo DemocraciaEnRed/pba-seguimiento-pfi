@@ -44,6 +44,14 @@ class SettingsTableSeeder extends Seeder
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
+        if (! Setting::where('name', 'app_search_indexing_enabled')->exists()) {
+            $setting = new Setting();
+            $setting->name = 'app_search_indexing_enabled';
+            $setting->value = false;
+            $setting->type = 'boolean';
+            $setting->cached = true;
+            $setting->save();
+        }
         $setting = new Setting();
         $setting->name = 'app_social_description';
         $setting->value = 'Aqui podes informarte de los avances del Plan de Fortalecimiento Institucional del Ministerio de Infraestructura y Servicios Públicos de la Provincia de Buenos Aires.';

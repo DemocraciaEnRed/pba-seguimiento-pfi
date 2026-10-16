@@ -11,6 +11,8 @@ use App\Report;
 use App\Goal;
 use App\Testimony;
 use App\Objective;
+use App\Services\SeoMetadata;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use App\Notifications\NewCommentReportForAuthor;
 use App\Notifications\NewCommentReportForTeamObjective;
@@ -40,11 +42,12 @@ class ReportController extends Controller
       return;
     }
 
-    public function index(Request $request, $reportId){
-        $report = Report::findorfail($reportId);
+    public function index(Request $request, string $reportId, SeoMetadata $seoMetadata): View {
+        $report = Report::with('photos')->findOrFail($reportId);
         abort_unless($report->isVisibleTo($request->user()), 404);
         $goal = Goal::findorfail($report->goal_id);
         $objective = Objective::with('strategicObjective.category')->findOrFail($goal->objective_id);
+        $request->attributes->set('search_indexing_public', $objective->isVisibleTo(null));
         $testimony = null;
         if($request->user()){
             $testimony = $report->userTestimony($request->user()->id)->first();
@@ -53,7 +56,8 @@ class ReportController extends Controller
             'report' => $report,
             'goal' => $goal,
             'objective' => $objective,
-            'testimony' => $testimony
+            'testimony' => $testimony,
+            'metadata' => $seoMetadata->report($report, $goal, $objective),
         ]);
     }
 

@@ -1031,9 +1031,14 @@ class AdminPanelController extends Controller
             'value' => 'nullable|string',
         ];
 
+        if ($request->input('name') === 'app_search_indexing_enabled') {
+            $rules['type'] = 'required|in:boolean';
+            $rules['value'] = 'nullable|in:true,false,1,0';
+        }
+
         $request->validate($rules);
 
-        $setting = Setting::where('name', $request->input('name'))->first();
+        $setting = Setting::where('name', $request->input('name'))->firstOrFail();
         if($setting->type == 'bool' || $setting->type == 'boolean') {
             // to string
             $setting->value = $request->boolean('value');

@@ -5,6 +5,8 @@ use Image;
 use Storage;
 use Log;
 use App\Event;
+use App\Services\SeoMetadata;
+use Illuminate\Contracts\View\View;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -38,10 +40,11 @@ class EventController extends Controller
         ]);
     }
 
-    public function index(Request $request, $eventId){
-        $event = Event::findorfail($eventId);
+    public function index(Request $request, string $eventId, SeoMetadata $seoMetadata): View {
+        $event = Event::with('photos')->findOrFail($eventId);
         return view('portal.events.view',[
             'event' => $event,
+            'metadata' => $seoMetadata->event($event),
         ]);
     }
 

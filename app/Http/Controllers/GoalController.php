@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Goal;
 use App\Objective;
 use App\Report;
+use App\Services\SeoMetadata;
+use Illuminate\Contracts\View\View;
 use App\Http\Resources\Report as ReportResource;
 use App\Http\Resources\SimpleReport as SimpleReportResource;
 
@@ -22,13 +24,15 @@ class GoalController extends Controller
         // $this->middleware('auth');
     }
 
-     public function index(Request $request, $goalId){
+     public function index(Request $request, string $goalId, SeoMetadata $seoMetadata): View {
         $goal = Goal::findorfail($goalId);
-        $objective = Objective::with(['strategicObjective.category', 'goals', 'communities'])->findOrFail($goal->objective_id);
+        $objective = Objective::with(['strategicObjective.category', 'goals', 'communities', 'cover'])->findOrFail($goal->objective_id);
         abort_unless($objective->isVisibleTo($request->user()), 404);
+        $request->attributes->set('search_indexing_public', $objective->isVisibleTo(null));
         return view('objective.goal.view',[
             'goal' => $goal,
-            'objective' => $objective
+            'objective' => $objective,
+            'metadata' => $seoMetadata->goal($goal, $objective),
         ]);
     }
 

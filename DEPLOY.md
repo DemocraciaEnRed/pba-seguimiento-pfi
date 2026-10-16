@@ -14,12 +14,12 @@ Notes: We focused this manual in the installation of the application for a LAMP 
 
 ##### Before starting...
 
-Laravel requiere **PHP >= 8.2**. No es muy diferente a lo que seria un deployment de Symfony u otros frameworks de PHP. En `production`, deberian ir por un **PHP-FPM** por razones de performance.
+La aplicación y sus dependencias requieren **PHP >= 8.4**. No es muy diferente a lo que seria un deployment de Symfony u otros frameworks de PHP. En `production`, deberian ir por un **PHP-FPM** por razones de performance.
 
 
 #### Requisitos:
 
-1. **PHP >= 8.2.x** y **PHP-FPM** (Recomendado para produccion). (It is confirmed it works with PHP 8.4.x)
+1. **PHP >= 8.4** y **PHP-FPM** (Recomendado para produccion).
 2. A webserver, like **Apache** o **Nginx** thatr points to the project's `/public` directory. (Doc para [nginx](https://laravel.com/docs/13.x/deployment#nginx))
 3. **MySQL 8.0+ o MariaDB 10.6+** as the database engine.
 4. **Composer** [https://getcomposer.org/](https://getcomposer.org/) for installing the project's dependencies
@@ -29,6 +29,24 @@ Laravel requiere **PHP >= 8.2**. No es muy diferente a lo que seria un deploymen
 8. A **Google reCAPTCHA v2** [https://www.google.com/recaptcha](https://www.google.com/recaptcha) to prevent spam. Since we use Google reCaptcha, it is also important that you create a reCaptcha for the site and that in the environment variables enter the values for `NOCAPTCHA_SECRET` and `NOCAPTCHA_SITEKEY`. More information at [Google Recaptcha](https://www.google.com/recaptcha/)
 9. (Optional) A **Mapbox** [https://mapbox.com](https://mapbox.com) to consume map tiles.
 10. (Optional) A **Google Analytics 4** [https://analytics.google.com](https://analytics.google.com) to track the platform's usage.
+
+##### Indexación en buscadores
+
+Después de actualizar la aplicación, ejecute las migraciones del despliegue para crear la opción `app_search_indexing_enabled`. La indexación permanece desactivada por defecto, también cuando la opción todavía no existe.
+
+Un administrador puede activarla en **SEO y Analytics > Indexación en buscadores**. Solo las páginas públicas son elegibles: administración, paneles personales y de gestión, autenticación, API y contenido oculto permanecen excluidos mediante `noindex`. El cambio se refleja en el HTML y en la cabecera `X-Robots-Tag` sin limpiar la caché manualmente.
+
+Esta opción no vuelve privada la plataforma ni garantiza que todos los bots respeten las directivas. Mantenga el rastreo permitido en `robots.txt` para que los buscadores puedan leer `noindex`. Los archivos estáticos servidos directamente por Apache/Nginx no pasan por esta política de Laravel; sus cabeceras se configuran en el servidor.
+
+Los metadatos se generan automáticamente según la sección o el contenido del objetivo, meta, reporte o actividad. Las páginas públicas tienen una URL canónica sin parámetros de seguimiento; las búsquedas y los filtros de los listados permanecen en `noindex`. Las canónicas no habilitan la indexación cuando la opción global está desactivada.
+
+Para compartir enlaces se utiliza la portada del objetivo (también para sus metas) o la primera foto del reporte o actividad, con la imagen global de **SEO y Analytics** como respaldo y `public/social-sharer.png` cuando no hay una imagen configurada. No es necesario cargar campos SEO por cada contenido.
+
+El sitemap se genera con `spatie/laravel-sitemap` 8.x (requiere PHP 8.4 o superior), sin rastrear la web ni ejecutar tareas programadas. `/sitemap.xml` incluye únicamente URLs canónicas públicas; al superar 1.000 URLs devuelve un índice de archivos de hasta 1.000 URLs en `/sitemaps/{section}/{page}.xml`. No se guardan archivos ni se cachean respuestas, para reflejar cambios de visibilidad en la siguiente solicitud. Los valores `lastmod` provienen de `updated_at`; las páginas generales y el índice no inventan fechas de modificación.
+
+Con la indexación desactivada, los endpoints de sitemap responden 404 y `/robots.txt` no anuncia un sitemap. Al activarla se agrega la referencia automáticamente, manteniendo el rastreo permitido. No habilite indexación en un entorno de pruebas para validar esta función.
+
+**Al desplegar:** elimine cualquier copia antigua de `public/robots.txt` o `public/sitemap.xml` y reglas del servidor/CDN que sirvan archivos estáticos o cacheen estas rutas. `robots.txt`, `sitemap.xml` y `/sitemaps/` deben llegar a Laravel. Configure el dominio y esquema HTTPS públicos correctos y compruebe las URLs del XML antes de registrarlo en Search Console. La configuración local no permite verificar el dominio de producción.
 
 ##### About MAPBOX
 
@@ -289,7 +307,11 @@ server {
     }
  
     location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
+    location = /robots.txt {
+        access_log off;
+        log_not_found off;
+        rewrite ^ /index.php last;
+    }
  
     error_page 404 /index.php;
  

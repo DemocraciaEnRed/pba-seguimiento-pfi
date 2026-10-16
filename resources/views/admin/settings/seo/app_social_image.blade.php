@@ -18,8 +18,8 @@
       <button type="submit" class="btn btn-sm btn-primary">Editar</button>
     </div>
     <div class="col">
-        <img src="{{URL::to('/')}}{{app_setting('app_social_image','/social-sharer.png')}}" class="img-fluid">
+        @inject('seoMetadata', 'App\Services\SeoMetadata')
+        <img src="{{ $seoMetadata->imageUrl() }}" class="img-fluid" alt="Imagen predeterminada para compartir">
     </div>
   </div>
 </form>
-

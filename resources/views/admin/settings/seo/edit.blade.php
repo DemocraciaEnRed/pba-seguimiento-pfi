@@ -16,6 +16,8 @@
   @endif
   @include('admin.settings.reset_cache')
   <hr>
+  @include('admin.settings.seo.app_search_indexing_enabled')
+  <hr>
   @include('admin.settings.seo.app_google_analytics_4_id')
   <hr>
   @include('admin.settings.seo.app_social_title')

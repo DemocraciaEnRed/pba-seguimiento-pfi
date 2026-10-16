@@ -14,6 +14,7 @@ use App\Http\Controllers\GoalPanelController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportPanelController;
 use App\Http\Controllers\StructureImportController;
+use App\Http\Controllers\SearchEngineController;
 use App\Http\Middleware\EnsureMapsEnabled;
 
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/robots.txt', [SearchEngineController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SearchEngineController::class, 'sitemap'])->name('sitemap');
+Route::get('/sitemaps/{section}/{page}.xml', [SearchEngineController::class, 'sitemapPart'])
+    ->where('section', 'pages|objectives|goals|reports|events')
+    ->where('page', '[1-9][0-9]{0,8}')
+    ->name('sitemap.part');
 Route::get('/start', [MiscController::class, 'start'])->name('start');
 Route::post('/start', [MiscController::class, 'startApp'])->name('start.form');
 // Route::get('/testmail', [MiscController::class, 'testEmail'])->name('misc.testEmail');
@@ -311,4 +318,3 @@ Route::group([
         Route::delete('/metas/{goalId}/reportes/{reportId}/eliminar', [ReportPanelController::class, 'formDeleteReport'])->name('goals.reports.delete.form');
     });
 });
-

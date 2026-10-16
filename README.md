@@ -12,13 +12,15 @@ The changelog has moved to [CHANGELOG.md](CHANGELOG.md).
 
 Please check out [DEPLOY.md](DEPLOY.md) file
 
+Las mejoras SEO deseables y diferidas están en el [backlog de SEO](docs/backlog-seo.md).
+
 ---
 
 ## Development
 
 First, make sure you have installed:
 
-- PHP +8.2 (8.4 recommended)
+- PHP 8.4 or newer
 - MySQL
 - Node 18.19.0 + NPM (For local development and building)
 

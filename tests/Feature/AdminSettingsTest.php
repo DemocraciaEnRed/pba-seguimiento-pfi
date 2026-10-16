@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Role;
 use App\Setting;
 use App\User;
+use Database\Factories\UserFactory;
 use Database\Seeders\SettingsTableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -116,5 +117,72 @@ class AdminSettingsTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertStringStartsWith('/storage/settings/app_social_image-', app_setting('app_social_image'));
+    }
+
+    public function test_indexing_is_disabled_by_default_and_has_a_single_setting(): void
+    {
+        $this->assertFalse(app_setting('app_search_indexing_enabled'));
+        $this->assertSame(1, Setting::where('name', 'app_search_indexing_enabled')->count());
+
+        $this->actingAs($this->admin)->get(route('admin.settings.seo'))
+            ->assertOk()
+            ->assertSee('Permitir que los buscadores indexen las páginas públicas')
+            ->assertSee('Esto no restringe el acceso público');
+    }
+
+    public function test_an_admin_can_enable_and_disable_indexing_without_clearing_the_cache(): void
+    {
+        foreach ([true, false] as $enabled) {
+            $data = [
+                'name' => 'app_search_indexing_enabled',
+                'type' => 'boolean',
+                'cached' => 'true',
+            ];
+            if ($enabled) {
+                $data['value'] = 'true';
+            }
+
+            $this->actingAs($this->admin)->from(route('admin.settings.seo'))
+                ->put(route('admin.settings.form'), $data)
+                ->assertRedirect(route('admin.settings.seo'))
+                ->assertSessionHas('success');
+
+            $this->assertSame($enabled, app_setting('app_search_indexing_enabled'));
+            $this->assertSame($enabled, Setting::where('name', 'app_search_indexing_enabled')->firstOrFail()->casted_value);
+            $this->get(route('home'))->assertHeader('X-Robots-Tag', $enabled ? 'index, follow' : 'noindex, follow');
+            $response = $this->get(route('admin.settings.seo'));
+            $this->assertMatchesRegularExpression(
+                '/id="app_search_indexing_enabled"[^>]*'.($enabled ? 'checked' : 'value="true"\s*').'>/',
+                $response->getContent(),
+            );
+        }
+    }
+
+    public function test_indexing_rejects_invalid_values_and_types(): void
+    {
+        foreach ([['string', 'true'], ['boolean', 'invalid']] as [$type, $value]) {
+            $this->actingAs($this->admin)->from(route('admin.settings.seo'))
+                ->put(route('admin.settings.form'), [
+                    'name' => 'app_search_indexing_enabled',
+                    'type' => $type,
+                    'value' => $value,
+                ])
+                ->assertSessionHasErrors($type === 'string' ? 'type' : 'value');
+
+            $this->assertFalse(app_setting('app_search_indexing_enabled'));
+        }
+    }
+
+    public function test_only_admins_can_access_or_save_the_indexing_setting(): void
+    {
+        $data = ['name' => 'app_search_indexing_enabled', 'type' => 'boolean', 'value' => 'true'];
+
+        $this->get(route('admin.settings.seo'))->assertRedirect(route('login'));
+        $this->put(route('admin.settings.form'), $data)->assertRedirect(route('login'));
+
+        $user = UserFactory::new()->create(['surname' => 'User']);
+        $this->actingAs($user)->get(route('admin.settings.seo'))->assertForbidden();
+        $this->actingAs($user)->put(route('admin.settings.form'), $data)->assertForbidden();
+        $this->assertFalse(app_setting('app_search_indexing_enabled'));
     }
 }

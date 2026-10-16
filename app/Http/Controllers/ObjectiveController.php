@@ -6,6 +6,8 @@ use App\Goal;
 use App\Report;
 use App\Category;
 use App\Services\Indicators\ObjectiveStats;
+use App\Services\SeoMetadata;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -36,10 +38,14 @@ class ObjectiveController extends Controller
         // $this->middleware('fetch_objective');
     }
 
-    public function index(Request $request, $objectiveId){
+    public function index(Request $request, string $objectiveId, SeoMetadata $seoMetadata): View {
         $objective = Objective::with(['strategicObjective.category', 'organizations.logo', 'goals', 'communities', 'cover', 'members', 'files'])->findOrFail($objectiveId);
         abort_unless($objective->isVisibleTo($request->user()), 404);
-        return view('objective.view',['objective' => $objective]);
+        $request->attributes->set('search_indexing_public', $objective->isVisibleTo(null));
+        return view('objective.view',[
+            'objective' => $objective,
+            'metadata' => $seoMetadata->objective($objective),
+        ]);
     }
 
     public function viewList(Request $request){
