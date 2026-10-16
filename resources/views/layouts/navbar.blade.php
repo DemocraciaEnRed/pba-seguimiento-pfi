@@ -28,7 +28,7 @@
           <a href="{{ route('reports') }}" class="nav-link"><i class="far fa-fw fa-copy"></i> Seguimiento</a>
         </li>
         <li class="nav-item">
-          <a href="{{ route('events.upcoming') }}" class="nav-link"><i class="far fa-fw fa-calendar-days"></i> Eventos</a>
+          <a href="{{ route('events.upcoming') }}" class="nav-link"><i class="far fa-fw fa-calendar-days"></i> Actividades</a>
         </li>
         <li class="nav-item">
           <a href="{{ route('about.general') }}" class="nav-link"><i class="fas fa-fw fa-circle-question"></i> ¿Cómo funciona?</a>

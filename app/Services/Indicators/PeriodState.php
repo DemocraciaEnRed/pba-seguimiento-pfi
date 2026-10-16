@@ -14,7 +14,7 @@ enum PeriodState: string
     public function label(): string
     {
         return match ($this) {
-            self::NoTarget => 'Sin objetivo',
+            self::NoTarget => 'Sin meta',
             self::Skipped => 'Omitido',
             self::Reported => 'Informado',
             self::Upcoming => 'Próximo',

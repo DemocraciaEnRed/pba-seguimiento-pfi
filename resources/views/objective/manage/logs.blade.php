@@ -3,7 +3,7 @@
 @section('panelContent')
 
 <section>
-  <h3 class="is-700">Bitacora del objetivo</h3>
+  <h3 class="is-700">Bitácora de acciones del objetivo</h3>
   <p class="lead">En esta sección se podrán auditar todas las acciones que refieren al objetivo</p>
   @foreach($logs as $log)
   <div class="text-smaller">

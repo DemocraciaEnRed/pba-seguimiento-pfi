@@ -115,7 +115,7 @@ class PeriodicGoalReportsTest extends TestCase
             'period_targets' => [1 => '', 2 => ''],
         ]);
 
-        $response->assertSessionHasErrors('period_targets');
+        $response->assertSessionHasErrors(['period_targets' => 'Definí el valor de meta de al menos un período.']);
         $this->assertSame(0, Goal::count());
     }
 
@@ -399,17 +399,34 @@ class PeriodicGoalReportsTest extends TestCase
             ->assertOk()
             ->assertSee('174%')
             ->assertSee('Vencido sin informar')
+            ->assertSee('Meta a la fecha:')
+            ->assertSeeInOrder(['>Meta</th>', '>Resultado</th>'], false)
+            ->assertDontSee('>Medido</th>', false)
+            ->assertDontSee('>Objetivo</th>', false)
             ->assertSee('Omitir');
         $this->actingAs($this->manager)->get(route('objectives.manage.goals.index', $objectiveParameters + ['goalId' => $periodic->id]))
             ->assertOk()
             ->assertDontSee('Omitir');
         $this->actingAs($this->reporter)->get(route('objectives.manage.goals.reports.edit', $objectiveParameters + ['goalId' => $periodic->id, 'reportId' => $report->id]))
             ->assertOk()
+            ->assertSee('Resultado del período')
+            ->assertSee('Meta del período:')
+            ->assertDontSee('Valor medido en el período')
             ->assertSee('measured_value', false);
+
+        $this->get(route('goals.index', ['goalId' => $periodic->id]))
+            ->assertOk()
+            ->assertSeeInOrder(['>Meta</th>', '>Resultado</th>'], false)
+            ->assertSee('Meta a la fecha:')
+            ->assertDontSee('>Medido</th>', false)
+            ->assertDontSee('>Objetivo</th>', false);
 
         $this->get(route('reports.index', ['reportId' => $report->id]))
             ->assertOk()
             ->assertSee('Medición del Período 1')
+            ->assertSee('Meta del período')
+            ->assertSee('Resultado del período')
+            ->assertDontSee('Valor medido')
             ->assertSee('174%')
             ->assertSee('+74%')
             ->assertSee('-11,51 días', false);
@@ -440,6 +457,7 @@ class PeriodicGoalReportsTest extends TestCase
         $export = new ObjectiveIndicatorsExport($this->objective->id);
         $row = array_combine($export->headings(), $export->map($export->collection()->sole()));
 
+        $this->assertSame($this->objective->title, $row['Objetivo general']);
         $this->assertSame([27.0, 27.0, 25.0, 21.0, 25.0], [$row['Meta P1'], $row['Meta P2'], $row['Meta P3'], $row['Meta P4'], $row['Meta ventana']]);
         $this->assertSame([15.49, '174%', '+74%'], [$row['Resultado P1'], $row['Cumplimiento P1'], $row['Desvío P1']]);
         $this->assertSame([25.81, '105%', '+5%'], [$row['Resultado P2'], $row['Cumplimiento P2'], $row['Desvío P2']]);
@@ -452,6 +470,34 @@ class PeriodicGoalReportsTest extends TestCase
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
 
         $this->assertStringContainsString(",15.49,174%,+74%,25.81,105%,+5%,,,,,,,20.65,131%,+31%\r\n", $response->streamedContent());
+    }
+
+    public function test_periods_without_a_target_are_labelled_without_confusing_them_with_objectives(): void
+    {
+        $this->withoutVite();
+        $this->objective->hidden = false;
+        $this->objective->save();
+        $goal = $this->createPeriodicGoal();
+        $period = $goal->periods->firstWhere('number', 3);
+        $period->target_value = null;
+        $period->save();
+
+        $this->get(route('goals.index', ['goalId' => $goal->id]))
+            ->assertOk()
+            ->assertSee('Sin meta')
+            ->assertDontSee('Sin objetivo');
+
+        $this->actingAs($this->manager)->get(route('objectives.manage.goals.index', [
+            'objectiveId' => $this->objective->id,
+            'goalId' => $goal->id,
+        ]))
+            ->assertOk()
+            ->assertSee('Sin meta')
+            ->assertSee('>Objetivo</p>', false)
+            ->assertSee($this->objective->title)
+            ->assertDontSee('Sin objetivo');
+
+        $this->assertSame(PeriodState::NoTarget, $goal->fresh()->indicatorSummary()->period(3)->state);
     }
 
     public function test_the_summary_reproduces_the_client_spreadsheet(): void

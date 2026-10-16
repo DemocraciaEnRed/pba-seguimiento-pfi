@@ -3,7 +3,7 @@
 @section('panelContent')
 
 <section>
-  <h3 class="is-700">Mis objetivos específicos</h1>
+  <h3 class="is-700">Mis objetivos generales</h1>
   <p class="lead">Estos son los objetivos de los cuales formas parte del equipo.</p>
   @if(!Auth::user()->hasVerifiedEmail())
   <div class="alert alert-warning">

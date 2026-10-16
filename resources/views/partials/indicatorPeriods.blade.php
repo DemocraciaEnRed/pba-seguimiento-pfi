@@ -32,7 +32,7 @@
           {{ $goal->indicator_nature === Nature::Intensive ? 'Promedio a la fecha' : 'Resultado a la fecha' }}
         </h6>
         <h3 class="is-700 mb-1">{{ indicator_number($summary->toDateMeasured) }} <small class="text-muted">{{ $goal->indicator_unit }}</small></h3>
-        <small class="text-muted">Objetivo a la fecha: {{ indicator_number($summary->toDateTarget) }} {{ $goal->indicator_unit }}</small>
+        <small class="text-muted">Meta a la fecha: {{ indicator_number($summary->toDateTarget) }} {{ $goal->indicator_unit }}</small>
       </div>
     </div>
   </div>
@@ -67,8 +67,8 @@
     <thead class="thead-light">
       <tr>
         <th>Período</th>
-        <th class="text-right">Objetivo</th>
-        <th class="text-right">Medido</th>
+        <th class="text-right">Meta</th>
+        <th class="text-right">Resultado</th>
         <th class="text-right">Cumplimiento</th>
         <th class="text-right">Desvío</th>
         <th class="text-right">Diferencia</th>

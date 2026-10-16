@@ -23,7 +23,7 @@
 @else
 <div class="card mb-3 shadow-sm">
   <div class="card-body">
-    <h6 class="card-title font-weight-bold m-0">No hay eventos creados</h6>
+    <h6 class="card-title font-weight-bold m-0">No hay actividades creadas</h6>
   </div>
 </div>
 @endif

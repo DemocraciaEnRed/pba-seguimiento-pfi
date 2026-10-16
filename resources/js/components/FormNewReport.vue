@@ -76,9 +76,9 @@
 					<small class="form-text text-muted">Se propone el primer período pendiente de informar.</small>
 				</div>
 				<div class="form-group" v-if="selectedPeriod">
-					<label>Valor medido en el período ({{goal.indicator_unit}})</label>
+					<label>Resultado del período ({{goal.indicator_unit}})</label>
 					<input type="number" step="any" min="0" name="measured_value" class="form-control" v-model="measuredValue" required>
-					<small class="form-text text-muted">Objetivo del período: <b>{{selectedPeriod.target}} {{goal.indicator_unit}}</b></small>
+					<small class="form-text text-muted">Meta del período: <b>{{selectedPeriod.target}} {{goal.indicator_unit}}</b></small>
 				</div>
 				<div class="alert alert-warning" v-if="reportablePeriods.length === 0">
 					<i class="fas fa-triangle-exclamation fa-fw"></i>&nbsp;No hay períodos pendientes de informar en este momento.

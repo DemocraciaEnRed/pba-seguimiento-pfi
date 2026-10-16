@@ -151,6 +151,8 @@ class CsvExportsTest extends TestCase
         $this->assertSame(['Titulo', 'Autor', 'Autor Email'], array_slice($records[0], 0, 3));
         $this->assertSame(['Avance, primer trimestre', 'Gestor, Mario', 'manager@example.com'], array_slice($records[1], 0, 3));
         $this->assertSame(['15.49', '-'], array_slice($records[1], 14, 2));
+        $this->assertSame('Resultado del período', $records[0][14]);
+        $this->assertNotContains('Valor medido', $records[0]);
         $this->assertSame('15/08/2026 10:00:00', array_combine($records[0], $records[1])['Fecha creado']);
     }
 

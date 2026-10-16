@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Eje, objetivo estratégico and objetivo específico a goal belongs to.
+ * Eje, objetivo estratégico and objetivo general a goal belongs to.
  *
  * @mixin \App\Goal
  */

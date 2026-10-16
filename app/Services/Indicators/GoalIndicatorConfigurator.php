@@ -116,7 +116,7 @@ class GoalIndicatorConfigurator
 
         if ($goal->isPeriodic() && array_filter($targets, fn (?float $target): bool => $target !== null) === []) {
             throw ValidationException::withMessages([
-                'period_targets' => 'Definí el valor objetivo de al menos un período.',
+                'period_targets' => 'Definí el valor de meta de al menos un período.',
             ]);
         }
 

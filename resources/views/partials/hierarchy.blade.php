@@ -20,7 +20,7 @@
   <div class="hierarchy-tree__row hierarchy-tree__row--objective">
     <span class="hierarchy-tree__icon"><i class="fas fa-crosshairs fa-fw"></i></span>
     <div>
-      <span class="hierarchy-tree__level">Objetivo específico</span>
+      <span class="hierarchy-tree__level">Objetivo general</span>
       <a class="hierarchy-tree__title" href="{{ route('objectives.index', [$objective->id]) }}">{{ $objective->title }}</a>
     </div>
   </div>

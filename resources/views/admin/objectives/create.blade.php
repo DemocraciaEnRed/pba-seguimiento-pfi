@@ -3,8 +3,8 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Crear objetivo específico</h3>
-  <p class="lead">Para crear un nuevo objetivo específico, completá los campos a continuación:</p>
+  <h3 class="is-700">Crear objetivo general</h3>
+  <p class="lead">Para crear un nuevo objetivo general, completá los campos a continuación:</p>
   <hr>
   @if ($errors->any())
     <div class="alert alert-danger">
@@ -53,7 +53,7 @@
   </form>
   @else
   <div class="alert alert-warning" role="alert">
-    No puede crear objetivos específicos sin objetivos estratégicos. Debe ir al panel de <a href="{{ route('admin.strategic-objectives') }}">Objetivos Estratégicos</a>
+    No puede crear objetivos generales sin objetivos estratégicos. Debe ir al panel de <a href="{{ route('admin.strategic-objectives') }}">Objetivos Estratégicos</a>
   </div>
   @endif
 </section>

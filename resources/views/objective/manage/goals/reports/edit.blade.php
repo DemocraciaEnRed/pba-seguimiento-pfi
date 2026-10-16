@@ -110,9 +110,9 @@
       </div>
       <div class="col">
         <div class="form-group">
-          <label>Valor medido en el período ({{ $goal->indicator_unit }})</label>
+          <label>Resultado del período ({{ $goal->indicator_unit }})</label>
           <input type="number" step="any" min="0" value="{{ old('measured_value', $report->measured_value) }}" name="measured_value" class="form-control" required>
-          <small class="form-text text-muted">Objetivo del período: {{ $report->period?->target_value ?? '—' }} {{ $goal->indicator_unit }}</small>
+          <small class="form-text text-muted">Meta del período: {{ $report->period?->target_value ?? '—' }} {{ $goal->indicator_unit }}</small>
         </div>
       </div>
     </div>

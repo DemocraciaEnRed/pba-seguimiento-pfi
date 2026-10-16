@@ -3,8 +3,8 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Crear evento</h3>
-  <p class="lead">Para crear un evento complete los siguientes campos:</p>
+  <h3 class="is-700">Crear actividad</h3>
+  <p class="lead">Para crear una actividad complete los siguientes campos:</p>
   @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
@@ -17,18 +17,18 @@
   <form method="POST" action="{{ route('admin.events.create.form') }}" enctype="multipart/form-data">
     @csrf
     <div class="form-group">
-      <label>Título del evento</label>
+      <label>Título de la actividad</label>
       <input type="text" class="form-control" name="title" value="{{old('title')}}" placeholder="Ingrese aquí..." maxlength="550">
       <small class="form-text text-muted">Hasta 550 caracteres.</small>
     </div>
     <div class="form-group">
-      <label>Descripción del evento</label>
+      <label>Descripción de la actividad</label>
       <textarea name="content" class="form-control" rows="4" placeholder="Ingrese aquí...">{{old('content')}}</textarea>
     </div>
     <div class="form-group">
       <div class="form-row">
         <div class="col-sm-4">
-          <label>Dia del evento</label>
+          <label>Dia de la actividad</label>
           <div class="input-group">
             <div class="input-group-prepend">
               <span class="input-group-text">Dia</span>
@@ -95,7 +95,7 @@
         <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true">
         <label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>
       </div>
-      <small class="form-text text-muted">Se le enviará una notificación por email (si lo tienen habilitado) y por sistema a los suscriptores de los objetivos seleccionados, de la creacion del evento invitandolos a verlo.</small>
+      <small class="form-text text-muted">Se le enviará una notificación por email (si lo tienen habilitado) y por sistema a los suscriptores de los objetivos seleccionados, de la creacion de la actividad invitandolos a verla.</small>
     </div>
     <br>
     <button type="submit" class="btn btn-primary">Crear</button>

@@ -3,7 +3,7 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Bitacora del sistema</h3>
+  <h3 class="is-700">Bitácora de acciones</h3>
   <p class="lead">En esta sección se podrán auditar todas las acciones que ocurren en el sistema</p>
   @foreach($logs as $log)
   <div class="text-smaller">

@@ -20,7 +20,7 @@ $checked = Str::contains(Auth::user()->notification_preferences,"mail")
     </div>
   @endif
   <h5 class="font-weight-bold"><i class="far fa-envelope"></i> ¿Desea recibir notificaciones por correo electronico?</h5>
-  <p>Habilitando la opción, usted será notificado de los siguientes eventos:</p>
+  <p>Habilitando la opción, usted será notificado de las siguientes novedades:</p>
   <ul>
     <li>Cuando se crea un nuevo reporte en algun objetivo del cual este suscripto</li>
     <li>Cuando recibe una respuesta de su comentario</li>

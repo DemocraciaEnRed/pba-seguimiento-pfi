@@ -33,7 +33,7 @@
     </div>
   </div>
   <hr>
-  <h5><b>Ultimos 15 eventos en la bitácora</b></h5>
+  <h5><b>Últimas 15 acciones en la bitácora</b></h5>
   @foreach($logs as $log)
   <div class="text-smaller">
   <p class="mb-1"><b>@datetime($log->record_datetime)</b> - {{$log->message}} <a data-toggle="collapse" href="#collapse{{$log->id}}" role="button" aria-expanded="false"><i class="fas fa-code fa-fw"></i></a></p>

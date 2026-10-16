@@ -19,12 +19,12 @@
     @csrf
     <p>Al eliminar un objetivo estratégico, tenga en cuenta lo siguiente</p>
     <ul>
-      <li>Los objetivos específicos vinculados con el objetivo estratégico "{{$strategicObjective->title}}" no pueden quedar sin objetivo estratégico</li>
-      <li>Para eliminarlo, se deben migrar los objetivos específicos vinculados a un objetivo estratégico existente</li>
-      <li>El siguiente formulario migra todos los objetivos específicos al objetivo estratégico seleccionado.</li>
+      <li>Los objetivos generales vinculados con el objetivo estratégico "{{$strategicObjective->title}}" no pueden quedar sin objetivo estratégico</li>
+      <li>Para eliminarlo, se deben migrar los objetivos generales vinculados a un objetivo estratégico existente</li>
+      <li>El siguiente formulario migra todos los objetivos generales al objetivo estratégico seleccionado.</li>
     </ul>
      <div class="form-group">
-      <label><b>Objetivo estratégico al que migran los objetivos específicos</b><span class="text-danger">*</span></label>
+      <label><b>Objetivo estratégico al que migran los objetivos generales</b><span class="text-danger">*</span></label>
       <select class="custom-select" name="strategic_objective">
         @foreach ($strategicObjectives as $strategicObjectiveAux)
         <option value="{{$strategicObjectiveAux->id}}">{{$strategicObjectiveAux->codigo}} - {{$strategicObjectiveAux->title}}</option>

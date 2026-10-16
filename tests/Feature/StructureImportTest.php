@@ -83,6 +83,23 @@ class StructureImportTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_indicator_choices_accept_both_current_and_previous_labels(): void
+    {
+        foreach (['Acercarse a la meta', 'Lo mejor es acercarse a la meta', 'Acercarse al objetivo', 'Lo mejor es acercarse al objetivo'] as $label) {
+            $this->assertSame('target_is_better', Column::choice($label, Column::directions()));
+        }
+
+        foreach (['La meta de cada período es lo que se agrega en ese período', 'El objetivo de cada período es lo que se agrega en ese período'] as $label) {
+            $this->assertSame('incremental', Column::choice($label, Column::semantics()));
+        }
+
+        foreach (['La meta de cada período es el nivel a alcanzar al cierre', 'El objetivo de cada período es el nivel a alcanzar al cierre'] as $label) {
+            $this->assertSame('cumulative_level', Column::choice($label, Column::semantics()));
+        }
+
+        $this->assertSame('Acercarse a la meta', Column::label('target_is_better', Column::directions()));
+    }
+
     public function test_the_upload_must_be_a_csv_file(): void
     {
         $this->actingAs($this->admin)

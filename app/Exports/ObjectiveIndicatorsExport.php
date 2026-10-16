@@ -31,7 +31,7 @@ class ObjectiveIndicatorsExport implements CsvExport
         $periodNumbers = range(1, max(1, $this->maxPeriodCount()));
 
         return array_merge(
-            ['Eje', 'Objetivo estratégico', 'Objetivo', 'Producto / Meta', 'Indicador', 'Fórmula', 'Unidad'],
+            ['Eje', 'Objetivo estratégico', 'Objetivo general', 'Producto / Meta', 'Indicador', 'Fórmula', 'Unidad'],
             array_map(fn (int $number): string => "Meta P{$number}", $periodNumbers),
             ['Meta ventana'],
             array_merge(...array_map(fn (int $number): array => ["Resultado P{$number}", "Cumplimiento P{$number}", "Desvío P{$number}"], $periodNumbers)),

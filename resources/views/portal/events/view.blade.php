@@ -39,7 +39,7 @@
           <span class="py-1 px-3 bg-primary rounded mr-2 mb-1 d-inline-block"><i class="fas fa-link text-white"></i>&nbsp;<a href="{{$url}}" target="_blank" class="text-white is-600">{{$label}}</a></span>
           @endforeach
           @else
-          <span class="text-muted">No se han previsto links acerca del evento</span>
+          <span class="text-muted">No se han previsto links acerca de la actividad</span>
           @endif
         </div>
       </div>

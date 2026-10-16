@@ -10,9 +10,9 @@
 @component('mail::message')
 # ¡Hola {{$user->name}}! 👋
 
-Hay un nuevo evento en el {{ config('app.short_name') }} 🗓️ y esta relacionado a un objetivo al que estas suscripto. ¡Creemos que te puede interesar participar! 🥳
+Hay una nueva actividad en el {{ config('app.short_name') }} 🗓️ y está relacionada a un objetivo al que estas suscripto. ¡Creemos que te puede interesar participar! 🥳
 
-El evento se llama **{{$event->title}}** y es el @justdate($event->date) a las @justtime($event->date). Te dejamos una breve descripción 👇
+La actividad se llama **{{$event->title}}** y es el @justdate($event->date) a las @justtime($event->date). Te dejamos una breve descripción 👇
 
 @component('mail::panel')
 {{Str::limit($event->content, 150, $end=' [...]')}}
@@ -22,7 +22,7 @@ El evento se llama **{{$event->title}}** y es el @justdate($event->date) a las @
 🔍 Ver mas información
 @endcomponent 
 
-¿Te gustaria agendarlo? 😀 ¡Hace clic en el siguiente link para agendarlo en tu google calendar! 
+¿Te gustaria agendarla? 😀 ¡Hace clic en el siguiente link para agendarla en tu google calendar!
 
 @component('mail::button', ['url' => 'https://calendar.google.com/calendar/r/eventedit?action=TEMPLATE&text='.$titleEncode.'&details='.$descriptionEncode.'&location='.$locationEncode.'&dates='.$startTime.'/'.$endTime.'&ctz='.$ctz])
 📅 Agregar a Google Calendar 

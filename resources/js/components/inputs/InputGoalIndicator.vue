@@ -7,7 +7,7 @@
         <label class="custom-control-label is-clickable" :for="`mode-${mode.value}`">{{ mode.label }} <small class="text-muted">— {{ modeHelp[mode.value] }}</small></label>
       </div>
       <div class="alert alert-info mt-2 mb-0" v-if="locked">
-        <i class="fas fa-lock fa-fw"></i>&nbsp;La meta ya tiene reportes de avance: el modo de medición, la dirección y la estructura de períodos no se pueden cambiar. Los valores objetivo de cada período sí.
+        <i class="fas fa-lock fa-fw"></i>&nbsp;La meta ya tiene reportes de avance: el modo de medición, la dirección y la estructura de períodos no se pueden cambiar. Los valores de meta de cada período sí.
       </div>
     </div>
 
@@ -74,7 +74,7 @@
       </div>
 
       <div class="form-group" v-if="form.indicator_nature === 'extensive'">
-        <label><b>El objetivo de cada período es…</b></label>
+        <label><b>La meta de cada período es…</b></label>
         <div class="custom-control custom-radio" v-for="semantic in options.semantics" :key="`semantic-${semantic.value}`">
           <input type="radio" :id="`semantic-${semantic.value}`" name="target_semantics" :value="semantic.value" v-model="form.target_semantics" class="custom-control-input" :disabled="locked">
           <label class="custom-control-label is-clickable" :for="`semantic-${semantic.value}`">{{ semantic.label }}</label>
@@ -111,11 +111,11 @@
       </div>
 
       <div class="form-group">
-        <label><b>Valor objetivo de cada período</b><span class="text-danger">*</span></label>
-        <small class="form-text text-muted mb-2">Dejá vacío un período si no tiene objetivo: queda fuera del cálculo.</small>
+        <label><b>Valor de meta de cada período</b><span class="text-danger">*</span></label>
+        <small class="form-text text-muted mb-2">Dejá vacío un período si no tiene meta: queda fuera del cálculo.</small>
         <table class="table table-sm table-bordered mb-0">
           <thead class="thead-light">
-            <tr><th>Período</th><th>Rango</th><th style="width: 40%">Objetivo ({{ form.indicator_unit || 'unidad' }})</th></tr>
+            <tr><th>Período</th><th>Rango</th><th style="width: 40%">Meta ({{ form.indicator_unit || 'unidad' }})</th></tr>
           </thead>
           <tbody>
             <tr v-for="period in periodsPreview" :key="`target-${period.number}`">
@@ -129,7 +129,7 @@
 
       <div class="alert" :class="`alert-${exampleColor}`" v-if="form.indicator_direction">
         <h6 class="is-700 mb-1"><i class="fas fa-circle-question fa-fw"></i>&nbsp;Verificá la dirección con un ejemplo</h6>
-        Si el objetivo de un período es <b>{{ formatNumber(exampleTarget) }} {{ form.indicator_unit }}</b> y se informa
+        Si la meta de un período es <b>{{ formatNumber(exampleTarget) }} {{ form.indicator_unit }}</b> y se informa
         <b>{{ formatNumber(exampleMeasured) }} {{ form.indicator_unit }}</b>, la meta va a mostrar
         <b>{{ examplePercentage }}% de cumplimiento</b> ({{ exampleColorLabel }}).
         <div class="custom-control custom-checkbox mt-2" v-if="!locked">
@@ -177,7 +177,7 @@ export default {
       modeHelp: {
         none: 'se sigue solo con novedades e hitos',
         simple: 'un valor final al que se llega sumando avances',
-        periodic: 'un objetivo por período que se contrasta con el valor medido'
+        periodic: 'una meta por período que se contrasta con el resultado informado'
       },
       presets: [
         { key: 'term', label: 'Plazo', icon: 'fa-hourglass-half', direction: 'lower_is_better', nature: 'intensive', semantics: 'incremental', unit: 'días' },

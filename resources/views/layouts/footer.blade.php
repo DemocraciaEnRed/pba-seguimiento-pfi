@@ -42,7 +42,7 @@
         <p class="mb-1"><a href="{{route('catalog')}}">El Plan</a></p>
         <p class="mb-1"><a href="{{route('objectives')}}">Objetivos</a></p>
         <p class="mb-1"><a href="{{route('reports')}}">Seguimiento</a></p>
-        <p class="mb-1"><a href="{{route('events.upcoming')}}">Eventos</a></p>
+        <p class="mb-1"><a href="{{route('events.upcoming')}}">Actividades</a></p>
       </div>
       <div class="col-6 col-md-4 order-md-last col-lg-2 mb-4 mb-lg-0">
         <p class="mb-1 mb-lg-2"><b>Más información</b></p>

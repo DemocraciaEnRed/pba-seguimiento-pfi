@@ -3,7 +3,7 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Objetivos Específicos</h1>
+  <h3 class="is-700">Objetivos Generales</h1>
   <p class="lead">Acá encontrarás el listado de objetivos que podés administrar</p>
   @if(!$objectives->isEmpty())
   <div class="my-3">

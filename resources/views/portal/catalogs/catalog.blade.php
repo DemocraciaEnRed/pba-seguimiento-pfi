@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('hero')
-<x-hero title="El Plan" subtitle="Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas.">
+<x-hero title="El Plan" subtitle="Recorré el plan completo: ejes, objetivos estratégicos, objetivos generales y sus metas.">
   <x-slot:actions>
     <button type="button" class="btn btn-outline-light" data-catalog-toggle aria-expanded="false">
       <i class="fas fa-fw fa-expand-alt mr-1"></i><span>Expandir todo</span>
@@ -20,8 +20,8 @@
           <summary>
             <span class="catalog-tree__label"><x-category-icon :icon="$category->icon" class="mr-2" />{{ $category->title }}</span>
             <div class="catalog-tree__stats_rows">
-              <p>Estrategias <span class="badge badge-light">{{ $category->strategicObjectives->count() }}</span></p>
-              <p>Objetivos <span class="badge badge-light">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->count()) }}</span></p>
+              <p>Objetivos Estratégicos <span class="badge badge-light">{{ $category->strategicObjectives->count() }}</span></p>
+              <p>Objetivos Generales <span class="badge badge-light">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->count()) }}</span></p>
               <p>Metas <span class="badge badge-light">{{ $category->strategicObjectives->sum(fn($so) => $so->objectives->sum(fn($o) => $o->goals->count())) }}</span></p>
             </div>
           </summary>
@@ -32,7 +32,7 @@
                 <summary>
                   <span class="catalog-tree__label"><i class="fas fa-compass fa-fw mr-2"></i>{{ $strategicObjective->title }}</span>
                   <div class="catalog-tree__stats_rows">
-                    <p>Objetivos <span class="badge badge-light">{{ $strategicObjective->objectives->count() }}</span></p>
+                    <p>Objetivos generales <span class="badge badge-light">{{ $strategicObjective->objectives->count() }}</span></p>
                     <p>Metas <span class="badge badge-light">{{ $strategicObjective->objectives->sum(fn($objective) => $objective->goals->count()) }}</span></p>
                   </div>
                 </summary>
@@ -65,7 +65,7 @@
                       </div>
                     </details>
                   @empty
-                    <p class="catalog-tree__empty">No hay objetivos publicados.</p>
+                    <p class="catalog-tree__empty">No hay objetivos generales publicados.</p>
                   @endforelse
                 </div>
               </details>
@@ -101,4 +101,3 @@
   });
 </script>
 @endsection
-

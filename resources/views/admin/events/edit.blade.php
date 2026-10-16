@@ -3,8 +3,8 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Editar evento</h3>
-  <p class="lead">Para crear un evento complete los siguientes campos:</p>
+  <h3 class="is-700">Editar actividad</h3>
+  <p class="lead">Para crear una actividad complete los siguientes campos:</p>
   @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
@@ -25,7 +25,7 @@
       </div>
     </form>
   <hr>
-  <h5 class="is-700 has-text-danger mb-3"><i class="far fa-images"></i> Fotos del evento</h5>
+  <h5 class="is-700 has-text-danger mb-3"><i class="far fa-images"></i> Fotos de la actividad</h5>
   @forelse($event->photos as $photo)
   <div class="d-inline-block mr-2 my-1">
     <a href="{{asset($photo->path)}}" target="_blank"><img src="{{asset($photo->thumbnail_path)}}" height="80" class="img rounded mb-1 align-top" alt=""></a> 
@@ -36,7 +36,7 @@
     </form>
   </div>
   @empty
-  <p class="text-muted">No hay fotos cargadas en el evento</p>
+  <p class="text-muted">No hay fotos cargadas en la actividad</p>
   @endforelse
   <hr>
   <h5 class="is-700 has-text-danger"><i class="fas fa-pen-to-square"></i> Editar información</h5>
@@ -44,18 +44,18 @@
     @method('PUT')
     @csrf
     <div class="form-group">
-      <label><b>Título del evento</b><span class="text-danger">*</span></label>
+      <label><b>Título de la actividad</b><span class="text-danger">*</span></label>
       <input type="text" class="form-control" name="title" value="{{$event->title}}" placeholder="Ingrese aquí...">
       <small class="form-text text-muted">Hasta 550 caracteres.</small>
     </div>
     <div class="form-group">
-      <label><b>Descripción del evento</b><span class="text-danger">*</span></label>
+      <label><b>Descripción de la actividad</b><span class="text-danger">*</span></label>
       <textarea name="content" class="form-control" rows="4" placeholder="Ingrese aquí...">{{$event->content}}</textarea>
     </div>
     <div class="form-group">
       <div class="form-row">
         <div class="col-sm-4">
-          <label><b>Dia del evento</b><span class="text-danger">*</span></label>
+          <label><b>Dia de la actividad</b><span class="text-danger">*</span></label>
           <div class="input-group">
             <div class="input-group-prepend">
               <span class="input-group-text">Dia</span>
@@ -118,7 +118,7 @@
         <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true">
         <label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>
       </div>
-      <small class="form-text text-muted">Se le enviará una notificación por email (si lo tienen habilitado) y por sistema a los suscriptores de los objetivos seleccionados, de la edicion de los datos del evento invitandolos a verlo.</small>
+      <small class="form-text text-muted">Se le enviará una notificación por email (si lo tienen habilitado) y por sistema a los suscriptores de los objetivos seleccionados, de la edicion de los datos de la actividad invitandolos a verla.</small>
     </div>
     <br>
     <button type="submit" class="btn btn-primary">Editar</button>

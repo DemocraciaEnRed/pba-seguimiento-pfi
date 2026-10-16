@@ -40,8 +40,8 @@ class PortalHeroTest extends TestCase
             'objectives' => ['objectives', 'Objetivos'],
             'catalog' => ['catalog', 'El Plan'],
             'reports' => ['reports', 'Seguimiento'],
-            'upcoming events' => ['events.upcoming', 'Eventos'],
-            'past events' => ['events.past', 'Eventos'],
+            'upcoming events' => ['events.upcoming', 'Actividades'],
+            'past events' => ['events.past', 'Actividades'],
             'about general' => ['about.general', '¿Cómo funciona?'],
             'about faq' => ['about.faq', '¿Cómo funciona?'],
             'about legal' => ['about.legal', '¿Cómo funciona?'],
@@ -67,7 +67,7 @@ class PortalHeroTest extends TestCase
     public static function sectionPages(): array
     {
         return [
-            'plan' => ['catalog', 'El Plan', 'Recorré el plan completo: ejes, objetivos estratégicos, objetivos y sus metas.'],
+            'plan' => ['catalog', 'El Plan', 'Recorré el plan completo: ejes, objetivos estratégicos, objetivos generales y sus metas.'],
             'objectives' => ['objectives', 'Objetivos', 'Buscá objetivos por nombre o eje y seguí el avance de sus metas.'],
             'tracking' => ['reports', 'Seguimiento', 'Novedades, avances e hitos que publican los equipos sobre cada objetivo.'],
         ];
@@ -105,7 +105,7 @@ class PortalHeroTest extends TestCase
                 'href="'.route('events.upcoming').'" class="nav-link"',
                 'href="'.route('about.general').'" class="nav-link"',
             ], false)
-            ->assertSeeInOrder(['El Plan', 'Objetivos', 'Seguimiento', 'Eventos', '¿Cómo funciona?']);
+            ->assertSeeInOrder(['El Plan', 'Objetivos', 'Seguimiento', 'Actividades', '¿Cómo funciona?']);
     }
 
     public function test_events_hero_marks_the_current_listing_as_active(): void

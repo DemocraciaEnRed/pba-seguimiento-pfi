@@ -21,11 +21,11 @@
       </div>
       <div class="row text-center">
         <div class="col-6 col-md-3 my-2">
-          <h6 class="is-700 mb-1">Objetivo del período</h6>
+          <h6 class="is-700 mb-1">Meta del período</h6>
           <span>{{ indicator_number($result?->target) }} {{ $goal->indicator_unit }}</span>
         </div>
         <div class="col-6 col-md-3 my-2">
-          <h6 class="is-700 mb-1">Valor medido</h6>
+          <h6 class="is-700 mb-1">Resultado del período</h6>
           <span>{{ indicator_number($report->measured_value) }} {{ $goal->indicator_unit }}</span>
         </div>
         <div class="col-6 col-md-3 my-2">

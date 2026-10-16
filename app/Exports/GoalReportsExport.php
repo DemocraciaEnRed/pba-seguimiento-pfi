@@ -32,7 +32,7 @@ class GoalReportsExport implements CsvExport
             "Progreso previo",
             "Progreso declarado",
             "Período informado",
-            "Valor medido",
+            "Resultado del período",
             "Hito completado",
             "Fecha de completado del hito",
             "Fecha creado",

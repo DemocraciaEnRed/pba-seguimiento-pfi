@@ -1,5 +1,5 @@
 @if(!$event->objectives->isEmpty())
-<h3 class="is-700 my-5"> Objetivos relacionados con el evento</h3>
+<h3 class="is-700 my-5"> Objetivos relacionados con la actividad</h3>
 @foreach($event->objectives as $objective)
   <div class="card my-3 shadow-sm">
       <div class="card-body d-flex align-items-start">

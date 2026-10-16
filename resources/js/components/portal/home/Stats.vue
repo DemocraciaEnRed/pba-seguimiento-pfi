@@ -21,7 +21,7 @@
         <div class="card rounded shadow-sm h-100">
           <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="fas fa-bullseye text-info"></i>&nbsp;{{ objectivesTotal }}</p>
-            <p class="mb-0">Objetivos específicos</p>
+            <p class="mb-0">Objetivos generales</p>
           </div>
         </div>
       </div>
@@ -72,8 +72,8 @@
         <a :href="`${catalogUrl}#eje-${category.id}`" class="catalog-tree__bar catalog-tree__bar--header">
           <span class="catalog-tree__label"><category-icon :url="category.icon_url" class="mr-2"></category-icon>{{ category.title }}</span>
           <div class="catalog-tree__stats_rows">
-            <p>Estrategias <span class="badge badge-light">{{ category.strategic_objectives_count }}</span></p>
-            <p>Objetivos <span class="badge badge-light">{{ category.objectives_count }}</span></p>
+            <p>Objetivos Estratégicos <span class="badge badge-light">{{ category.strategic_objectives_count }}</span></p>
+            <p>Objetivos generales <span class="badge badge-light">{{ category.objectives_count }}</span></p>
             <p>Metas <span class="badge badge-light">{{ category.goals_total }}</span></p>
           </div>
         </a>

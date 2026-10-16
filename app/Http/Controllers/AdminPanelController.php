@@ -145,7 +145,7 @@ class AdminPanelController extends Controller
                     if (!empty($strategicObjectiveData['delete'])) {
                         if ($strategicObjective->objectives()->exists()) {
                             throw ValidationException::withMessages([
-                                'strategic_objectives' => "No se puede eliminar el objetivo estratégico '{$strategicObjective->title}' porque tiene objetivos específicos asociados.",
+                                'strategic_objectives' => "No se puede eliminar el objetivo estratégico '{$strategicObjective->title}' porque tiene objetivos generales asociados.",
                             ]);
                         }
 
@@ -203,7 +203,7 @@ class AdminPanelController extends Controller
         $strategicObjective = StrategicObjective::findorfail($strategicObjectiveId);
         $strategicObjectives = StrategicObjective::where('id','!=',$strategicObjectiveId)->get();
         if(count($strategicObjectives) == 0){
-            return redirect()->route('admin.strategic-objectives')->with('warning','No puede eliminar el objetivo estratégico porque se requiere migrar los objetivos específicos vinculados a otro objetivo estratégico. Cree un nuevo objetivo estratégico para poder migrarlos');
+            return redirect()->route('admin.strategic-objectives')->with('warning','No puede eliminar el objetivo estratégico porque se requiere migrar los objetivos generales vinculados a otro objetivo estratégico. Cree un nuevo objetivo estratégico para poder migrarlos');
         }
         return view('admin.strategic-objectives.delete',['strategicObjective' => $strategicObjective, 'strategicObjectives' => $strategicObjectives]);
     }
@@ -222,7 +222,7 @@ class AdminPanelController extends Controller
         }
         $strategicObjective->delete();
 
-        return redirect()->route('admin.strategic-objectives')->with('success','El objetivo estratégico ha sido eliminado correctamente y los objetivos específicos han sido migrados a otro objetivo estratégico');
+        return redirect()->route('admin.strategic-objectives')->with('success','El objetivo estratégico ha sido eliminado correctamente y los objetivos generales han sido migrados a otro objetivo estratégico');
     }
 
     // ====================================
@@ -611,7 +611,7 @@ class AdminPanelController extends Controller
             }
         }
 
-        Log::channel('mysql')->info("[{$request->user()->fullname}] ha creado el evento [{$event->title}]", [
+        Log::channel('mysql')->info("[{$request->user()->fullname}] ha creado la actividad [{$event->title}]", [
             'event_id' => $event->id,
             'event_title' => $event->title,
             'user_id' => $request->user()->id,
@@ -632,7 +632,7 @@ class AdminPanelController extends Controller
             }
         }
 
-        return redirect()->route('admin.events')->with('success','¡Nuevo evento creado!');
+        return redirect()->route('admin.events')->with('success','¡Nueva actividad creada!');
 
     }
 
@@ -671,7 +671,7 @@ class AdminPanelController extends Controller
         $event->objectives()->sync($request->input('objectives'));
         $event->save();
 
-        Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado el evento [{$event->title}]", [
+        Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado la actividad [{$event->title}]", [
             'event_id' => $event->id,
             'event_title' => $event->title,
             'user_id' => $request->user()->id,
@@ -692,7 +692,7 @@ class AdminPanelController extends Controller
             }
         }
 
-        return redirect()->route('admin.events')->with('success','El evento ha sido editado correctamente');
+        return redirect()->route('admin.events')->with('success','La actividad ha sido editada correctamente');
     }
 
     public function formAddPictureEvent(Request $request, $eventId)
@@ -793,7 +793,7 @@ class AdminPanelController extends Controller
         $event->objectives()->detach();
         $event->delete();
 
-        Log::channel('mysql')->info("[{$request->user()->fullname}] ha eliminado el evento [{$event->title}]", [
+        Log::channel('mysql')->info("[{$request->user()->fullname}] ha eliminado la actividad [{$event->title}]", [
             'event_id' => $event->id,
             'event_title' => $event->title,
             'user_id' => $request->user()->id,
@@ -802,7 +802,7 @@ class AdminPanelController extends Controller
             ]);
 
 
-        return redirect()->route('admin.events')->with('success','El evento ha sido eliminado correctamente');
+        return redirect()->route('admin.events')->with('success','La actividad ha sido eliminada correctamente');
     }
 
     public function viewEditSettings(Request $request)

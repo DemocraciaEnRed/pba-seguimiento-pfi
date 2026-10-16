@@ -38,7 +38,7 @@ class Event extends Model
     $dateTimeObject = $this->date->startOfDay();
     $diff = Carbon::now()->startOfDay()->diffInDays($dateTimeObject, false);
     if($diff < 0){
-        return "Celebrado el {$this->date->format('d/m/Y')} a las {$this->date->format('H:i')}";
+        return "Celebrada el {$this->date->format('d/m/Y')} a las {$this->date->format('H:i')}";
     } else if ($diff == 0){
         return "¡Hoy! El {$this->date->format('d/m/Y')} a las {$this->date->format('H:i')}" ;
     } 

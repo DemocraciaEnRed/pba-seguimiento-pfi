@@ -17,7 +17,7 @@ $currentRoute = Route::currentRouteName();
 <a href="{{ route('admin.organizations.create') }}" class="item-link {{ $currentRoute == 'admin.organizations.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
 <a href="{{ route('admin.organizations') }}" class="item-link {{ $currentRoute == 'admin.organizations' ? 'is-active' : null }}">Listar</a>
 </div>
-<h6 class="category"><i class="fas fa-flag-checkered fa-fw"></i>&nbsp;Objetivos Específicos</h6>
+<h6 class="category"><i class="fas fa-flag-checkered fa-fw"></i>&nbsp;Objetivos Generales</h6>
 <div class="menu-link">
 <a href="{{ route('admin.objectives.create') }}" class="item-link {{ $currentRoute == 'admin.objectives.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
 <a href="{{ route('admin.objectives') }}" class="item-link {{ $currentRoute == 'admin.objectives' ? 'is-active' : null }}">Listar</a>
@@ -26,11 +26,11 @@ $currentRoute = Route::currentRouteName();
 <div class="menu-link">
 <a href="{{ route('admin.import') }}" class="item-link {{ Str::startsWith($currentRoute, 'admin.import') ? 'is-active' : null }}">Importar estructura</a>
 </div>
-<h6 class="category"><i class="far fa-calendar-days fa-fw"></i>&nbsp;Eventos</h6>
+<h6 class="category"><i class="far fa-calendar-days fa-fw"></i>&nbsp;Actividades</h6>
 <div class="menu-link">
 <a href="{{ route('admin.events.create') }}" class="item-link {{ $currentRoute == 'admin.events.create' ? 'is-active' : null }}"><i class="fas fa-plus"></i>&nbsp;Crear</a>
-<a href="{{ route('admin.events') }}" class="item-link {{ $currentRoute == 'admin.events' ? 'is-active' : null }}">Próximos</a>
-<a href="{{ route('admin.events.past') }}" class="item-link {{ $currentRoute == 'admin.events.past' ? 'is-active' : null }}">Celebrados</a>
+<a href="{{ route('admin.events') }}" class="item-link {{ $currentRoute == 'admin.events' ? 'is-active' : null }}">Próximas</a>
+<a href="{{ route('admin.events.past') }}" class="item-link {{ $currentRoute == 'admin.events.past' ? 'is-active' : null }}">Celebradas</a>
 </div>
 <h6 class="category"><i class="fas fa-user-shield fa-fw"></i>&nbsp;Administradores</h6>
 <div class="menu-link">
@@ -48,5 +48,5 @@ $currentRoute = Route::currentRouteName();
   <a href="{{ route('admin.settings.homepage') }}" class="item-link {{ $currentRoute == 'admin.settings.homepage'  ? 'is-active' : null }}">Personalizar Home</a>
   <a href="{{ route('admin.settings.seo') }}" class="item-link {{ $currentRoute == 'admin.settings.seo'  ? 'is-active' : null }}">SEO y Analytics</a>
   <a href="{{ route('admin.settings.map') }}" class="item-link {{ $currentRoute == 'admin.settings.map'  ? 'is-active' : null }}">Mapas y Georeferencia</a>
-  <a href="{{ route('admin.logs') }}" class="item-link {{ $currentRoute == 'admin.logs'  ? 'is-active' : null }}">Bitacora de eventos</a>
+  <a href="{{ route('admin.logs') }}" class="item-link {{ $currentRoute == 'admin.logs'  ? 'is-active' : null }}">Bitácora de acciones</a>
 </div>

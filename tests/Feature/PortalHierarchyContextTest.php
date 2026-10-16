@@ -113,10 +113,11 @@ class PortalHierarchyContextTest extends TestCase
             ->assertSeeInOrder([
                 'Eje', 'Eje Integridad',
                 'Objetivo estratégico', 'Fortalecer la transparencia',
-                'Objetivo específico', 'Publicar datos abiertos',
+                'Objetivo general', 'Publicar datos abiertos',
                 'Meta', 'Portal de datos publicado',
             ])
-            ->assertSee(route('catalog').'#eje-'.$this->category->id, false);
+            ->assertSee(route('catalog').'#eje-'.$this->category->id, false)
+            ->assertDontSee('Objetivo específico');
     }
 
     public function test_report_page_keeps_its_url_after_the_listing_moved(): void

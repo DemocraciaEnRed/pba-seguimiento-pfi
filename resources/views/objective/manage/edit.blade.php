@@ -3,7 +3,7 @@
 @section('panelContent')
 
 <section>
-  <h3 class="is-700">Editar objetivo específico</h3>
+  <h3 class="is-700">Editar objetivo general</h3>
   <p class="lead">Completá los campos a continuación:</p>
   @if ($errors->any())
     <div class="alert alert-danger">
@@ -69,7 +69,7 @@
   </form>
   @else
   <div class="alert alert-warning" role="alert">
-    No puede editar objetivos específicos sin objetivos estratégicos. Debe ir al panel de <a href="{{ route('admin.strategic-objectives') }}">Objetivos Estratégicos</a>
+    No puede editar objetivos generales sin objetivos estratégicos. Debe ir al panel de <a href="{{ route('admin.strategic-objectives') }}">Objetivos Estratégicos</a>
   </div>
   @endif
 </section>

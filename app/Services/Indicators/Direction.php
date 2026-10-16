@@ -13,7 +13,7 @@ enum Direction: string
         return match ($this) {
             self::HigherIsBetter => 'Un valor mayor es mejor',
             self::LowerIsBetter => 'Un valor menor es mejor',
-            self::TargetIsBetter => 'Lo mejor es acercarse al objetivo',
+            self::TargetIsBetter => 'Lo mejor es acercarse a la meta',
         };
     }
 }

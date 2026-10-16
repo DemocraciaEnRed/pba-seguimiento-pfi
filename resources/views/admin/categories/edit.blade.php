@@ -61,7 +61,7 @@
           </div>
         @endforeach
       </div>
-      <small class="form-text text-muted">Los objetivos estratégicos con objetivos específicos asociados no pueden eliminarse.</small>
+      <small class="form-text text-muted">Los objetivos estratégicos con objetivos generales asociados no pueden eliminarse.</small>
     </div>
     <button type="submit" class="btn btn-primary">Editar</button>
   </form>

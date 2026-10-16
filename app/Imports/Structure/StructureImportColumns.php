@@ -139,11 +139,11 @@ final class StructureImportColumns
         return self::withEnumLabels(Direction::cases(), [
             'higher_is_better' => 'Mayor es mejor',
             'lower_is_better' => 'Menor es mejor',
-            'target_is_better' => 'Acercarse al objetivo',
+            'target_is_better' => 'Acercarse a la meta',
         ], [
             'higher_is_better' => ['Mayor'],
             'lower_is_better' => ['Menor'],
-            'target_is_better' => ['Acercarse'],
+            'target_is_better' => ['Acercarse', 'Acercarse al objetivo', 'Lo mejor es acercarse al objetivo'],
         ]);
     }
 
@@ -170,7 +170,8 @@ final class StructureImportColumns
             'incremental' => 'Incremental',
             'cumulative_level' => 'Nivel acumulado',
         ], [
-            'cumulative_level' => ['Nivel'],
+            'incremental' => ['El objetivo de cada período es lo que se agrega en ese período'],
+            'cumulative_level' => ['Nivel', 'El objetivo de cada período es el nivel a alcanzar al cierre'],
         ]);
     }
 
@@ -279,12 +280,12 @@ final class StructureImportColumns
             ['header' => self::FORMULA, 'required' => 'No', 'values' => 'Texto', 'description' => 'Solo por períodos. Cómo se calcula el indicador.'],
             ['header' => self::DIRECTION, 'required' => 'Por períodos', 'values' => $accepted(self::directions()), 'description' => 'Qué resultado indica un mejor desempeño.'],
             ['header' => self::NATURE, 'required' => 'Por períodos', 'values' => $accepted(self::natures()), 'description' => 'Suma para cantidades o avance; Promedio para plazos, tasas o porcentajes.'],
-            ['header' => self::SEMANTICS, 'required' => 'No', 'values' => $accepted(self::semantics()), 'description' => 'Vacío: Incremental (el objetivo de cada período es lo que se agrega en ese período).'],
+            ['header' => self::SEMANTICS, 'required' => 'No', 'values' => $accepted(self::semantics()), 'description' => 'Vacío: Incremental (la meta de cada período es lo que se agrega en ese período).'],
             ['header' => self::PERIOD_TYPE, 'required' => 'Por períodos', 'values' => $accepted(self::periodTypes()), 'description' => 'Duración de cada período.'],
             ['header' => self::START_YEAR, 'required' => 'Por períodos', 'values' => 'Ej: 2027', 'description' => 'Año en que empieza el primer período.'],
             ['header' => self::START_MONTH, 'required' => 'Por períodos', 'values' => '1 a 12 o nombre del mes', 'description' => 'Mes en que empieza el primer período.'],
             ['header' => self::PERIOD_COUNT, 'required' => 'Por períodos', 'values' => '1 a '.self::MAX_PERIOD_COLUMNS, 'description' => 'Cantidad de períodos a medir.'],
-            ['header' => 'Meta P1, Meta P2, …', 'required' => 'Por períodos (al menos una)', 'values' => 'Número', 'description' => 'Valor objetivo de cada período. Vacío si ese período no tiene objetivo. Se pueden agregar columnas hasta Meta P'.self::MAX_PERIOD_COLUMNS.'.'],
+            ['header' => 'Meta P1, Meta P2, …', 'required' => 'Por períodos (al menos una)', 'values' => 'Número', 'description' => 'Valor de meta de cada período. Vacío si ese período no tiene meta. Se pueden agregar columnas hasta Meta P'.self::MAX_PERIOD_COLUMNS.'.'],
         ];
     }
 
