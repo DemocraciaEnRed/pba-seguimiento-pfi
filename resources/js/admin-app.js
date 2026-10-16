@@ -14,7 +14,6 @@ import Toasted from 'vue-toasted';
 
 import NotificationItem from './components/NotificationItem.vue';
 import FormNewReport from './components/FormNewReport.vue';
-import AdminSearchUserNewAdmin from './components/AdminSearchUserNewAdmin.vue';
 import ObjectiveSearchUserAddTeam from './components/ObjectiveSearchUserAddTeam.vue';
 import Paginator from './components/utils/Paginator.vue';
 import ErrorAlert from './components/utils/ErrorAlert.vue';
@@ -50,7 +49,6 @@ Vue.use(Toasted, {
 
 Vue.component('notification-item', NotificationItem);
 Vue.component('form-new-report', FormNewReport);
-Vue.component('admin-search-user-new-admin', AdminSearchUserNewAdmin);
 Vue.component('objective-search-user-add-team', ObjectiveSearchUserAddTeam);
 Vue.component('paginator', Paginator);
 Vue.component('error-alert', ErrorAlert);

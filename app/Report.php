@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Report extends Model
 {
+    /** @var array<string, string> */
+    public const TYPES = [
+        'post' => 'Novedad',
+        'progress' => 'Avance',
+        'milestone' => 'Hito',
+    ];
+
     use SoftDeletes;
 
     protected $table = 'reports';

@@ -66,6 +66,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $q;
     }
     
+    public function comments()
+    {
+        return $this->hasMany('App\Comment');
+    }
+
+    public function reports()
+    {
+        return $this->hasMany('App\Report', 'author_id');
+    }
+
     public function avatar()
     {
         return $this->morphOne('App\ImageFile', 'imageable');

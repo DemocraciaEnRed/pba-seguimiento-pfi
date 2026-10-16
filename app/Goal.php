@@ -17,6 +17,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Goal extends Model
 {
+    /** @var array<string, string> */
+    public const STATUSES = [
+        'ongoing' => 'En progreso',
+        'reached' => 'Alcanzada',
+        'delayed' => 'No cumplida',
+        'inactive' => 'Inactiva',
+    ];
+
     use SoftDeletes;
 
     protected $table = 'goals';

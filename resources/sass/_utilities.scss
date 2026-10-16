@@ -1,0 +1,70 @@
+// Layout utilities missing in Bootstrap 4. Names follow Bootstrap 5 (gap, row-gap, column-gap, .g-*)
+// so they keep working after an upgrade; grid helpers mirror Tailwind's grid-cols-* naming.
+
+// Gap: .gap-{0..5}, .row-gap-{n}, .column-gap-{n}, with responsive infix (.gap-md-3)
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+
+    @each $size, $length in $spacers {
+      .gap#{$infix}-#{$size} { gap: $length !important; }
+      .row-gap#{$infix}-#{$size} { row-gap: $length !important; }
+      .column-gap#{$infix}-#{$size} { column-gap: $length !important; }
+    }
+  }
+}
+
+// Row gutters: .row.g-{n} / .gx-{n} / .gy-{n} replace the fixed 30px column padding.
+@each $size, $length in $spacers {
+  .row.g-#{$size},
+  .row.gx-#{$size} {
+    margin-right: -$length * .5;
+    margin-left: -$length * .5;
+
+    > * {
+      padding-right: $length * .5;
+      padding-left: $length * .5;
+    }
+  }
+
+  .row.g-#{$size},
+  .row.gy-#{$size} {
+    row-gap: $length;
+  }
+}
+
+// CSS grid: items in the same row share the tallest height.
+// .d-grid .grid-cols-2 .grid-cols-lg-4 .gap-3
+// .d-grid .grid-auto (style="--grid-min: 12rem") fills columns automatically.
+@each $breakpoint in map-keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+
+    .d#{$infix}-grid { display: grid !important; }
+
+    @for $columns from 1 through 6 {
+      .grid-cols#{$infix}-#{$columns} { grid-template-columns: repeat($columns, minmax(0, 1fr)); }
+    }
+
+    @for $columns from 1 through 6 {
+      .col-span#{$infix}-#{$columns} { grid-column: span $columns / span $columns; }
+    }
+
+    .col-span#{$infix}-full { grid-column: 1 / -1; }
+  }
+}
+
+.grid-auto {
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min, 12rem), 100%), 1fr));
+}
+
+// Stretches a direct child (e.g. a .card inside a .col) to the full height of its cell.
+.h-stretch {
+  display: flex;
+  flex-direction: column;
+
+  > * { flex: 1 1 auto; }
+}
+
+// Lets flex children shrink so .text-truncate works inside them.
+.min-w-0 { min-width: 0 !important; }

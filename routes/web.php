@@ -99,13 +99,18 @@ Route::group([
     ],function () {
     Route::get('/', [AdminPanelController::class, 'index'])->name('index');
     Route::get('/bitacora', [AdminPanelController::class, 'viewLogs'])->name('logs');
+    // Reportes
+    Route::get('/reportes', [AdminPanelController::class, 'viewListReports'])->name('reports');
+    Route::get('/reportes/descargar', [AdminPanelController::class, 'downloadReports'])->name('reports.download');
+    // Comentarios
+    Route::get('/comentarios', [AdminPanelController::class, 'viewListComments'])->name('comments');
+    Route::get('/comentarios/descargar', [AdminPanelController::class, 'downloadComments'])->name('comments.download');
+    Route::delete('/comentarios/{commentId}/eliminar', [AdminPanelController::class, 'formDeleteComment'])->name('comments.delete.form');
     // Settings
-    Route::get('/configuracion/editar', [AdminPanelController::class, 'viewEditSettings'])->name('settings');
-    Route::get('/configuracion/editar', [AdminPanelController::class, 'viewEditSettings'])->name('settings');
     Route::put('/configuracion/editar', [AdminPanelController::class, 'formEditSetting'])->name('settings.form');
     Route::put('/configuracion/editar/file', [AdminPanelController::class, 'formEditFileSetting'])->name('settings.form.file');
-    Route::get('/configuracion/editar/map', [AdminPanelController::class, 'viewEditMapSettings'])->name('settings.map');
-    Route::put('/configuracion/editar/map/default', [AdminPanelController::class, 'formEditMapSetting'])->name('settings.map.form');
+    Route::get('/configuracion/editar/map', [AdminPanelController::class, 'viewEditMapSettings'])->name('settings.map')->middleware(EnsureMapsEnabled::class);
+    Route::put('/configuracion/editar/map/default', [AdminPanelController::class, 'formEditMapSetting'])->name('settings.map.form')->middleware(EnsureMapsEnabled::class);
     Route::get('/configuracion/editar/homepage', [AdminPanelController::class, 'viewEditHomepageSettings'])->name('settings.homepage');
     Route::get('/configuracion/editar/seo', [AdminPanelController::class, 'viewEditSeoSettings'])->name('settings.seo');
     Route::post('/configuracion/cache', [AdminPanelController::class, 'clearCacheSettings'])->name('settings.cache');
@@ -129,11 +134,19 @@ Route::group([
     Route::put('/organizaciones/{organizationId}/editar', [AdminPanelController::class, 'formEditOrganization'])->name('organizations.edit.form');
     Route::get('/organizaciones/{organizationId}/eliminar', [AdminPanelController::class, 'viewDeleteOrganization'])->name('organizations.delete');
     Route::delete('/organizaciones/{organizationId}/eliminar', [AdminPanelController::class, 'formDeleteOrganization'])->name('organizations.delete.form');
-    // Administradores
-    Route::get('/administradores', [AdminPanelController::class, 'viewListAdministrators'])->name('administrators');
-    Route::get('/administradores/nuevo', [AdminPanelController::class, 'viewAddAdministrator'])->name('administrators.add');
-    Route::post('/administradores/nuevo', [AdminPanelController::class, 'formAddAdministrator'])->name('administrators.add.form');
-    Route::delete('/administradores/{adminId}/eliminar', [AdminPanelController::class, 'formDeleteAdministrator'])->name('administrators.delete.form');
+    // Usuarios
+    Route::get('/usuarios', [AdminPanelController::class, 'viewListUsers'])->name('users');
+    Route::get('/usuarios/descargar', [AdminPanelController::class, 'downloadUsers'])->name('users.download');
+    Route::get('/usuarios/{userId}', [AdminPanelController::class, 'viewUser'])->whereNumber('userId')->name('users.show');
+    Route::put('/usuarios/{userId}', [AdminPanelController::class, 'formUpdateUser'])->whereNumber('userId')->name('users.update.form');
+    Route::post('/usuarios/{userId}/verificar', [AdminPanelController::class, 'formVerifyUser'])->name('users.verify.form');
+    Route::post('/usuarios/{userId}/reenviar-verificacion', [AdminPanelController::class, 'formResendUserVerification'])->name('users.verification.form');
+    Route::post('/usuarios/{userId}/restablecer-clave', [AdminPanelController::class, 'formSendUserPasswordReset'])->name('users.password.form');
+    Route::post('/usuarios/{userId}/administrador', [AdminPanelController::class, 'formGrantUserAdmin'])->name('users.admin.grant.form');
+    Route::delete('/usuarios/{userId}/administrador', [AdminPanelController::class, 'formRevokeUserAdmin'])->name('users.admin.revoke.form');
+    Route::get('/usuarios/{userId}/objetivos', [AdminPanelController::class, 'viewUserObjectives'])->name('users.objectives');
+    Route::put('/usuarios/{userId}/objetivos/{objectiveId}', [AdminPanelController::class, 'formUpdateUserObjectiveRole'])->name('users.objectives.role.form');
+    Route::delete('/usuarios/{userId}/objetivos/{objectiveId}', [AdminPanelController::class, 'formRemoveUserObjective'])->name('users.objectives.remove.form');
     // Objectives
     Route::get('/objetivos', [AdminPanelController::class, 'viewListObjectives'])->name('objectives');
     Route::get('/objetivos/descargar', [AdminPanelController::class, 'downloadListObjectives'])->name('objectives.download');
@@ -232,6 +245,10 @@ Route::group([
         Route::post('/archivos', [ObjectivePanelController::class, 'formObjectiveFile'])->name('files.form');
         Route::get('/mapa', [ObjectivePanelController::class, 'viewObjectiveMap'])->name('map')->middleware(EnsureMapsEnabled::class);
         Route::delete('/eliminar', [ObjectivePanelController::class, 'formDeleteObjective'])->name('delete.form');
+        // Comentarios
+        Route::get('/comentarios', [ObjectivePanelController::class, 'viewListComments'])->name('comments');
+        Route::get('/comentarios/descargar', [ObjectivePanelController::class, 'downloadComments'])->name('comments.download');
+        Route::delete('/comentarios/{commentId}/eliminar', [ObjectivePanelController::class, 'formDeleteComment'])->name('comments.delete.form');
         // Suscriptores
         Route::get('/suscriptores', [ObjectivePanelController::class, 'viewListSubscribers'])->name('subscribers');
         Route::get('/suscriptores/descargar', [ObjectivePanelController::class, 'downloadListSubscribers'])->name('subscribers.download');
@@ -264,6 +281,10 @@ Route::group([
         Route::delete('/metas/{goalId}/hitos/{milestoneId}/eliminar', [GoalPanelController::class, 'formDeleteGoalMilestone'])->name('goals.milestones.delete.form');
         Route::get('/metas/{goalId}/configuracion', [GoalPanelController::class, 'viewGoalConfiguration'])->name('goals.configuration');
         Route::delete('/metas/{goalId}/eliminar', [GoalPanelController::class, 'formDeleteGoal'])->name('goals.delete.form');
+        // Comentarios de la meta
+        Route::get('/metas/{goalId}/comentarios', [GoalPanelController::class, 'viewListGoalComments'])->name('goals.comments');
+        Route::get('/metas/{goalId}/comentarios/descargar', [GoalPanelController::class, 'downloadGoalComments'])->name('goals.comments.download');
+        Route::delete('/metas/{goalId}/comentarios/{commentId}/eliminar', [GoalPanelController::class, 'formDeleteGoalComment'])->name('goals.comments.delete.form');
         // Períodos
         Route::post('/metas/{goalId}/periodos/{periodId}/omitir', [GoalPanelController::class, 'formSkipGoalPeriod'])->name('goals.periods.skip.form');
         Route::delete('/metas/{goalId}/periodos/{periodId}/omitir', [GoalPanelController::class, 'formUnskipGoalPeriod'])->name('goals.periods.unskip.form');

@@ -29,6 +29,26 @@ class Comment extends Model
         return $this->user_id == $userId;
     }
 
+    public function parent()
+    {
+        return $this->belongsTo('App\Comment', 'parent_id');
+    }
+
+    public function isReply(): bool
+    {
+        return $this->parent_id !== null;
+    }
+
+    /**
+     * Replies are stored without commentable, so the report comes from the parent comment.
+     */
+    public function relatedReport(): ?Report
+    {
+        $commentable = $this->isReply() ? $this->parent?->commentable : $this->commentable;
+
+        return $commentable instanceof Report ? $commentable : null;
+    }
+
     //Comment have many replies
     public function replies()
     {

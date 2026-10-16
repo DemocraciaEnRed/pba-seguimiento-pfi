@@ -19,6 +19,7 @@ use App\Objective;
 use App\Goal;
 use App\Report;
 use App\ActionLog;
+use App\Comment;
 use App\Faq;
 use App\Setting;
 use Carbon\Carbon;
@@ -27,6 +28,17 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use App\Exports\ObjectivesExport;
+use App\Exports\CommentsExport;
+use App\Exports\UsersExport;
+use App\Exports\ReportsExport;
+use App\Notifications\RemoveObjectiveTeam;
+use App\Services\Admin\UserDirectory;
+use App\Services\Admin\ReportDirectory;
+use App\Services\Admin\ObjectiveDirectory;
+use Illuminate\Support\Facades\Password;
+use App\Services\Comments\CommentModeration;
+use App\Services\Admin\ActivityRange;
+use App\Services\Admin\AdminDashboardStats;
 use App\Services\Csv\CsvDownload;
 use App\Rules\MatchOldPassword;
 use App\Notifications\NewEvent;
@@ -49,21 +61,75 @@ class AdminPanelController extends Controller
         $this->middleware('check_role:admin');
     }
 
-    public function index(Request $request){
-        $countUsers = User::count();
-        $countUsersNotVerified = User::where('email_verified_at')->count();
-        $countObjectives = Objective::count();
-        $countGoals = Goal::count();
-        $countReports = Report::count();
-        $logs = ActionLog::where('context->type','!=','notifications')->orWhereNull('context->type')->orderBy('record_datetime','DESC')->take(15)->get();
+    public function index(Request $request, AdminDashboardStats $dashboardStats, CommentModeration $commentModeration){
+        $range = ActivityRange::fromRequest($request->query('rango'));
+        $logs = ActionLog::where('context->type','!=','notifications')->orWhereNull('context->type')->orderBy('record_datetime','DESC')->take(3)->get();
+
         return view('admin.index', [
-            'users_registered_count' => $countUsers,
-            'users_unverified_count' => $countUsersNotVerified,
-            'objectives_count' => $countObjectives,
-            'goals_count' => $countGoals,
-            'reports_count' => $countReports,
-            'logs' => $logs
+            'stats' => $dashboardStats->compute($range),
+            'range' => $range,
+            'ranges' => ActivityRange::cases(),
+            'logs' => $logs,
+            'latestComments' => $commentModeration->search()->take(5)->get(),
         ]);
+    }
+
+    // ====================================
+    // Admin - Reports
+    // ====================================
+
+    public function viewListReports(Request $request, ReportDirectory $reportDirectory){
+        $filters = $reportDirectory->normalize($this->reportFilters($request));
+
+        return view('admin.reports.list', [
+            'reports' => $reportDirectory->search($filters)->paginate(20)->withQueryString(),
+            'filters' => $filters,
+            ...$reportDirectory->hierarchyOptions($filters),
+        ]);
+    }
+
+    public function downloadReports(Request $request, CsvDownload $csvDownload){
+        return $csvDownload->download(
+            new ReportsExport($this->reportFilters($request)),
+            Carbon::now()->format('Ymd').'-reportes.csv',
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function reportFilters(Request $request): array
+    {
+        return $request->only(['q', 'eje', 'objetivo', 'meta', 'desde', 'hasta', 'autor', 'comentarios', 'orden']);
+    }
+
+    // ====================================
+    // Admin - Comments
+    // ====================================
+
+    public function viewListComments(Request $request, CommentModeration $commentModeration){
+        $search = $request->query('q');
+        $type = $request->query('tipo');
+
+        return view('admin.comments.list', [
+            'comments' => $commentModeration->search($search, $type)->paginate(25)->withQueryString(),
+            'search' => $search,
+            'type' => $type,
+        ]);
+    }
+
+    public function downloadComments(Request $request, CsvDownload $csvDownload){
+        return $csvDownload->download(
+            new CommentsExport($request->query('q'), $request->query('tipo')),
+            Carbon::now()->format('Ymd').'-comentarios.csv',
+        );
+    }
+
+    public function formDeleteComment(Request $request, CommentModeration $commentModeration, $commentId){
+        $comment = Comment::with(['user', 'commentable', 'parent.commentable'])->findOrFail($commentId);
+        $commentModeration->delete($comment, $request->user(), 'Administrador');
+
+        return redirect()->back()->with('success', CommentModeration::deletedMessage($comment));
     }
 
 
@@ -196,8 +262,24 @@ class AdminPanelController extends Controller
     // ====================================
 
     public function viewListStrategicObjectives(Request $request){
-      $strategicObjectives = StrategicObjective::with('category')->get();
-      return view('admin.strategic-objectives.list',['strategicObjectives' => $strategicObjectives]);
+        $search = trim((string) $request->query('q', ''));
+        $categoryId = filter_var($request->query('eje'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
+
+        $strategicObjectives = StrategicObjective::query()
+            ->with('category')
+            ->withCount('objectives')
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('codigo', 'like', '%'.$search.'%')
+                ->orWhere('title', 'like', '%'.$search.'%')))
+            ->when($categoryId, fn ($query) => $query->where('category_id', $categoryId))
+            ->orderBy('codigo')
+            ->get();
+
+        return view('admin.strategic-objectives.list', [
+            'strategicObjectivesByCategory' => $strategicObjectives->groupBy('category_id')->sortBy(fn ($group) => $group->first()->category?->order),
+            'categories' => Category::orderBy('order')->get(['id', 'title']),
+            'filters' => ['q' => $search === '' ? null : $search, 'eje' => $categoryId],
+        ]);
     }
     public function viewDeleteStrategicObjective(Request $request, $strategicObjectiveId){
         $strategicObjective = StrategicObjective::findorfail($strategicObjectiveId);
@@ -429,55 +511,191 @@ class AdminPanelController extends Controller
         return redirect()->route('admin.faqs')->with('success','La pregunta frecuente ha sido eliminada correctamente');
     }
     // ====================================
-    // Admin Administrators
+    // Admin Users
     // ====================================
 
-    public function viewListAdministrators(Request $request){
-      $administrators = User::whereHas('roles', function ($q) {
-            $q->where('name','admin');
-          })->get();
-      return view('admin.administrators.list',['administrators' => $administrators]);
-    }
-    public function viewAddAdministrator(Request $request){
-        return view('admin.administrators.add');
-    }
-    public function formAddAdministrator(Request $request){
-        $user = User::findOrFail($request->input('userId'));
-        $user->roles()->attach(Role::where('name', 'admin')->first());
+    public function viewListUsers(Request $request, UserDirectory $userDirectory){
+        $filters = $this->userFilters($request);
 
-        Log::channel('mysql')->info("[{$request->user()->fullname}] le ha ortorgado el rol de administrador al usuario  [{$user->fullname}]", [
-            'admin_id' => $user->id,
-            'admin_fullname' => $user->fullname,
-            'admin_email' => $user->email,
+        return view('admin.users.list', [
+            'users' => $userDirectory->search($filters)->paginate(25)->withQueryString(),
+            'filters' => $filters,
+        ]);
+    }
+
+    public function downloadUsers(Request $request, CsvDownload $csvDownload){
+        return $csvDownload->download(
+            new UsersExport($this->userFilters($request)),
+            Carbon::now()->format('Ymd').'-usuarios.csv',
+        );
+    }
+
+    public function viewUser(Request $request, UserDirectory $userDirectory, $userId){
+        $user = User::with(['avatar', 'roles'])->findOrFail($userId);
+
+        return view('admin.users.show', [
+            'user' => $user,
+            'counts' => $userDirectory->profileCounts($user),
+            'latestActions' => $userDirectory->latestActions($user),
+        ]);
+    }
+
+    public function formUpdateUser(Request $request, $userId){
+        $user = User::findOrFail($userId);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'surname' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'organization' => 'nullable|string|max:550',
+            'mailable' => 'nullable|string|in:true',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->surname = $validated['surname'];
+        $user->email = $validated['email'];
+        $user->organization = $validated['organization'] ?? null;
+        $user->notification_preferences = ($validated['mailable'] ?? null) === 'true' ? 'database,mail' : 'database';
+        $changes = array_keys($user->getDirty());
+        $user->save();
+
+        $this->logUserAction($request, $user, "ha editado los datos del usuario [{$user->fullname}]", ['changes' => $changes]);
+
+        return redirect()->route('admin.users.show', ['userId' => $user->id])->with('success', 'Se actualizaron los datos del usuario');
+    }
+
+    public function formVerifyUser(Request $request, $userId){
+        $user = User::findOrFail($userId);
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            $this->logUserAction($request, $user, "ha verificado manualmente la cuenta de [{$user->fullname}]");
+        }
+
+        return redirect()->route('admin.users.show', ['userId' => $user->id])->with('success', 'La cuenta del usuario está verificada');
+    }
+
+    public function formResendUserVerification(Request $request, $userId){
+        $user = User::findOrFail($userId);
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('admin.users.show', ['userId' => $user->id])->with('error', 'La cuenta del usuario ya está verificada');
+        }
+        $user->sendEmailVerificationNotification();
+        $this->logUserAction($request, $user, "ha reenviado el email de verificación a [{$user->fullname}]");
+
+        return redirect()->route('admin.users.show', ['userId' => $user->id])->with('success', 'Se reenvió el email de verificación a '.$user->email);
+    }
+
+    public function formSendUserPasswordReset(Request $request, $userId){
+        $user = User::findOrFail($userId);
+        $status = Password::broker()->sendResetLink(['email' => $user->email]);
+        if ($status !== Password::RESET_LINK_SENT) {
+            return redirect()->route('admin.users.show', ['userId' => $user->id])->with('error', __($status));
+        }
+        $this->logUserAction($request, $user, "ha enviado un link para restablecer la contraseña a [{$user->fullname}]");
+
+        return redirect()->route('admin.users.show', ['userId' => $user->id])->with('success', 'Se envió el link para restablecer la contraseña a '.$user->email);
+    }
+
+    public function formGrantUserAdmin(Request $request, $userId){
+        $user = User::findOrFail($userId);
+        $user->roles()->syncWithoutDetaching([Role::where('name', 'admin')->firstOrFail()->id]);
+        $this->logUserAction($request, $user, "le ha otorgado el rol de administrador al usuario [{$user->fullname}]");
+
+        return redirect()->route('admin.users.show', ['userId' => $user->id])->with('success', 'El usuario ahora es administrador de la plataforma');
+    }
+
+    public function formRevokeUserAdmin(Request $request, $userId){
+        $user = User::findOrFail($userId);
+        if ($user->is($request->user())) {
+            return redirect()->route('admin.users.show', ['userId' => $user->id])->with('error', 'No podés quitarte el rol de administrador a vos mismo');
+        }
+        $user->roles()->detach(Role::where('name', 'admin')->firstOrFail());
+        $this->logUserAction($request, $user, "ha quitado el rol de administrador al usuario [{$user->fullname}]");
+
+        return redirect()->route('admin.users.show', ['userId' => $user->id])->with('success', 'Se quitó el rol de administrador al usuario');
+    }
+
+    public function viewUserObjectives(Request $request, $userId){
+        $user = User::with(['avatar', 'roles'])->findOrFail($userId);
+
+        return view('admin.users.objectives', [
+            'user' => $user,
+            'objectives' => $user->objectives()->with('strategicObjective.category')->orderBy('title')->get(),
+            'subscriptions' => $user->subscriptions()->with('strategicObjective.category')->orderBy('title')->get(),
+        ]);
+    }
+
+    public function formUpdateUserObjectiveRole(Request $request, $userId, $objectiveId){
+        $user = User::findOrFail($userId);
+        $objective = $user->objectives()->findOrFail($objectiveId);
+        $validated = $request->validate(['role' => 'required|string|in:manager,reporter']);
+
+        $user->objectives()->updateExistingPivot($objective->id, ['role' => $validated['role']]);
+        $this->logUserAction($request, $user, "ha cambiado el rol de [{$user->fullname}] en el objetivo [{$objective->title}]", [
+            'objective_id' => $objective->id,
+            'objective_title' => $objective->title,
+            'member_previous_role' => $objective->pivot->role,
+            'member_role' => $validated['role'],
+        ]);
+
+        return redirect()->route('admin.users.objectives', ['userId' => $user->id])->with('success', 'Se actualizó el rol en el objetivo');
+    }
+
+    public function formRemoveUserObjective(Request $request, $userId, $objectiveId){
+        $user = User::findOrFail($userId);
+        $objective = $user->objectives()->findOrFail($objectiveId);
+
+        $user->objectives()->detach($objective->id);
+        $this->logUserAction($request, $user, "ha quitado a [{$user->fullname}] del equipo del objetivo [{$objective->title}]", [
+            'objective_id' => $objective->id,
+            'objective_title' => $objective->title,
+            'member_role' => $objective->pivot->role,
+        ]);
+        $user->notify(new RemoveObjectiveTeam($objective, $objective->pivot->role));
+
+        return redirect()->route('admin.users.objectives', ['userId' => $user->id])->with('success', 'Se quitó al usuario del equipo del objetivo');
+    }
+
+    /**
+     * @return array{q: ?string, verificado: ?string, rol: ?string, equipo: ?string, orden: ?string}
+     */
+    private function userFilters(Request $request): array
+    {
+        return [
+            'q' => $request->query('q'),
+            'verificado' => $request->query('verificado'),
+            'rol' => $request->query('rol'),
+            'equipo' => $request->query('equipo'),
+            'orden' => $request->query('orden'),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function logUserAction(Request $request, User $user, string $message, array $context = []): void
+    {
+        Log::channel('mysql')->info("[{$request->user()->fullname}] {$message}", $context + [
+            'member_id' => $user->id,
+            'member_fullname' => $user->fullname,
+            'member_email' => $user->email,
             'user_id' => $request->user()->id,
             'user_fullname' => $request->user()->fullname,
-            'user_email' => $request->user()->email
-            ]);
-
-        return redirect()->route('admin.administrators')->with('success','¡Nuevo administrador creado!');
+            'user_email' => $request->user()->email,
+        ]);
     }
-    public function formDeleteAdministrator(Request $request, $id){
-        $user = User::findOrFail($id);
-        $user->roles()->detach(Role::where('name', 'admin')->first());
 
-        Log::channel('mysql')->info("[{$request->user()->fullname}] ha quitado el rol de administrador al usuario  [{$user->fullname}]", [
-            'admin_id' => $user->id,
-            'admin_fullname' => $user->fullname,
-            'admin_email' => $user->email,
-            'user_id' => $request->user()->id,
-            'user_fullname' => $request->user()->fullname,
-            'user_email' => $request->user()->email
-            ]);
-
-        return redirect()->route('admin.administrators')->with('success','Administrador eliminado');
-    }
     // ====================================
     // Admin Objectives
     // ====================================
 
-    public function viewListObjectives(Request $request){
-            $objectives = Objective::with('strategicObjective.category')->paginate(10);
-      return view('admin.objectives.list',['objectives' => $objectives]);
+    public function viewListObjectives(Request $request, ObjectiveDirectory $objectiveDirectory){
+        $filters = $objectiveDirectory->normalize($request->only(['q', 'eje', 'estrategico', 'visibilidad', 'metas', 'orden']));
+
+        return view('admin.objectives.list', [
+            'objectives' => $objectiveDirectory->search($filters)->paginate(10)->withQueryString(),
+            'filters' => $filters,
+            ...$objectiveDirectory->hierarchyOptions($filters),
+        ]);
     }
 
     public function downloadListObjectives(Request $request, CsvDownload $csvDownload){
@@ -805,11 +1023,6 @@ class AdminPanelController extends Controller
         return redirect()->route('admin.events')->with('success','La actividad ha sido eliminada correctamente');
     }
 
-    public function viewEditSettings(Request $request)
-    {
-        $settings = Setting::all()->keyBy('name');
-        return view('admin.settings.edit',['settings' => $settings]);
-    }
     public function formEditSetting(Request $request)
     {
         $rules = [
@@ -875,8 +1088,6 @@ class AdminPanelController extends Controller
         $settingLong->save();
         $settingZoom->save();
 
-        // return redirect()->route('admin.settings')->with('success','Configuración guardada');
-        // Redirect::back()->with('message','Operation Successful !');
         return redirect()->back()->with('success','Configuración guardada');
 
     }
@@ -906,7 +1117,7 @@ class AdminPanelController extends Controller
             $setting->value = $filePath;
         }
         $setting->save();
-        return redirect()->route('admin.settings')->with('success','Configuración guardada');
+        return redirect()->back()->with('success','Configuración guardada');
 
     }
     public function clearCacheSettings(Request $request)
