@@ -68,3 +68,6 @@
 
 // Lets flex children shrink so .text-truncate works inside them.
 .min-w-0 { min-width: 0 !important; }
+
+// Fits images inside their box without cropping (e.g. logos).
+.object-contain { object-fit: contain; }

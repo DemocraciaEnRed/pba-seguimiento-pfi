@@ -70,11 +70,11 @@
     <a href="{{ route('admin.objectives.download') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-download fa-fw"></i>Descargar CSV</a>
   </div>
 
-  @forelse($objectives as $objective)
-  <div class="card mb-2 shadow-sm">
-    <div class="card-body p-3 d-flex align-items-start gap-3">
+  <div class="list-group shadow-sm mb-3">
+    @forelse($objectives as $objective)
+    <div class="list-group-item d-flex align-items-start gap-3">
       <div class="category-icon-container" style="background-color: {{$objective->category->background_color}}">
-        <x-category-icon :icon="$objective->category->icon" size="2x" style="color: {{$objective->category->color}}" />
+        <x-category-icon :icon="$objective->category->icon" style="color: {{$objective->category->color}}" />
       </div>
       <div class="flex-grow-1 min-w-0">
         <span class="text-smaller" style="color:{{$objective->category->color}}">{{$objective->category->title}}</span>
@@ -82,26 +82,24 @@
         @if($objective->hidden)
         <span class="badge badge-secondary align-middle">Oculto</span>
         @endif
-        <h5 class="is-700 my-1">
+        <p class="is-700 my-1">
           <a href="{{route('objectives.manage.index',['objectiveId' => $objective->id])}}" class="text-dark">{{$objective->title}}</a>
-        </h5>
+        </p>
         <p class="text-muted text-smaller mb-0">{{Str::limit($objective->content, 200, ' [...]')}}</p>
       </div>
       <div class="text-right text-smaller text-nowrap">
-        <span class="d-block" title="Metas"><i class="fas fa-bullseye fa-fw"></i>{{ $objective->goals_count }} {{ $objective->goals_count === 1 ? 'meta' : 'metas' }}</span>
-        <a href="{{ route('admin.reports', ['eje' => $objective->category->id, 'objetivo' => $objective->id]) }}" class="d-block" title="Ver reportes"><i class="far fa-file-lines fa-fw"></i>{{ $objective->reports_count }} {{ $objective->reports_count === 1 ? 'reporte' : 'reportes' }}</a>
-        <span class="d-block" title="Miembros del equipo"><i class="fas fa-users fa-fw"></i>{{ $objective->members_count }} {{ $objective->members_count === 1 ? 'miembro' : 'miembros' }}</span>
-        <span class="text-muted">Último reporte: {{ $objective->last_report_date ? \Carbon\Carbon::parse($objective->last_report_date)->format('d/m/Y') : '-' }}</span>
+        <span class="d-block" title="Metas">{{ $objective->goals_count }} {{ $objective->goals_count === 1 ? 'meta' : 'metas' }}<i class="fas fa-bullseye fa-fw ml-1"></i></span>
+        <a href="{{ route('admin.reports', ['eje' => $objective->category->id, 'objetivo' => $objective->id]) }}" class="d-block" title="Ver reportes">{{ $objective->reports_count }} {{ $objective->reports_count === 1 ? 'reporte' : 'reportes' }}<i class="far fa-file-lines fa-fw ml-1"></i></a>
+        <span class="d-block" title="Miembros del equipo">{{ $objective->members_count }} {{ $objective->members_count === 1 ? 'miembro' : 'miembros' }}<i class="fas fa-users fa-fw ml-1"></i></span>
+        <span class="d-block text-muted" title="Último reporte">Último reporte: {{ $objective->last_report_date ? \Carbon\Carbon::parse($objective->last_report_date)->format('d/m/Y') : '-' }}<i class="far fa-clock fa-fw ml-1"></i></span>
       </div>
     </div>
-  </div>
-  @empty
-  <div class="card my-3 shadow-sm">
-    <div class="card-body text-center">
+    @empty
+    <div class="list-group-item text-center">
       <h6 class="mb-0">No se encontraron objetivos</h6>
     </div>
+    @endforelse
   </div>
-  @endforelse
   {{ $objectives->links() }}
 </section>
 

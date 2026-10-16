@@ -98,6 +98,29 @@ class AdminStrategicObjectivesListTest extends TestCase
             ->assertDontSee('No hay objetivos estratégicos cargados');
     }
 
+    public function test_categories_list_shows_strategic_and_general_objective_counts(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.categories'))
+            ->assertOk()
+            ->assertSee('list-group', false)
+            ->assertSeeInOrder(['Movilidad', '2 objetivos estratégicos', '2 objetivos generales', 'Salud', '1 objetivo estratégico', '0 objetivos generales'])
+            ->assertSee(e(route('admin.strategic-objectives', ['eje' => $this->mobility->id])), false)
+            ->assertSee(e(route('admin.objectives', ['eje' => $this->mobility->id])), false);
+    }
+
+    public function test_objectives_list_renders_as_a_single_list_group(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.objectives'))
+            ->assertOk()
+            ->assertSee('Repavimentar rutas')
+            ->assertSee('Sumar ciclovías');
+
+        $this->assertSame(1, substr_count($response->getContent(), '<div class="list-group shadow-sm mb-3">'));
+        $this->assertStringNotContainsString('card mb-2 shadow-sm', $response->getContent());
+    }
+
     private function createCategory(string $title, int $order): Category
     {
         $category = new Category();

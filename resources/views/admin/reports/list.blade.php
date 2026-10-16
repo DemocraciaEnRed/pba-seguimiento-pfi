@@ -105,9 +105,9 @@
         <p class="mb-0 text-smaller text-muted">Por {{ $report->author?->fullname ?? 'usuario eliminado' }} · cargado el {{ $report->created_at?->format('d/m/Y') ?? '-' }}</p>
       </div>
       <div class="text-right text-smaller text-nowrap">
-        <span class="d-block" title="Comentarios"><i class="far fa-comments fa-fw"></i>{{ $report->comments_count }}</span>
-        <span class="d-block" title="Me gusta"><i class="far fa-thumbs-up fa-fw"></i>{{ $report->positive_testimonies_count }}</span>
-        <a href="{{ route('reports.index', ['reportId' => $report->id]) }}" target="_blank" rel="noopener" title="Ver en el portal"><i class="fas fa-arrow-up-right-from-square fa-fw"></i>Portal</a>
+        <span class="d-block" title="Comentarios">{{ $report->comments_count }}<i class="far fa-comments fa-fw ml-1"></i></span>
+        <span class="d-block" title="Me gusta">{{ $report->positive_testimonies_count }}<i class="far fa-thumbs-up fa-fw ml-1"></i></span>
+        <a href="{{ route('reports.index', ['reportId' => $report->id]) }}" target="_blank" rel="noopener" title="Ver en el portal">Portal<i class="fas fa-arrow-up-right-from-square fa-fw ml-1"></i></a>
       </div>
     </div>
     @empty

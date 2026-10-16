@@ -67,8 +67,8 @@
         @endif
       </div>
       <div class="text-right text-smaller text-nowrap text-muted">
-        <span title="Comentarios"><i class="far fa-comments fa-fw"></i>{{ $report->comments_count }}</span>
-        <span class="ml-2" title="Me gusta"><i class="far fa-thumbs-up fa-fw"></i>{{ $report->positive_testimonies_count }}</span>
+        <span title="Comentarios">{{ $report->comments_count }}<i class="far fa-comments fa-fw ml-1"></i></span>
+        <span class="ml-2" title="Me gusta">{{ $report->positive_testimonies_count }}<i class="far fa-thumbs-up fa-fw ml-1"></i></span>
       </div>
     </div>
     @empty

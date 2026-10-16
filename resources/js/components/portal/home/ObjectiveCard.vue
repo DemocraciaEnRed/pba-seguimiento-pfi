@@ -1,7 +1,7 @@
 <template>
   <div class="card rounded shadow-sm objective-card" :style="{'--objective-accent': objective.category.color || null}">
     <div class="card-body">
-      <div class="d-flex flex-column flex-md-row align-items-md-center">
+      <div class="d-flex flex-column flex-md-row align-items-md-start">
         <div class="d-flex align-items-center w-100 min-w-0 mb-3 mb-md-0">
           <div class="mr-3 category-icon-container" :style="`background-color: ${objective.category.background_color}`">
             <category-icon :url="objective.category.icon_url" :style="`color: ${objective.category.color}`"></category-icon>
@@ -14,16 +14,14 @@
             <a :href="objective.url" class="objective-card__title text-dark is-700 d-block mb-0">{{objective.title}}</a>
           </div>
         </div>
-        <div class="d-flex align-items-center flex-shrink-0 ml-md-3 text-center">
-          <div class="px-2">
-            <span class="is-700"><i class="fas fa-medal fa-fw text-primary"></i>{{objective.goals_count}}</span><br><span class="text-smallest text-muted">metas</span>
-          </div>
-          <div class="px-2">
-            <span class="is-700"><i class="far fa-file fa-fw text-primary"></i>{{objective.reports_count}}</span><br><span class="text-smallest text-muted">reportes</span>
-          </div>
-          <div class="px-2 text-smallest text-muted" v-if="objective.updated_when">
-            <i class="far fa-clock fa-fw"></i><br>{{objective.updated_when}}
-          </div>
+        <div class="d-flex flex-wrap align-items-center flex-md-column align-items-md-end text-smaller flex-shrink-0 ml-md-3">
+          <div class="text-nowrap"><span class="is-700">{{objective.goals_count}}</span> {{objective.goals_count === 1 ? 'meta' : 'metas'}}<i class="fas fa-medal fa-fw text-primary ml-1"></i></div>
+          <span class="text-muted mx-1 d-md-none">•</span>
+          <div class="text-nowrap"><span class="is-700">{{objective.reports_count}}</span> {{objective.reports_count === 1 ? 'reporte' : 'reportes'}}<i class="far fa-file fa-fw text-primary ml-1"></i></div>
+          <template v-if="objective.updated_when">
+            <span class="text-muted mx-1 d-md-none">•</span>
+            <div class="text-muted text-nowrap">{{objective.updated_when}}<i class="far fa-clock fa-fw ml-1"></i></div>
+          </template>
         </div>
       </div>
 

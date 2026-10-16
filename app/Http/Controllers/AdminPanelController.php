@@ -138,7 +138,10 @@ class AdminPanelController extends Controller
     // ====================================
 
     public function viewListCategories(Request $request){
-      $categories = Category::orderBy('order')->get();
+      $categories = Category::query()
+          ->withCount(['strategicObjectives', 'objectives'])
+          ->orderBy('order')
+          ->get();
       return view('admin.categories.list',['categories' => $categories]);
     }
     public function viewCreateCategory(Request $request){
@@ -312,7 +315,11 @@ class AdminPanelController extends Controller
     // ====================================
 
     public function viewListOrganizations(Request $request){
-      $organizations = Organization::paginate(5);
+      $organizations = Organization::query()
+          ->with('logo')
+          ->withCount('objectives')
+          ->orderBy('name')
+          ->paginate(15);
       return view('admin.organizations.list',['organizations' => $organizations]);
     }
     public function viewCreateOrganization(Request $request){

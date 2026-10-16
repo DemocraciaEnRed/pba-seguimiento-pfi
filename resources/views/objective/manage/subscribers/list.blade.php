@@ -25,7 +25,7 @@
         <span class="d-block text-smaller text-muted text-truncate">{{ $subscriber->email }}</span>
         @endisManager
       </div>
-      <span class="text-right text-smaller text-nowrap text-muted" title="Fecha de suscripción"><i class="far fa-calendar fa-fw"></i>@justdate($subscriber->pivot->created_at)</span>
+      <span class="text-right text-smaller text-nowrap text-muted" title="Fecha de suscripción">@justdate($subscriber->pivot->created_at)<i class="far fa-calendar fa-fw ml-1"></i></span>
     </div>
     @empty
     <div class="list-group-item text-center text-muted py-4">

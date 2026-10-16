@@ -68,8 +68,8 @@
         </div>
       </div>
       <div class="text-right text-smaller text-nowrap text-muted">
-        <span title="Reportes"><i class="far fa-file-lines fa-fw"></i>{{ $goal->reports_count }}</span>
-        <span class="ml-2" title="Hitos"><i class="far fa-star fa-fw"></i>{{ $goal->milestones_count }}</span>
+        <span title="Reportes">{{ $goal->reports_count }}<i class="far fa-file-lines fa-fw ml-1"></i></span>
+        <span class="ml-2" title="Hitos">{{ $goal->milestones_count }}<i class="far fa-star fa-fw ml-1"></i></span>
       </div>
     </div>
     @empty

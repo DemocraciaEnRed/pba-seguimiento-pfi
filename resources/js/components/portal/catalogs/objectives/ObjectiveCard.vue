@@ -18,9 +18,9 @@
       <p class="mb-0 text-smallest text-muted" v-else>Sin metas cargadas</p>
     </div>
     <div class="text-right text-smaller text-nowrap flex-shrink-0">
-      <div><i class="fas fa-medal fa-fw text-primary"></i><span class="is-700">{{objective.goals_count}}</span> {{objective.goals_count === 1 ? 'meta' : 'metas'}}</div>
-      <div><i class="far fa-file fa-fw text-primary"></i><span class="is-700">{{objective.reports_count}}</span> {{objective.reports_count === 1 ? 'reporte' : 'reportes'}}</div>
-      <div class="text-muted" v-if="objective.last_report_when">Último reporte {{objective.last_report_when}}</div>
+      <div><span class="is-700">{{objective.goals_count}}</span> {{objective.goals_count === 1 ? 'meta' : 'metas'}}<i class="fas fa-medal fa-fw text-primary ml-1"></i></div>
+      <div><span class="is-700">{{objective.reports_count}}</span> {{objective.reports_count === 1 ? 'reporte' : 'reportes'}}<i class="far fa-file fa-fw text-primary ml-1"></i></div>
+      <div class="text-muted" v-if="objective.last_report_when">Último reporte {{objective.last_report_when}}<i class="far fa-clock fa-fw ml-1"></i></div>
     </div>
   </a>
 </template>

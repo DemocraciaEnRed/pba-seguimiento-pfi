@@ -76,8 +76,8 @@
         <p class="mb-0 text-smaller text-muted text-truncate">{{ $user->email }}@if($user->organization) · {{ $user->organization }}@endif</p>
       </div>
       <div class="text-right text-smaller text-nowrap">
-        <span class="d-block text-dark" title="Objetivos en los que integra el equipo"><i class="fas fa-flag-checkered fa-fw"></i>{{ $user->objectives_count }} {{ $user->objectives_count === 1 ? 'objetivo' : 'objetivos' }}</span>
-        <span class="text-muted">Alta: {{ $user->created_at?->format('d/m/Y') ?? '-' }}</span>
+        <span class="d-block text-dark" title="Objetivos en los que integra el equipo">{{ $user->objectives_count }} {{ $user->objectives_count === 1 ? 'objetivo' : 'objetivos' }}<i class="fas fa-flag-checkered fa-fw ml-1"></i></span>
+        <span class="d-block text-muted" title="Fecha de alta">Alta: {{ $user->created_at?->format('d/m/Y') ?? '-' }}<i class="far fa-calendar fa-fw ml-1"></i></span>
       </div>
     </a>
     @empty

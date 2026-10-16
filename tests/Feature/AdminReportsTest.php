@@ -99,8 +99,8 @@ class AdminReportsTest extends TestCase
             ->assertSee('Ciclovías zona sur')
             ->assertSee('Objetivo oculto')
             ->assertSee('Por Reportera, Rita')
-            ->assertSee('<i class="far fa-comments fa-fw"></i>2', false)
-            ->assertSee('<i class="far fa-thumbs-up fa-fw"></i>1', false)
+            ->assertSee('2<i class="far fa-comments fa-fw ml-1"></i>', false)
+            ->assertSee('1<i class="far fa-thumbs-up fa-fw ml-1"></i>', false)
             ->assertSee(route('objectives.manage.goals.reports.index', ['objectiveId' => $this->bikeLanes->id, 'goalId' => $this->southLanes->id, 'reportId' => $this->southReport->id]))
             ->assertSee(route('reports.index', ['reportId' => $this->southReport->id]));
     }
