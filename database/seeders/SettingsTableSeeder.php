@@ -58,7 +58,7 @@ class SettingsTableSeeder extends Seeder
         $setting->save();
         $setting = new Setting();
         $setting->name = 'app_homepage_subtitle';
-        $setting->value = 'Impulsando una gestión pública más eficiente, transparente e innovadora, orientada a mejorar la calidad de vida de las y los bonaerenses';
+        $setting->value = 'Un tablero abierto para conocer y controlar el avance de los objetivos y metas del Plan de Fortalecimiento Institucional y visibilizar el impacto de la gestión.';
         $setting->type = 'string';
         $setting->cached = true;
         $setting->save();
