@@ -137,11 +137,5 @@ class SettingsTableSeeder extends Seeder
         $setting->type = 'boolean';
         $setting->cached = true;
         $setting->save();
-        $setting = new Setting();
-        $setting->name = 'app_homepage_show_categories_selector';
-        $setting->value = true;
-        $setting->type = 'boolean';
-        $setting->cached = true;
-        $setting->save();
     }
 }

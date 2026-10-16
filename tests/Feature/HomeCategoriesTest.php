@@ -3,8 +3,9 @@
 namespace Tests\Feature;
 
 use App\Category;
+use App\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
+use Database\Seeders\SettingsTableSeeder;
 use Tests\TestCase;
 
 class HomeCategoriesTest extends TestCase
@@ -31,9 +32,11 @@ class HomeCategoriesTest extends TestCase
             ->assertDontSee('Eje Integridad');
     }
 
-    public function test_axes_are_shown_regardless_of_the_legacy_selector_setting(): void
+    public function test_axes_are_shown_without_the_legacy_selector_setting(): void
     {
-        Cache::forever('app_homepage_show_categories_selector', false);
+        $this->seed(SettingsTableSeeder::class);
+
+        $this->assertFalse(Setting::where('name', 'app_homepage_show_categories_selector')->exists());
 
         $this->get(route('home'))
             ->assertOk()
