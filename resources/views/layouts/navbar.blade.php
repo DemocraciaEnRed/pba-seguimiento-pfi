@@ -8,7 +8,7 @@
 <nav class="navbar navbar-expand-md navbar-light p-2 bg-white">
   <div class="container">
     <a class="navbar-brand" href="{{ url('/') }}">
-      <img src="{{asset(app_setting('app_logo_color','img/default-logo-color.svg'))}}" class="img-fluid" alt="{{ config('app.name', 'Laravel') }}" style="height:25px;">
+      <img src="{{asset('img/default-logo-color.svg')}}" class="img-fluid" alt="{{ config('app.name', 'Laravel') }}" style="height:25px;">
     </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
       aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
@@ -31,7 +31,7 @@
           <a href="{{ route('events.upcoming') }}" class="nav-link"><i class="far fa-fw fa-calendar-days"></i> Actividades</a>
         </li>
         <li class="nav-item">
-          <a href="{{ route('about.general') }}" class="nav-link"><i class="fas fa-fw fa-circle-question"></i> ¿Cómo funciona?</a>
+          <a href="{{ route('about.general') }}" class="nav-link"><i class="fas fa-fw fa-circle-question"></i> Acerca de</a>
         </li>
       </ul>
 

@@ -176,13 +176,29 @@ class MapsDisabledTest extends TestCase
             ->assertSee('<set-map-default', false);
     }
 
-    public function test_admins_can_still_reach_the_map_settings_to_enable_maps(): void
+    public function test_the_admin_map_settings_are_hidden_when_maps_are_disabled(): void
     {
-        $this->actingAs($this->admin)
-            ->get(route('admin.settings.map'))
+        $this->actingAs($this->admin);
+
+        $this->get(route('admin.settings.map'))->assertNotFound();
+        $this->put(route('admin.settings.map.form'))->assertNotFound();
+        $this->get(route('admin.index'))
             ->assertOk()
-            ->assertSee('Habilitar georeferenciación')
-            ->assertDontSee('checked', false);
+            ->assertDontSee('Mapas y georreferencia')
+            ->assertDontSee(route('admin.settings.map'));
+    }
+
+    public function test_the_admin_map_settings_are_available_when_maps_are_enabled(): void
+    {
+        $this->enableMaps();
+        $this->actingAs($this->admin);
+
+        $this->get(route('admin.settings.map'))
+            ->assertOk()
+            ->assertSee('Habilitar georeferenciación');
+        $this->get(route('admin.index'))
+            ->assertSee('Mapas y georreferencia')
+            ->assertSee(route('admin.settings.map'));
     }
 
     private function enableMaps(): void

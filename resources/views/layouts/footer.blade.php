@@ -5,7 +5,7 @@
   <div class="container">
     <div class="row text-smaller text-center text-md-left">
       <div class="col-12 col-lg-5 mb-4 mb-lg-0">
-        <img src="{{asset(app_setting('app_logo_footer','img/logo-large-color.svg'))}}" class="footer-logo" alt="">
+        <img src="{{asset('img/logo-large-color.svg')}}" class="footer-logo" alt="">
           <div class="footer-social-links justify-content-center justify-content-md-start my-1" aria-label="Redes sociales">
             <a href="https://www.facebook.com/BAProvincia/" class="h4" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
               <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
@@ -33,7 +33,6 @@
             </a>
         </div>
         <p class="mb-lg-1"><b>Contactenos</b></p>
-        <!-- <p>{!! nl2br(e(app_setting('app_footer_contact_info'))) !!}</p> -->
         <p>mesadeayuda@minfra.gba.gob.ar</p>
       </div>
       <div class="col-6 col-md-4 offset-lg-1 col-lg-2 mb-4 mb-lg-0">
