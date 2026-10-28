@@ -4,6 +4,8 @@ $assetsUrl = 'https://democraciaenred.nyc3.digitaloceanspaces.com/projects/pba-m
 
 return [
 
+    'library_url' => 'https://www.minfra.gba.gob.ar/test-bibliotecadigital/home',
+
     /*
     |--------------------------------------------------------------------------
     | Documentos del Plan

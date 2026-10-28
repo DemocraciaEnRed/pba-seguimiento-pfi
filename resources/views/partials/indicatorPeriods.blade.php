@@ -17,6 +17,13 @@
     PeriodState::Skipped->value => 'secondary',
     PeriodState::NoTarget->value => 'light',
   ];
+  $periodYears = [];
+  foreach ($goal->periods as $period) {
+    foreach (range($period->starts_on->year, $period->ends_on->year) as $year) {
+      $periodYears[$year] = $year;
+    }
+  }
+  sort($periodYears);
 @endphp
 
 <div class="row mb-3">
@@ -66,7 +73,22 @@
 </div>
 @endif
 
-<div class="table-responsive">
+<div data-indicator-periods>
+  @if(count($periodYears) > 1)
+  <div class="mb-3" data-period-year-controls hidden>
+    <label class="mb-0">
+      Año de los períodos
+      <select class="custom-select custom-select-sm w-auto ml-2" data-period-year>
+        <option value="">Todos los años</option>
+        @foreach($periodYears as $year)
+        <option value="{{ $year }}">{{ $year }}</option>
+        @endforeach
+      </select>
+    </label>
+    <small class="d-block text-muted">El filtro solo cambia los períodos visibles. Las tarjetas y alertas corresponden al seguimiento general de la meta. Los períodos que abarcan más de un año se muestran en cada uno, sin dividir sus resultados.</small>
+  </div>
+  @endif
+  <div class="table-responsive">
   <table class="table table-sm table-hover">
     <thead class="thead-light">
       <tr>
@@ -88,7 +110,7 @@
           $light = TrafficLight::fromCompliance($result->compliance);
           $reservation = $reportLinks === 'panel' ? $period->reservedReport : null;
         @endphp
-        <tr>
+        <tr data-period-start-year="{{ $period->starts_on->year }}" data-period-end-year="{{ $period->ends_on->year }}">
           <td>
             {{ $period->label() }}
             <small class="d-block text-muted">{{ $period->rangeLabel() }}</small>
@@ -145,6 +167,7 @@
       @endforeach
     </tbody>
   </table>
+  </div>
 </div>
 
 @if($goal->indicator_nature === Nature::Intensive)

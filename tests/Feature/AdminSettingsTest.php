@@ -100,6 +100,31 @@ class AdminSettingsTest extends TestCase
         $this->assertFalse(app_setting('app_homepage_show_latest_reports'));
     }
 
+    public function test_the_home_subtitle_can_be_updated_without_leaving_a_stale_cached_value(): void
+    {
+        $subtitle = 'Un tablero abierto para conocer y controlar el avance de los objetivos y metas del Plan de Fortalecimiento Institucional y visibilizar el impacto de la gestión.';
+        $setting = Setting::where('name', 'app_homepage_subtitle')->firstOrFail();
+        $setting->value = 'Bajada anterior';
+        $setting->save();
+        $this->assertSame('Bajada anterior', app_setting('app_homepage_subtitle'));
+
+        $this->actingAs($this->admin)
+            ->from(route('admin.settings.homepage'))
+            ->put(route('admin.settings.form'), [
+                'name' => 'app_homepage_subtitle',
+                'value' => $subtitle,
+                'type' => 'string',
+                'cached' => 'true',
+            ])
+            ->assertRedirect(route('admin.settings.homepage'))
+            ->assertSessionHas('success');
+
+        $this->assertSame($subtitle, $setting->fresh()->value);
+        $this->assertSame($subtitle, app_setting('app_homepage_subtitle'));
+        $this->get(route('home'))->assertOk()->assertSee($subtitle)->assertDontSee('Bajada anterior');
+        $this->get(route('home'))->assertOk()->assertSee($subtitle);
+    }
+
     public function test_uploading_a_file_setting_redirects_back_and_refreshes_the_cache(): void
     {
         Storage::fake('settings');

@@ -91,6 +91,16 @@
           </div>
         </a>
       </div>
+      <a :href="catalogUrl" class="plan-invitation">
+        <img v-if="planCoverUrl" :src="planCoverUrl" alt="" class="plan-invitation__cover" loading="lazy">
+        <div class="plan-invitation__content">
+          <span class="plan-invitation__eyebrow">Plan de Fortalecimiento Institucional</span>
+          <span class="plan-invitation__title">Conocé de qué se trata y recorré el Plan completo <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+          <span class="plan-invitation__icons" aria-hidden="true">
+            <category-icon v-for="category in categories" :key="`plan-icon-${category.id}`" :url="category.icon_url"></category-icon>
+          </span>
+        </div>
+      </a>
     </div>
     <div class="alert alert-info" v-if="categories.length === 0">No hay ejes cargados en la plataforma.</div>
   </section>
@@ -115,6 +125,10 @@ export default {
     objectivesUrl: {
       type: String,
       required: true
+    },
+    planCoverUrl: {
+      type: String,
+      default: ''
     }
   },
   data() {

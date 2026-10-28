@@ -552,7 +552,73 @@ class PeriodicGoalReportsTest extends TestCase
         $this->assertSame(3, substr_count($response->getContent(), '<span class="text-muted">—</span>'));
     }
 
-    private function createPeriodicGoal(array $targets = [1 => 27, 2 => 27, 3 => 25, 4 => 21]): Goal
+    public function test_multiyear_periods_offer_the_same_year_filter_in_portal_and_management(): void
+    {
+        $this->withoutVite();
+        $this->objective->hidden = false;
+        $this->objective->save();
+        $goal = $this->createPeriodicGoal([1 => 27, 2 => 27, 3 => 25, 4 => 21], '2025-11', 'four_monthly');
+        $report = $this->createProgressReport($goal, $goal->periods->first(), 26);
+        $summary = $goal->indicatorSummary();
+
+        $portalUrl = route('goals.index', ['goalId' => $goal->id]);
+        $managementUrl = route('objectives.manage.goals.index', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]);
+        $managementReportUrl = route('objectives.manage.goals.reports.index', [
+            'objectiveId' => $this->objective->id, 'goalId' => $goal->id, 'reportId' => $report->id,
+        ]);
+
+        $this->get($portalUrl)
+            ->assertOk()
+            ->assertSeeInOrder(['Todos los años', '<option value="2025">2025</option>', '<option value="2026">2026</option>', '<option value="2027">2027</option>'], false)
+            ->assertSee('data-period-year-controls hidden', false)
+            ->assertSee('data-period-start-year="2025" data-period-end-year="2026"', false)
+            ->assertSee('data-period-start-year="2026" data-period-end-year="2027"', false)
+            ->assertSee('Las tarjetas y alertas corresponden al seguimiento general')
+            ->assertSee('href="'.route('reports.index', ['reportId' => $report->id]).'"', false)
+            ->assertSee(indicator_percentage($summary->toDateCompliance))
+            ->assertDontSee('Omitir');
+
+        $this->actingAs($this->admin)->get($managementUrl)
+            ->assertOk()
+            ->assertSeeInOrder(['Todos los años', '<option value="2025">2025</option>', '<option value="2026">2026</option>', '<option value="2027">2027</option>'], false)
+            ->assertSee('data-period-year-controls hidden', false)
+            ->assertSee('data-period-start-year="2025" data-period-end-year="2026"', false)
+            ->assertSee('href="'.$managementReportUrl.'"', false)
+            ->assertSee(indicator_percentage($summary->toDateCompliance))
+            ->assertSee('Omitir');
+    }
+
+    public function test_year_options_include_intermediate_years_of_a_long_period(): void
+    {
+        $this->withoutVite();
+        $goal = $this->createPeriodicGoal([1 => 27]);
+        $period = $goal->periods->first();
+        $period->ends_on = '2028-03-31';
+        $period->save();
+
+        $this->actingAs($this->admin)->get(route('goals.index', ['goalId' => $goal->id]))
+            ->assertOk()
+            ->assertSeeInOrder(['<option value="2026">2026</option>', '<option value="2027">2027</option>', '<option value="2028">2028</option>'], false);
+    }
+
+    public function test_single_year_and_empty_period_tables_do_not_offer_a_year_filter(): void
+    {
+        $this->withoutVite();
+        $goal = $this->createPeriodicGoal();
+        $this->actingAs($this->admin)->get(route('goals.index', ['goalId' => $goal->id]))
+            ->assertOk()
+            ->assertSee('data-period-start-year="2026" data-period-end-year="2026"', false)
+            ->assertDontSee('data-period-year-controls', false);
+
+        $goal->periods()->delete();
+
+        $this->get(route('goals.index', ['goalId' => $goal->id]))
+            ->assertOk()
+            ->assertDontSee('data-period-start-year', false)
+            ->assertDontSee('data-period-year-controls', false);
+    }
+
+    private function createPeriodicGoal(array $targets = [1 => 27, 2 => 27, 3 => 25, 4 => 21], string $periodStart = '2026-01', string $periodType = 'quarterly'): Goal
     {
         $goal = new Goal();
         $goal->title = 'Certificados';
@@ -565,8 +631,8 @@ class PeriodicGoalReportsTest extends TestCase
             'indicator_unit' => 'días',
             'indicator_direction' => 'lower_is_better',
             'indicator_nature' => 'intensive',
-            'period_type' => 'quarterly',
-            'period_start' => '2026-01',
+            'period_type' => $periodType,
+            'period_start' => $periodStart,
             'period_count' => count($targets),
             'period_targets' => $targets,
         ]);

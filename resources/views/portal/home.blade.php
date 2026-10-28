@@ -35,10 +35,16 @@
 
 @section('content')
 <div class="container py-5">
-  <portal-home-stats fetch-url="{{route('apiService.home.stats')}}" catalog-url="{{route('catalog')}}" objectives-url="{{route('objectives')}}">
+  <portal-home-stats fetch-url="{{route('apiService.home.stats')}}" catalog-url="{{route('catalog')}}" objectives-url="{{route('objectives')}}" plan-cover-url="{{ collect(config('plan.documents', []))->firstWhere('acronym', 'PFI')['cover'] ?? '' }}">
     @include('partials.loading')
   </portal-home-stats>
-  <p class="mb-4 text-right"><a href="{{route('catalog')}}" class="btn btn-outline-primary">Recorré el plan completo con todos los objetivos y metas <i class="fas fa-arrow-right"></i></a></p>
+
+  <div class="mb-5 text-right">
+    <p class="text-muted mb-2">Accedé a los planes y documentos del Ministerio en la Biblioteca Digital.</p>
+    <a href="{{ config('plan.library_url') }}" class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer">
+      Biblioteca Digital <i class="fas fa-arrow-up-right-from-square ml-1" aria-hidden="true"></i><span class="sr-only"> (se abre en una pestaña nueva)</span>
+    </a>
+  </div>
 
   @if($featuredInitiatives->isNotEmpty())
   <x-initiatives-carousel :initiatives="$featuredInitiatives" label="Iniciativas destacadas" class="mb-5">
@@ -69,4 +75,3 @@
   @endif
 </div>
 @endsection
-
