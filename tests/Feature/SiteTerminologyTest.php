@@ -83,7 +83,7 @@ class SiteTerminologyTest extends TestCase
 
         $this->get(route('catalog'))
             ->assertOk()
-            ->assertSee('Objetivos Estratégicos')
+            ->assertSee('Objetivos estratégicos')
             ->assertSee('Objetivos generales')
             ->assertDontSee('Estrategias')
             ->assertSee('eje-'.$category->id, false);

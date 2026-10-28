@@ -4,7 +4,7 @@
       <report-tile v-for="(report, index) in reports" :key="`report-${report.id}`" :report="report" :featured="index === 0" :horizontal="index === 0"></report-tile>
     </div>
     <section class="p-5 text-center" v-else>
-      <i class="fas fa-circle-info"></i>&nbsp; No hay reportes cargados en la plataforma
+      <i class="fas fa-circle-info"></i>&nbsp; {{ emptyText }}
     </section>
   </div>
   <section class="p-5 text-center" v-else>
@@ -20,6 +20,10 @@ export default {
     fetchUrl: {
       type: String,
       required: true
+    },
+    emptyText: {
+      type: String,
+      default: 'No hay reportes cargados en la plataforma'
     }
   },
   components: {

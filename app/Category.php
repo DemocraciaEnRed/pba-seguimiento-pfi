@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Category extends Model
 {
@@ -44,6 +45,11 @@ class Category extends Model
     public function strategicObjectives()
     {
         return $this->hasMany('App\StrategicObjective','category_id');
+    }
+
+    public function initiatives(): BelongsToMany
+    {
+        return $this->belongsToMany(Initiative::class)->orderBy('order')->orderBy('title');
     }
 
     public function getBackgroundColorAttribute()

@@ -38,7 +38,7 @@ class PortalHeroTest extends TestCase
         return [
             'home' => ['home', null],
             'objectives' => ['objectives', 'Objetivos'],
-            'catalog' => ['catalog', 'El Plan'],
+            'catalog' => ['catalog', 'Plan de Fortalecimiento Institucional 2024-2027'],
             'reports' => ['reports', 'Seguimiento'],
             'upcoming events' => ['events.upcoming', 'Actividades'],
             'past events' => ['events.past', 'Actividades'],
@@ -67,7 +67,7 @@ class PortalHeroTest extends TestCase
     public static function sectionPages(): array
     {
         return [
-            'plan' => ['catalog', 'El Plan', 'Recorré el plan completo: ejes, objetivos estratégicos, objetivos generales y sus metas.'],
+            'plan' => ['catalog', 'Plan de Fortalecimiento Institucional 2024-2027', 'La hoja de ruta con la que el Ministerio desarrolla las capacidades necesarias para planificar, decidir, ejecutar y evaluar mejor las obras y los servicios públicos. Acá podés recorrer sus ejes, objetivos y metas, y seguir cómo avanzan.'],
             'objectives' => ['objectives', 'Objetivos', 'Buscá objetivos por nombre, eje u objetivo estratégico y seguí el avance de sus metas.'],
             'tracking' => ['reports', 'Seguimiento', 'Novedades, avances e hitos que publican los equipos sobre cada objetivo.'],
         ];

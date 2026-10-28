@@ -12,6 +12,8 @@ The changelog has moved to [CHANGELOG.md](CHANGELOG.md).
 
 Please check out [DEPLOY.md](DEPLOY.md) file
 
+Para actualizar a la versión 0.3.0 (migraciones y carga inicial de iniciativas), seguí las [notas de despliegue de 0.3.0](docs/release-0.3.0.md).
+
 Las mejoras SEO deseables y diferidas están en el [backlog de SEO](docs/backlog-seo.md).
 
 ---

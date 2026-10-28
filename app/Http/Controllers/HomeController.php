@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Faq;
 use App\Services\Indicators\HomeStats;
 use Illuminate\Http\JsonResponse;
+use App\Initiative;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
@@ -26,7 +27,13 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('portal.home');
+        $featuredInitiatives = Initiative::hydrate(Cache::remember(
+            Initiative::HOME_CACHE_KEY,
+            600,
+            fn (): array => Initiative::query()->featuredOnHome()->ordered()->get()->map->getAttributes()->all()
+        ));
+
+        return view('portal.home', ['featuredInitiatives' => $featuredInitiatives]);
     }
 
     public function viewAboutGeneral()
@@ -53,7 +60,7 @@ class HomeController extends Controller
     {
         return response()->json([
             'message' => 'Ok',
-            'data' => Cache::remember('home.stats', 600, fn (): array => $homeStats->compute()),
+            'data' => $homeStats->cached(),
         ], 200);
     }
 }

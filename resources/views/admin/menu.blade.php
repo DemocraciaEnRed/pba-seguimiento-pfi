@@ -17,6 +17,7 @@
   </x-side-menu.category>
 </x-side-menu.group>
 <x-side-menu.group label="Portal">
+  <x-side-menu.category label="Iniciativas" icon="fas fa-rocket" :href="route('admin.initiatives')" :active="request()->routeIs('admin.initiatives', 'admin.initiatives.edit', 'admin.initiatives.delete')" :create-href="route('admin.initiatives.create')" :create-active="request()->routeIs('admin.initiatives.create')" create-label="Crear iniciativa" />
   <x-side-menu.category label="Preguntas frecuentes" icon="fas fa-circle-question" :href="route('admin.faqs')" :active="request()->routeIs('admin.faqs', 'admin.faqs.edit')" :create-href="route('admin.faqs.create')" :create-active="request()->routeIs('admin.faqs.create')" create-label="Agregar pregunta frecuente" />
   <x-side-menu.category label="Personalizar Home" icon="fas fa-house" :href="route('admin.settings.homepage')" :active="request()->routeIs('admin.settings.homepage')" />
   <x-side-menu.category label="SEO y Analytics" icon="fas fa-magnifying-glass-chart" :href="route('admin.settings.seo')" :active="request()->routeIs('admin.settings.seo')" />

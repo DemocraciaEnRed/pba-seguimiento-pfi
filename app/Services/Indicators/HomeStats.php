@@ -7,9 +7,22 @@ use App\Goal;
 use App\Objective;
 use App\StrategicObjective;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 
 class HomeStats
 {
+    public const string CACHE_KEY = 'home.stats';
+
+    public const int CACHE_TTL = 600;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function cached(): array
+    {
+        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, fn (): array => $this->compute());
+    }
+
     /**
      * Traffic lights only consider active (non inactive) goals of published objectives.
      *

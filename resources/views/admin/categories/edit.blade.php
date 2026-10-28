@@ -23,6 +23,11 @@
       <small class="form-text text-muted">Hasta 225 caracteres</small>
     </div>
     <div class="form-group">
+      <label><b>Descripción</b> <small class="text-info">Opcional</small></label>
+      <textarea class="form-control" name="description" rows="3" maxlength="2000">{{ old('description', $category->description) }}</textarea>
+      <small class="form-text text-muted">Texto introductorio del eje que se muestra en «El Plan». Hasta 2000 caracteres.</small>
+    </div>
+    <div class="form-group">
       <label><b>Ícono</b></label>
       @include('admin.categories.icon-picker', ['selectedIcon' => old('icon', $category->icon)])
     </div>

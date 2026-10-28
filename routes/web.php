@@ -3,6 +3,7 @@
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminPanelController;
+use App\Http\Controllers\InitiativeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserPanelController;
 use App\Http\Controllers\EventController;
@@ -139,6 +140,13 @@ Route::group([
     Route::get('/objetivos-estrategicos/{strategicObjectiveId}/eliminar', [AdminPanelController::class, 'viewDeleteStrategicObjective'])->name('strategic-objectives.delete');
     Route::delete('/objetivos-estrategicos/{strategicObjectiveId}/eliminar', [AdminPanelController::class, 'formDeleteStrategicObjective'])->name('strategic-objectives.delete.form');
     // Organizaciones
+    Route::get('/iniciativas', [InitiativeController::class, 'index'])->name('initiatives');
+    Route::get('/iniciativas/nueva', [InitiativeController::class, 'create'])->name('initiatives.create');
+    Route::post('/iniciativas/nueva', [InitiativeController::class, 'store'])->name('initiatives.create.form');
+    Route::get('/iniciativas/{initiative}/editar', [InitiativeController::class, 'edit'])->name('initiatives.edit');
+    Route::put('/iniciativas/{initiative}/editar', [InitiativeController::class, 'update'])->name('initiatives.edit.form');
+    Route::get('/iniciativas/{initiative}/eliminar', [InitiativeController::class, 'delete'])->name('initiatives.delete');
+    Route::delete('/iniciativas/{initiative}/eliminar', [InitiativeController::class, 'destroy'])->name('initiatives.delete.form');
     Route::get('/organizaciones', [AdminPanelController::class, 'viewListOrganizations'])->name('organizations');
     Route::get('/organizaciones/nuevo', [AdminPanelController::class, 'viewCreateOrganization'])->name('organizations.create');
     Route::post('/organizaciones/nuevo', [AdminPanelController::class, 'formCreateOrganization'])->name('organizations.create.form');

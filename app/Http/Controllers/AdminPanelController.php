@@ -8,6 +8,7 @@ use Image;
 use Log;
 use Notification;
 use App\Category;
+use App\Initiative;
 use App\StrategicObjective;
 use App\Organization;
 use App\Role;
@@ -151,6 +152,7 @@ class AdminPanelController extends Controller
     public function formCreateCategory(Request $request){
         $rules = [
             'title' => 'required|string|max:255' ,
+            'description' => 'nullable|string|max:2000',
             'icon' => ['required', 'string', Rule::in(array_keys(Category::AVAILABLE_ICONS))],
             'color' => 'required|string|max:100' ,
             'order' => 'required|integer|min:0',
@@ -164,6 +166,7 @@ class AdminPanelController extends Controller
         DB::transaction(function () use ($validated): void {
             $category = new Category();
             $category->title = $validated['title'];
+            $category->description = $validated['description'] ?? null;
             $category->icon = $validated['icon'];
             $category->color = $validated['color'];
             $category->order = $validated['order'];
@@ -178,6 +181,7 @@ class AdminPanelController extends Controller
             }
         });
 
+        Initiative::flushPublicCache();
         return redirect()->route('admin.categories')->with('success','La categoria ha sido creada correctamente');
     }
     public function viewEditCategory(Request $request, $categoryId){
@@ -187,6 +191,7 @@ class AdminPanelController extends Controller
     public function formEditCategory(Request $request, $categoryId){
         $rules = [
             'title' => 'required|string|max:255' ,
+            'description' => 'nullable|string|max:2000',
             'icon' => ['required', 'string', Rule::in(array_keys(Category::AVAILABLE_ICONS))],
             'color' => 'required|string|max:100' ,
             'order' => 'required|integer|min:0',
@@ -202,6 +207,7 @@ class AdminPanelController extends Controller
         DB::transaction(function () use ($validated, $categoryId): void {
             $category = Category::findOrFail($categoryId);
             $category->title = $validated['title'];
+            $category->description = $validated['description'] ?? null;
             $category->icon = $validated['icon'];
             $category->color = $validated['color'];
             $category->order = $validated['order'];
@@ -233,6 +239,7 @@ class AdminPanelController extends Controller
             }
         });
 
+        Initiative::flushPublicCache();
         return redirect()->route('admin.categories')->with('success','La categoria ha sido editada correctamente');
     }
     public function viewDeleteCategory(Request $request, $categoryId){
@@ -258,6 +265,7 @@ class AdminPanelController extends Controller
         }
         $category->delete();
 
+        Initiative::flushPublicCache();
         return redirect()->route('admin.categories')->with('success','La categoria ha sido eliminada correctamente y los objetivos estratégicos han sido migrados a otra categoria');
     }
 

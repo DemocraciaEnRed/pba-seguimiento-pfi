@@ -5,6 +5,8 @@ use App\Objective;
 use App\Goal;
 use App\Report;
 use App\Category;
+use App\Initiative;
+use App\Services\Indicators\HomeStats;
 use App\Services\Indicators\ObjectiveStats;
 use App\Services\SeoMetadata;
 use Illuminate\Contracts\View\View;
@@ -58,7 +60,7 @@ class ObjectiveController extends Controller
         ]);
     }
 
-    public function viewCatalog()
+    public function viewCatalog(HomeStats $homeStats): View
     {
         $categories = Category::with([
             'strategicObjectives' => function ($query) {
@@ -72,8 +74,22 @@ class ObjectiveController extends Controller
             },
         ])->orderBy('order')->get();
 
+        $statsByCategory = collect($homeStats->cached()['categories'])
+            ->keyBy('id');
+
+        $initiativesByCategory = Initiative::query()
+            ->with('categories:id')
+            ->ordered()
+            ->get()
+            ->flatMap(fn (Initiative $initiative) => $initiative->categories->map(fn (Category $category): array => [$category->id, $initiative]))
+            ->groupBy(0)
+            ->map(fn ($pairs) => $pairs->pluck(1)->values());
+
         return view('portal.catalogs.catalog', [
             'categories' => $categories,
+            'statsByCategory' => $statsByCategory,
+            'initiativesByCategory' => $initiativesByCategory,
+            'documents' => config('plan.documents', []),
         ]);
     }
 

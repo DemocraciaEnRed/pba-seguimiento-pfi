@@ -40,6 +40,15 @@
   </portal-home-stats>
   <p class="mb-4 text-right"><a href="{{route('catalog')}}" class="btn btn-outline-primary">Recorré el plan completo con todos los objetivos y metas <i class="fas fa-arrow-right"></i></a></p>
 
+  @if($featuredInitiatives->isNotEmpty())
+  <x-initiatives-carousel :initiatives="$featuredInitiatives" label="Iniciativas destacadas" class="mb-5">
+    <x-slot:header>
+      <h4 class="is-400 mb-1">Iniciativas destacadas</h4>
+      <p class="text-muted mb-0">Sistemas, herramientas y programas que llevan adelante el Plan de Fortalecimiento Institucional.</p>
+    </x-slot:header>
+  </x-initiatives-carousel>
+  @endif
+
 
   @if(app_setting('app_homepage_show_latest_reports') && !app_setting('app_homepage_latest_reports_at_the_end'))
   <h4 class="is-400 mb-3">Últimos reportes de seguimiento</h4>

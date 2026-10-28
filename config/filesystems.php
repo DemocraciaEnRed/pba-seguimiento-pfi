@@ -78,6 +78,12 @@ return [
             'url' => env('APP_URL').'/storage/organizations',
             'visibility' => 'public',
         ],
+        'initiatives' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/initiatives'),
+            'url' => env('APP_URL').'/storage/initiatives',
+            'visibility' => 'public',
+        ],
         'reports' => [
             'driver' => 'local',
             'root' => storage_path('app/public/reports'),

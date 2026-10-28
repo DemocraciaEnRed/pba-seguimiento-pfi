@@ -6,6 +6,7 @@
 
 import '../sass/app.scss';
 import './bootstrap';
+import './initiatives-carousel';
 import Vue from 'vue';
 import http from './axios'
 import globals from './globals'
