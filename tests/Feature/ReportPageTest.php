@@ -56,6 +56,7 @@ class ReportPageTest extends TestCase
         $goal->save();
 
         $this->report = new Report();
+        $this->report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $this->report->title = 'Inauguramos la obra';
         $this->report->type = 'post';
         $this->report->content = 'Contenido del reporte';

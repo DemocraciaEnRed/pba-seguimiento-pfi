@@ -190,6 +190,7 @@ class ObjectivePageTest extends TestCase
     private function createReport(string $date): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Reporte';
         $report->type = 'post';
         $report->content = 'Contenido';

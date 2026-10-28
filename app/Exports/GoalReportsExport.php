@@ -37,6 +37,7 @@ class GoalReportsExport implements CsvExport
             "Fecha de completado del hito",
             "Fecha creado",
             "Fecha actualizado",
+            "Revisión",
         ];
     }
 
@@ -59,9 +60,10 @@ class GoalReportsExport implements CsvExport
             $report->period ? $report->period->label().' ('.$report->period->rangeLabel().')' : '-',
             $report->measured_value !== null ? (string) $report->measured_value : '-',
             $report->milestone ? $report->milestone->title : '-',
-            $report->milestone ? $report->milestone->completed->format('d/m/Y') : '-',
+            $report->milestone?->completed?->format('d/m/Y') ?? '-',
             $report->created_at->format('d/m/Y H:i:s'),
             $report->updated_at->format('d/m/Y H:i:s'),
+            $report->review_status_label,
         ];
     }
 

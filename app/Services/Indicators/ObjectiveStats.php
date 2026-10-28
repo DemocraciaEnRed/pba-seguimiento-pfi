@@ -41,7 +41,7 @@ class ObjectiveStats
         $statusCounts = $goals->countBy('status');
         $lightCounts = $goals->pluck('light')->filter()->countBy(fn (TrafficLight $light): string => $light->value);
         $measured = $lightCounts->sum();
-        $lastReportDate = $objective->reports()->max('reports.date');
+        $lastReportDate = $objective->reports()->approved()->max('reports.date');
 
         return [
             'goals_total' => $goals->count(),
@@ -49,7 +49,7 @@ class ObjectiveStats
             'goals_ongoing' => $statusCounts->get('ongoing', 0),
             'goals_delayed' => $statusCounts->get('delayed', 0),
             'goals_inactive' => $statusCounts->get('inactive', 0),
-            'reports_total' => $objective->reports()->count(),
+            'reports_total' => $objective->reports()->approved()->count(),
             'last_report_date' => $lastReportDate ? CarbonImmutable::parse($lastReportDate)->toDateString() : null,
             'traffic_lights' => [
                 'green' => $lightCounts->get(TrafficLight::Green->value, 0),

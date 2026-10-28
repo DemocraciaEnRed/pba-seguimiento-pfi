@@ -1,333 +1,182 @@
 <?php
 
 namespace App\Http\Controllers;
-use Notification;
-use Image;
-use Storage;
-use Str;
-use Log;
-use Carbon\Carbon;
-use App\Category;
-use App\Organization;
-use App\Role;
-use App\File;
-use App\ImageFile;
-use App\User;
-use App\Objective;
-use App\Goal;
-use App\Milestone;
-use App\Report;
-use App\Comment;
+
 use App\Exports\ReportCommentsExport;
 use App\Exports\ReportTestimoniesExport;
-use App\Services\Csv\CsvDownload;
-use App\Notifications\EditReport;
+use App\Http\Middleware\AuthorizeReportManagement;
 use App\Notifications\DeleteReport;
+use App\Notifications\EditReport;
 use App\Rules\MatchOldPassword;
+use App\Services\Csv\CsvDownload;
+use App\Services\Reports\ReportReview;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ReportPanelController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function __construct(private ReportReview $review)
     {
-        // Forces to be authenticated.
-        $this->middleware('auth');
-        $this->middleware('verified');
-        $this->middleware('fetch_objective');
-        $this->middleware('goal_belongs_objective');
-        $this->middleware('fetch_goal');
-        $this->middleware('report_belongs_goal');
-        $this->middleware('fetch_report');
-        $this->middleware('can_manage_objective');
+        $this->middleware(['auth', 'verified', 'fetch_objective', 'goal_belongs_objective', 'fetch_goal', 'report_belongs_goal', 'fetch_report', 'can_manage_objective', AuthorizeReportManagement::class]);
     }
 
-    private function hasManagerPrivileges(Request $request){
-      if(!$request->user()->hasRole('admin') && !$request->user()->isManagerObjective($request->objective->id)){
-        abort(403, 'No autorizado');
-      }
-      return;
-    }
-
-    public function viewReport(Request $request, $objectiveId, $goalId, $reportId){
-      return view('objective.manage.goals.reports.view',['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
-    }
-
-    public function viewEditReport(Request $request, $objectiveId, $goalId, $reportId){
-      $request->goal->load('milestones');
-      return view('objective.manage.goals.reports.edit',['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
-    }
-
-    public function formEditReport(Request $request, $objectiveId, $goalId, $reportId){
-
-      $rules = [
-        'title' => 'required|string|max:550',
-        'content' => 'required|string',
-        'date' => 'required|date',
-        'previous_status' => 'nullable|string|max:550',
-        'status' => 'nullable|string|max:550',
-        'previous_progress' => 'numeric|min:0',
-        'progress' => 'numeric|min:0',
-        'measured_value' => [Rule::requiredIf($request->goal->isPeriodic() && $request->report->type === 'progress'), 'nullable', 'numeric', 'min:0'],
-        'milestone_date' => 'nullable|date',
-        'milestone' => 'integer',
-        'tags' => 'array',
-        'tags.*' => 'required|string|max:100',
-        'notify' => 'nullable|string|in:true',
-      ];
-
-      $request->validate($rules);
-
-      $goal = $request->goal;
-      $goalDirty = false;
-      $milestoneDirty = false;
-
-      $report = $request->report;
-      $report->title = $request->input('title');
-      $report->content = $request->input('content');
-      $report->date = $request->input('date');
-      $report->tags = $request->input('tags');
-      if(!empty($request->input('status'))){
-        $report->previous_status = $request->input('previous_status');
-        $report->status = $request->input('status');
-      }
-      switch($report->type){
-        case 'post':
-          break;
-        case 'progress':
-          if($goal->isPeriodic()){
-            $report->measured_value = $request->input('measured_value');
-            break;
-          }
-          $report->previous_progress = $request->input('previous_progress');
-          $report->progress = $request->input('progress');
-          break;
-        case 'milestone':
-          if($report->milestone->id == $request->input('milestone')){
-            if(!empty($request->input('milestone_date'))){
-              $report->milestone->completed = $request->input('milestone_date');
-            } else {
-              $report->milestone->completed = $request->input('date');
-            }
-          } else {
-            $milestone = Milestone::findorfail($request->input('milestone'));
-            $report->milestone()->associate($milestone);
-            if(!empty($request->input('milestone_date'))){
-              $milestone->completed = $request->input('milestone_date');
-            } else {
-              $milestone->completed = $request->input('date');
-            }
-            $milestone->save();
-          }
-          break;
-      }
-
-      $report->save();
-
-      Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado el reporte [{$report->title}] de la meta [{$request->goal->title}] del objetivo [{$request->objective->title}]", [
-        'objective_id' => $request->objective->id,
-        'objective_title' => $request->objective->title,
-        'goal_id' => $request->goal->id,
-        'goal_title' => $request->goal->title,
-        'report_id' => $report->id,
-        'report_title' => $report->title,
-        'user_id' => $request->user()->id,
-        'user_fullname' => $request->user()->fullname,
-        'user_email' => $request->user()->email
+    public function viewReport(Request $request): \Illuminate\Contracts\View\View
+    {
+        $request->report->load(['goal', 'milestone', 'period', 'photos']);
+        return view('objective.manage.goals.reports.view', [
+            'objective' => $request->objective, 'goal' => $request->report->goal, 'report' => $request->report,
+            'reviewContext' => $this->review->context($request->report),
+            'files' => $request->report->files()->paginate(10, ['*'], 'files_page'),
         ]);
-
-      // Notify
-      $notifySubscriber = $request->boolean('notify');
-      if(!$request->objective->hidden && $notifySubscriber){
-        Notification::send($request->objective->subscribers, new EditReport($request->objective, $request->goal, $report));
-      }
-
-      return redirect()->route('objectives.manage.goals.reports.index', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id,'reportId' => $report->id])->with('success','El reporte ha sido editado con exito');
     }
 
-    public function viewReportComments (Request $request){
-      $comments = $request->report->comments()->paginate(10);
-      return view('objective.manage.goals.reports.comments', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'comments' => $comments]);
-    }
-
-    public function downloadReportComments (Request $request, CsvDownload $csvDownload, $objectiveId, $goalId, $reportId){
-      $this->hasManagerPrivileges($request);
-      return $csvDownload->download(new ReportCommentsExport($reportId), Carbon::now()->format('Ymd').'-comentarios-reporte-'.$reportId.'.csv');
-    }
-
-    public function viewReportTestimonies (Request $request){
-      $testimonies = $request->report->testimonies()->paginate(10);
-      return view('objective.manage.goals.reports.testimonies', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'testimonies' => $testimonies]);
-    }
-
-    public function downloadReportTestimonies (Request $request, CsvDownload $csvDownload, $objectiveId, $goalId, $reportId){
-      $this->hasManagerPrivileges($request);
-      return $csvDownload->download(new ReportTestimoniesExport($reportId), Carbon::now()->format('Ymd').'-me-gusta-reporte-'.$reportId.'.csv');
-    }
-
-     public function viewReportAlbum (Request $request){
-      $photos = $request->report->photos()->paginate(10);
-      return view('objective.manage.goals.reports.album', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'photos' => $photos]);
-    }
-
-    public function formReportAlbum (Request $request){
-      $rules = [
-        'photo' => 'required|file|max:102400',
-      ];
-
-      $request->validate($rules);
-      if($request->hasFile('photo')){
-        $photoFile = $request->file('photo');
-        $photo = Image::make($photoFile);
-        $photo->resize(1366, 910, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-        $photoThumbnail = Image::make($photoFile);
-        $photoThumbnail->resize(400, 266, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-        // Get mimeType
-        $mimeType = $photo->mime();
-        // Get Extension
-        $fileExtension = strtolower($photoFile->getClientOriginalExtension());
-        $uniqueHash = substr(uniqid(),-5);
-        $photoName = 'photo-'.$request->report->id.'-'.$uniqueHash.'.'.$fileExtension;
-        $photoNameThumbnail = 'photo-'.$request->report->id.'-'.$uniqueHash.'-thumbnail.'.$fileExtension;
-        // Make the File path
-        $photoPath = '/storage/reports/photos/'.$photoName;
-        $photoPathThumbnail = '/storage/reports/photos/'.$photoNameThumbnail;
-        Storage::disk('reports')->put("photos/".$photoName, (string) $photo->encode($fileExtension));
-        Storage::disk('reports')->put("photos/".$photoNameThumbnail, (string) $photoThumbnail->encode($fileExtension,80));
-        $imageFile = new ImageFile();
-        $imageFile->name = $photoName;
-        $imageFile->size = Storage::disk('reports')->size("photos/".$photoName);
-        $imageFile->mime = $mimeType;
-        $imageFile->path = $photoPath;
-        $imageFile->thumbnail_name = $photoNameThumbnail;
-        $imageFile->thumbnail_size = Storage::disk('reports')->size("photos/".$photoNameThumbnail);
-        $imageFile->thumbnail_mime = $mimeType;
-        $imageFile->thumbnail_path = $photoPathThumbnail;
-        $request->report->photos()->save($imageFile);
-      }
-
-      return redirect()->route('objectives.manage.goals.reports.album', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id])->with('success','Se agrego la foto al album del reporte');
-    }
-
-    public function formDeletePictureReport(Request $request, $objectiveId, $goalId, $reportId, $pictureId)
+    public function viewEditReport(Request $request): \Illuminate\Contracts\View\View
     {
-        $report = Report::findorfail($reportId);
-        $picture = ImageFile::findorfail($pictureId);
-        Storage::disk('reports')->delete("photos/".$picture->name);
-        Storage::disk('reports')->delete("photos/".$picture->thumbnail_name);
-        $picture->delete();
-        return redirect()->route('objectives.manage.goals.reports.album', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id])->with('success','Se elimino la foto del album del reporte');
+        $request->goal->load('milestones');
+        return view('objective.manage.goals.reports.edit', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
     }
 
-    public function viewReportFiles (Request $request){
-      $files = $request->report->files()->paginate(10);
-      return view('objective.manage.goals.reports.files', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'files' => $files]);
-    }
-    public function formReportFile (Request $request){
-      $rules = [
-        'file' => 'required|file|max:102400'
-      ];
-
-      $request->validate($rules);
-
-      if($request->hasFile('file')){
-        $file = $request->file('file');
-        $fileName = 'report-'.$request->report->id.'-'.$file->getClientOriginalName();
-        $exists = Storage::disk('reports')->exists('files/'.$fileName);
-        $filePath = $file->storeAs('files',$fileName, 'reports');
-        if($exists){
-          $existingFile = File::where('name',$fileName)->first();
-          $existingFile->name = $file->getClientOriginalName();
-          $existingFile->size = $file->getSize();
-          $existingFile->mime = $file->getMimeType();
-          $existingFile->path = '/storage/reports/'.$filePath;
-          $existingFile->save();
+    public function formEditReport(Request $request): RedirectResponse
+    {
+        if (! $request->report->isApproved()) {
+            $this->review->update($request->report, $request->user(), $request);
         } else {
-          $saveFile = new File();
-          $saveFile->name = $file->getClientOriginalName();
-          $saveFile->size = $file->getSize();
-          $saveFile->mime = $file->getMimeType();
-          $saveFile->path = '/storage/reports/'.$filePath;
-          $request->report->files()->save($saveFile);
+            $data = $request->validate([
+                'title' => 'required|string|max:550', 'content' => 'required|string', 'date' => 'required|date',
+                'previous_status' => ['nullable', Rule::in(array_keys(\App\Goal::STATUSES))],
+                'status' => ['nullable', Rule::in(array_keys(\App\Goal::STATUSES))],
+                'previous_progress' => 'nullable|numeric|min:0', 'progress' => 'nullable|numeric|min:0',
+                'measured_value' => [Rule::requiredIf($request->goal->isPeriodic() && $request->report->type === 'progress'), 'nullable', 'numeric', 'min:0'],
+                'milestone' => 'nullable|integer', 'milestone_date' => 'nullable|date',
+                'tags' => 'nullable|array', 'tags.*' => 'required|string|max:100', 'notify' => 'nullable|in:true',
+            ]);
+            $report = $this->review->mutate($request->report, $request->user(), function (\App\Report $report) use ($data): void {
+                foreach (['title', 'content', 'date', 'tags', 'previous_status', 'status', 'previous_progress', 'progress', 'measured_value'] as $field) {
+                    if (array_key_exists($field, $data)) {
+                        $report->{$field} = $data[$field];
+                    }
+                }
+                if ($report->type === 'milestone') {
+                    $milestone = $report->goal->milestones()->findOrFail($data['milestone'] ?? $report->milestone_achieved);
+                    $milestone->completed = $data['milestone_date'] ?? $data['date'];
+                    $milestone->save();
+                    $report->milestone()->associate($milestone);
+                }
+            });
+            if (! $request->objective->hidden && $request->boolean('notify')) {
+                Notification::send($request->objective->subscribers, new EditReport($request->objective, $request->goal, $report));
+            }
         }
-      }
-
-      return redirect()->route('objectives.manage.goals.reports.files', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id])->with('success','Se agrego el archivo al repositorio del objetivo');
+        return $this->redirectToReport($request)->with('success', 'Los cambios fueron guardados.');
     }
 
-    public function viewReportMap (Request $request){
-      return view('objective.manage.goals.reports.map', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
+    public function viewReportComments(Request $request): \Illuminate\Contracts\View\View
+    {
+        return view('objective.manage.goals.reports.comments', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'comments' => $request->report->comments()->paginate(10)]);
     }
 
-     public function formReportMap (Request $request){
-      $rules = [
-        'map_lat' => 'nullable|numeric',
-        'map_long' => 'nullable|numeric',
-        'map_zoom' => 'nullable|numeric',
-        'map_geometries' => 'nullable|string',
-        'map_center' => 'nullable|string',
-      ];
-
-      $request->validate($rules);
-      $report = $request->report;
-      $report->map_lat = $request->input('map_lat');
-      $report->map_long = $request->input('map_long');
-      $report->map_zoom = $request->input('map_zoom');
-      $report->map_geometries = $request->input('map_geometries');
-      $report->map_center = $request->input('map_center');
-      $report->save();
-
-      return redirect()->route('objectives.manage.goals.reports.map', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id])->with('success','Geometria actualizada!');
+    public function downloadReportComments(Request $request, CsvDownload $csvDownload): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        abort_unless($request->user()->hasRole('admin') || $request->user()->isManagerObjective($request->objective->id), 403);
+        return $csvDownload->download(new ReportCommentsExport($request->report->id), now()->format('Ymd').'-comentarios-reporte-'.$request->report->id.'.csv');
     }
 
-    public function viewReportConfiguration(Request $request){
-      return view('objective.manage.goals.reports.configuration',['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
+    public function viewReportTestimonies(Request $request): \Illuminate\Contracts\View\View
+    {
+        return view('objective.manage.goals.reports.testimonies', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'testimonies' => $request->report->testimonies()->paginate(10)]);
     }
 
-    public function formDeleteReport(Request $request){
-      $this->hasManagerPrivileges($request);
+    public function downloadReportTestimonies(Request $request, CsvDownload $csvDownload): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        abort_unless($request->user()->hasRole('admin') || $request->user()->isManagerObjective($request->objective->id), 403);
+        return $csvDownload->download(new ReportTestimoniesExport($request->report->id), now()->format('Ymd').'-me-gusta-reporte-'.$request->report->id.'.csv');
+    }
 
-      $rules = [
-        'password' =>  ['required', new MatchOldPassword],
-        'notify' => 'nullable|string|in:true',
-      ];
+    public function viewReportAlbum(Request $request): \Illuminate\Contracts\View\View
+    {
+        return view('objective.manage.goals.reports.album', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'photos' => $request->report->photos()->paginate(10)]);
+    }
 
-      $request->validate($rules);
+    public function formReportAlbum(Request $request): RedirectResponse
+    {
+        $request->validate(['photo' => 'required|image|max:102400']);
+        $this->review->addAttachments($request->report, $request->user(), $request);
+        return back()->with('success', 'Se agregó la foto al reporte.');
+    }
 
-      Log::channel('mysql')->info("[{$request->user()->fullname}] ha eliminado el reporte [{$request->report->title}] de la meta [{$request->goal->title}] del objetivo [{$request->objective->title}]", [
-        'objective_id' => $request->objective->id,
-        'objective_title' => $request->objective->title,
-        'goal_title' => $request->goal->id,
-        'goal_title' => $request->goal->title,
-        'report_id' => $request->report->id,
-        'report_title' => $request->report->title,
-        'user_id' => $request->user()->id,
-        'user_fullname' => $request->user()->fullname,
-        'user_email' => $request->user()->email
+    public function formDeletePictureReport(Request $request): RedirectResponse
+    {
+        $request->validate(['review_version' => 'required|integer|min:1']);
+        $this->review->mutate($request->report, $request->user(), function (\App\Report $report) use ($request): void {
+            $this->review->checkVersion($report, $request->integer('review_version'));
+            $photo = $report->photos()->findOrFail($request->route('pictureId'));
+            $disk = $photo->disk ?? 'reports';
+            $paths = $photo->disk ? [$photo->getRawOriginal('path'), $photo->getRawOriginal('thumbnail_path')] : ['photos/'.$photo->name, 'photos/'.$photo->thumbnail_name];
+            $photo->delete();
+            \Illuminate\Support\Facades\DB::afterCommit(function () use ($disk, $paths): void {
+                if (! Storage::disk($disk)->delete($paths)) {
+                    throw new \RuntimeException('No se pudieron eliminar las imágenes del reporte.');
+                }
+            });
+        }, 'photo-deleted');
+        return back()->with('success', 'Se eliminó la foto.');
+    }
+
+    public function viewReportFiles(Request $request): \Illuminate\Contracts\View\View
+    {
+        return view('objective.manage.goals.reports.files', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report, 'files' => $request->report->files()->paginate(10)]);
+    }
+
+    public function formReportFile(Request $request): RedirectResponse
+    {
+        $request->validate(['file' => 'required|file|max:102400']);
+        $this->review->addAttachments($request->report, $request->user(), $request);
+        return back()->with('success', 'Se agregó el archivo al reporte.');
+    }
+
+    public function viewReportMap(Request $request): \Illuminate\Contracts\View\View
+    {
+        return view('objective.manage.goals.reports.map', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
+    }
+
+    public function formReportMap(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'map_lat' => 'nullable|numeric', 'map_long' => 'nullable|numeric', 'map_zoom' => 'nullable|numeric',
+            'map_geometries' => 'nullable|json', 'map_center' => 'nullable|json', 'review_version' => 'required|integer|min:1',
         ]);
-
-      $request->report->delete();
-
-      // Notify
-      $notifySubscribers = $request->boolean('notify');
-      if(!$request->objective->hidden && $notifySubscribers){
-        Notification::send($request->objective->subscribers, new DeleteReport($request->objective, $request->goal, $request->report));
-      }
-
-
-      return redirect()->route('objectives.manage.goals.index', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id])->with('success','Reporte eliminado correctamente');
-
+        $this->review->mutate($request->report, $request->user(), function (\App\Report $report) use ($request, $data): void {
+            $this->review->checkVersion($report, $request->integer('review_version'));
+            foreach (['map_lat', 'map_long', 'map_zoom', 'map_geometries', 'map_center'] as $field) {
+                $report->{$field} = in_array($field, ['map_geometries', 'map_center'], true)
+                    ? (isset($data[$field]) ? json_decode($data[$field], true, 512, JSON_THROW_ON_ERROR) : null)
+                    : ($data[$field] ?? null);
+            }
+        }, 'map-edited');
+        return back()->with('success', 'Mapa actualizado.');
     }
 
+    public function viewReportConfiguration(Request $request): \Illuminate\Contracts\View\View
+    {
+        return view('objective.manage.goals.reports.configuration', ['objective' => $request->objective, 'goal' => $request->goal, 'report' => $request->report]);
+    }
+
+    public function formDeleteReport(Request $request): RedirectResponse
+    {
+        $request->validate(['password' => ['required', new MatchOldPassword], 'notify' => 'nullable|in:true']);
+        $report = $request->report;
+        $this->review->delete($report, $request->user());
+        if ($report->isApproved() && ! $request->objective->hidden && $request->boolean('notify')) {
+            Notification::send($request->objective->subscribers, new DeleteReport($request->objective, $request->goal, $report));
+        }
+        return redirect()->route('objectives.manage.goals.reports', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id])->with('success', 'Reporte eliminado.');
+    }
+
+    private function redirectToReport(Request $request): RedirectResponse
+    {
+        return redirect()->route('objectives.manage.goals.reports.index', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $request->report->id]);
+    }
 }

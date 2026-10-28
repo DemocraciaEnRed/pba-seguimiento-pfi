@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\Reports\ReviewStatus;
 
 class Report extends Model
 {
@@ -23,6 +24,12 @@ class Report extends Model
     protected $appends = ['type_label','status_label','previous_status_label','type_icon'];
 
     protected $casts = [
+        'review_status' => ReviewStatus::class,
+        'submitted_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'proposed_milestone_date' => 'datetime',
+        'notify_subscribers' => 'boolean',
+        'review_version' => 'integer',
         'date' => 'datetime',
         'tags' => 'array',
         'map_center' => 'array',
@@ -31,6 +38,81 @@ class Report extends Model
         'progress' => 'float',
         'measured_value' => 'float',
     ];
+
+    protected $attributes = ['review_status' => 'pending', 'review_version' => 1, 'notify_subscribers' => false];
+
+    public function scopeApproved(Builder $query): void
+    {
+        $query->where($this->qualifyColumn('review_status'), ReviewStatus::Approved->value);
+    }
+
+    public function scopeManageableBy(Builder $query, User $user): void
+    {
+        if ($user->hasRole('admin')) {
+            return;
+        }
+        $query->where(function (Builder $reports) use ($user): void {
+            $reports->approved()
+                ->orWhere(function (Builder $proposals) use ($user): void {
+                    $proposals->where('author_id', $user->id)
+                        ->whereHas('goal.objective.members', fn (Builder $members) => $members->where('users.id', $user->id)->whereIn('objective_user.role', ['reporter', 'manager']));
+                })
+                ->orWhereHas('goal.objective.members', fn (Builder $members) => $members->where('users.id', $user->id)->where('objective_user.role', 'manager'));
+        });
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->review_status === ReviewStatus::Approved;
+    }
+
+    public function canManage(User $user): bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+        $objectiveId = $this->goal->objective_id;
+        return ! $this->isApproved() && ($user->isManagerObjective($objectiveId)
+            || ($this->author_id === $user->id && $user->isReporterObjective($objectiveId)));
+    }
+
+    public function canViewInManagement(User $user): bool
+    {
+        return $this->canManage($user)
+            || ($this->isApproved() && $user->isMemberObjective($this->goal->objective_id));
+    }
+
+    public function canDelete(User $user): bool
+    {
+        return $user->hasRole('admin') || (! $this->isApproved() && $this->author_id === $user->id && $this->canManage($user));
+    }
+
+    public function getReviewStatusLabelAttribute(): string
+    {
+        return $this->review_status->label();
+    }
+
+    public function reviewer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getMapGeometriesAttribute(?string $value): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+        $geometry = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
+        // Older map forms stored an encoded JSON string inside the JSON column.
+        if (is_string($geometry)) {
+            $geometry = json_decode($geometry, true, 512, JSON_THROW_ON_ERROR);
+        }
+        if ($geometry !== null && ! is_array($geometry)) {
+            throw new \UnexpectedValueException('La geometría del reporte no es un objeto JSON.');
+        }
+        return $geometry;
+    }
 
     public function period()
     {
@@ -66,7 +148,7 @@ class Report extends Model
 
     public function isVisibleTo(?User $user): bool
     {
-        return $this->goal->objective->isVisibleTo($user);
+        return $this->isApproved() && $this->goal->objective->isVisibleTo($user);
     }
 
     public function objective()

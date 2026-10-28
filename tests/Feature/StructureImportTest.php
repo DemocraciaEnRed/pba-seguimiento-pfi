@@ -225,6 +225,7 @@ class StructureImportTest extends TestCase
     {
         $goal = $this->createPeriodicGoal('Plazo de emisión');
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Avance';
         $report->type = 'progress';
         $report->content = 'Contenido';

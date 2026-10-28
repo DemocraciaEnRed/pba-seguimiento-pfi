@@ -285,6 +285,7 @@ class AdminReportsTest extends TestCase
     private function createReport(string $title, Goal $goal, User $author, string $date, string $createdAt): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = $title;
         $report->type = 'post';
         $report->content = 'Contenido';

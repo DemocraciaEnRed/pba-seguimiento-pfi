@@ -275,7 +275,7 @@ class ObjectivePanelController extends Controller
       ];
       $goals = $request->objective->goals()
         ->with('periods.progressReport')
-        ->withCount(['reports', 'milestones'])
+        ->withCount(['reports' => fn ($reports) => $reports->manageableBy($request->user()), 'milestones'])
         ->when($filters['q'], fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
         ->when($filters['estado'], fn ($query, $status) => $query->where('status', $status))
         ->when($filters['tipo'], fn ($query, $mode) => $query->where('measurement_mode', $mode))

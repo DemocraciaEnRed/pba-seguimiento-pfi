@@ -1,5 +1,4 @@
 @php
-$geometry = $report->map_geometries ?: 'undefined';
 $lat = $report->map_lat ?: ($objective->map_lat ?: app_setting('app_map_zoom_default'));
 $long = $report->map_long ?: ($objective->map_long ?: app_setting('app_map_zoom_default'));
 $zoom = $report->map_zoom ?: ($objective->map_zoom ?: app_setting('app_map_zoom_default'));
@@ -22,12 +21,13 @@ $zoom = $report->map_zoom ?: ($objective->map_zoom ?: app_setting('app_map_zoom_
 
 <section>
   <h3 class="is-700">Mapa</h3>
-  <p class="lead">Aqui puede crear puntos, areas, o lineas que tengan que ver con el reporte publicado</p>
+  <p class="lead">Aquí puede crear puntos, áreas o líneas vinculadas al reporte. Los cambios de una propuesta quedan sujetos a revisión.</p>
    <hr />
     <form action="{{route('objectives.manage.goals.reports.map.form',['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])}}" method="POST">
       @method('PUT')
       @csrf
-      <draw-map access-token="{{app_setting('app_mapbox_api_key')}}" map-style="{{app_setting('app_mapbox_style')}}" :lat="{{$lat}}" :long="{{$long}}" :zoom="{{$zoom}}" :init-collection="{{$geometry}}" />
+      <input type="hidden" name="review_version" value="{{ $report->review_version }}">
+      <draw-map access-token="{{app_setting('app_mapbox_api_key')}}" map-style="{{app_setting('app_mapbox_style')}}" :lat="{{$lat}}" :long="{{$long}}" :zoom="{{$zoom}}" :init-collection='@json($report->map_geometries)' />
     </form>
 </section>
 

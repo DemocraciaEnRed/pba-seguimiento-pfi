@@ -30,6 +30,19 @@ class ReportController extends Controller
      */
     public function __construct()
     {
+        $this->middleware(function (Request $request, \Closure $next) {
+            if ($reportId = $request->route('reportId')) {
+                $report = Report::findOrFail($reportId);
+                abort_unless($report->isVisibleTo($request->user()), 404);
+                if ($commentId = $request->route('commentId')) {
+                    $comment = $report->comments()->findOrFail($commentId);
+                    if ($replyId = $request->route('replyId')) {
+                        $comment->replies()->findOrFail($replyId);
+                    }
+                }
+            }
+            return $next($request);
+        });
         // Forces to be authenticated.
         // $this->middleware('auth');
         // $this->middleware('fetch_report');
@@ -106,7 +119,7 @@ class ReportController extends Controller
         $dateRange = $validated['date_range'] ?? null;
         $sort = $validated['sort'] ?? null;
 
-        $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
+        $reports = Report::query()->approved()->forListing(explode(',', (string) $request->query('with')));
         $isVisibleObjectiveFilter = ! is_null($objective) && (bool) Objective::find($objective)?->isVisibleTo($request->user());
         $isVisibleGoalFilter = ! is_null($goal) && (bool) Goal::with('objective')->find($goal)?->objective?->isVisibleTo($request->user());
         if(! $isVisibleObjectiveFilter && ! $isVisibleGoalFilter){

@@ -72,12 +72,12 @@ class GoalPanelController extends Controller
     private function findReportablePeriod(Goal $goal, int $periodId): GoalPeriod
     {
       /** @var GoalPeriod|null $period */
-      $period = $goal->periods()->with('progressReport')->find($periodId);
+      $period = $goal->periods()->with('reservedReport')->find($periodId);
 
       if(is_null($period)){
         throw ValidationException::withMessages(['goal_period_id' => 'El período seleccionado no pertenece a esta meta.']);
       }
-      if(!is_null($period->progressReport)){
+      if(!is_null($period->reservedReport)){
         throw ValidationException::withMessages(['goal_period_id' => self::PERIOD_ALREADY_REPORTED_MESSAGE]);
       }
       if(!$period->state()->isReportable()){
@@ -88,6 +88,7 @@ class GoalPanelController extends Controller
     }
 
     public function viewGoal(Request $request, CommentModeration $commentModeration, $objectiveId, $goalId){
+      $request->goal->load(['reports' => fn ($reports) => $reports->manageableBy($request->user()), 'periods.reservedReport']);
       return view('objective.manage.goals.view',[
         'objective' => $request->objective,
         'goal' => $request->goal->loadMissing(['milestones', 'reports']),
@@ -274,6 +275,7 @@ class GoalPanelController extends Controller
         'tipo' => array_key_exists((string) $request->query('tipo'), Report::TYPES) ? $request->query('tipo') : null,
       ];
       $reports = Report::where('goal_id', $goalId)
+        ->manageableBy($request->user())
         ->with(['period', 'milestone', 'author'])
         ->withCount(['comments', 'positiveTestimonies'])
         ->when($filters['q'], fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
@@ -287,7 +289,7 @@ class GoalPanelController extends Controller
         'objective' => $request->objective,
         'goal' => $request->goal,
         'reports' => $reports,
-        'hasReports' => $request->goal->reports()->exists(),
+        'hasReports' => $request->goal->reports()->manageableBy($request->user())->exists(),
         'filters' => $filters,
       ]);
     }
@@ -301,189 +303,27 @@ class GoalPanelController extends Controller
       $goal = $request->goal;
       $periods = [];
       if($goal->isPeriodic()){
-        $periods = $goal->periods()->with('progressReport')->get()->map(fn (GoalPeriod $period): array => [
+        $periods = $goal->periods()->with(['progressReport', 'reservedReport'])->get()->map(fn (GoalPeriod $period): array => [
           'id' => $period->id,
           'label' => $period->label(),
           'range' => $period->rangeLabel(),
           'target' => $period->target_value,
-          'state_label' => $period->state()->label(),
-          'reportable' => $period->state()->isReportable(),
-          'edit_url' => $period->progressReport
-            ? route('objectives.manage.goals.reports.edit', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id, 'reportId' => $period->progressReport->id])
+          'state_label' => $period->reservedReport?->review_status_label ?? $period->state()->label(),
+          'reportable' => ! $period->reservedReport && $period->state()->isReportable(),
+          'reserved' => $period->reservedReport !== null,
+          'edit_url' => $period->reservedReport?->canManage($request->user())
+            ? route('objectives.manage.goals.reports.edit', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id, 'reportId' => $period->reservedReport->id])
             : null,
         ])->values()->all();
       }
       return view('objective.manage.goals.reports.add',['objective' => $request->objective, 'goal' => $request->goal, 'periods' => $periods]);
     }
 
-    public function formNewGoalReport(Request $request, $objectiveId, $goalId){
-      $goal = $request->goal;
-      $allowedTypes = $goal->acceptsProgressReports() ? 'post,progress,milestone' : 'post,milestone';
-
-      $rules = [
-        'title' => 'required|string|max:550',
-        'type' => 'required|string|in:'.$allowedTypes,
-        'content' => 'required|string',
-        'date' => 'required|date',
-        'status' => 'nullable|string|max:550',
-        'lat' => 'nullable|string',
-        'long' => 'nullable|string',
-        'progress' => 'numeric|gt:0',
-        'goal_period_id' => [Rule::requiredIf($goal->isPeriodic() && $request->input('type') === 'progress'), 'nullable', 'integer'],
-        'measured_value' => [Rule::requiredIf($goal->isPeriodic() && $request->input('type') === 'progress'), 'nullable', 'numeric', 'min:0'],
-        'milestone_date' => 'nullable|date',
-        'milestone' => 'integer',
-        'tags' => 'array' ,
-        'tags.*' => 'required|string|max:100',
-        'photos' => 'array',
-        'photos.*' => 'required|file|max:102400',
-        'files' => 'array',
-        'files.*' => 'required|file|max:102400',
-        'notify' => 'nullable|string|in:true',
-      ];
-
-      $request->validate($rules);
-
-      $period = null;
-      if($goal->isPeriodic() && $request->input('type') === 'progress'){
-        $period = $this->findReportablePeriod($goal, (int) $request->input('goal_period_id'));
-      }
-
-      $goalDirty = false;
-      $milestoneDirty = false;
-      $milestone = null;
-
-      $report = new Report();
-      $report->title = $request->input('title');
-      $report->type = $request->input('type');
-      $report->content = $request->input('content');
-      $report->date = $request->input('date');
-      $report->tags = $request->input('tags');
-      if(!empty($request->input('status'))){
-        $report->previous_status = $goal->status;
-        $report->status = $request->input('status');
-        $goal->status = $request->input('status');
-        $goalDirty = true;
-      }
-      switch($request->input('type')){
-        case 'post':
-          break;
-        case 'progress':
-          if($goal->isPeriodic()){
-            $report->period()->associate($period);
-            $report->measured_value = $request->input('measured_value');
-            break;
-          }
-          $report->previous_progress = $goal->indicator_progress;
-          $report->progress = $request->input('progress');
-          $goal->indicator_progress += $request->input('progress');
-          $goalDirty = true;
-          break;
-        case 'milestone':
-          $milestone = Milestone::findorfail($request->input('milestone'));
-
-          if(!empty($request->input('milestone_date'))){
-            $milestone->completed = $request->input('milestone_date');
-          } else {
-            $milestone->completed = $request->input('date');
-          }
-          $milestoneDirty = true;
-          $report->milestone()->associate($milestone);
-          break;
-      }
-      try {
-        DB::transaction(function () use ($goal, $goalDirty, $milestoneDirty, $milestone, $report, $request): void {
-          if($goalDirty){
-            $goal->save();
-          }
-          if($milestoneDirty){
-            $milestone->save();
-          }
-          $report->author()->associate($request->user());
-          $report->goal()->associate($goal);
-          $report->save();
-        });
-      } catch (UniqueConstraintViolationException) {
-        throw ValidationException::withMessages(['goal_period_id' => self::PERIOD_ALREADY_REPORTED_MESSAGE]);
-      }
-
-      if($request->hasFile('photos')){
-        foreach($request->file('photos') as $photoFile){
-          $photo = Image::make($photoFile);
-          $photo->resize(1366, 910, function ($constraint) {
-              $constraint->aspectRatio();
-              $constraint->upsize();
-          });
-          $photoThumbnail = Image::make($photoFile);
-          $photoThumbnail->resize(400, 266, function ($constraint) {
-              $constraint->aspectRatio();
-              $constraint->upsize();
-          });
-          // Get mimeType
-          $mimeType = $photo->mime();
-          // dd( strtolower($photoFile->getClientOriginalExtension()) );
-          // Get Extension
-          // $fileExtension = explode('/',$mimeType)[1];
-          $fileExtension = strtolower($photoFile->getClientOriginalExtension());
-          $uniqueHash = substr(uniqid(),-5);
-          $photoName = 'photo-'.$report->id.'-'.$uniqueHash.'.'.$fileExtension;
-          $photoNameThumbnail = 'photo-'.$report->id.'-'.$uniqueHash.'-thumbnail.'.$fileExtension;
-          // Make the File path
-          $photoPath = '/storage/reports/photos/'.$photoName;
-          $photoPathThumbnail = '/storage/reports/photos/'.$photoNameThumbnail;
-          Storage::disk('reports')->put("photos/".$photoName, (string) $photo->encode($fileExtension));
-          Storage::disk('reports')->put("photos/".$photoNameThumbnail, (string) $photoThumbnail->encode($fileExtension,80));
-          $imageFile = new ImageFile();
-          $imageFile->name = $photoName;
-          $imageFile->size = Storage::disk('reports')->size("photos/".$photoName);
-          $imageFile->mime = $mimeType;
-          $imageFile->path = $photoPath;
-          $imageFile->thumbnail_name = $photoNameThumbnail;
-          $imageFile->thumbnail_size = Storage::disk('reports')->size("photos/".$photoNameThumbnail);
-          $imageFile->thumbnail_mime = $mimeType;
-          $imageFile->thumbnail_path = $photoPathThumbnail;
-          $report->photos()->save($imageFile);
-        }
-      }
-      if($request->hasFile('files')){
-        foreach($request->file('files') as $file){
-          $fileName = 'report-'.$report->id.'-'.$file->getClientOriginalName();
-          $filePath = $file->storeAs('files',$fileName, 'reports');
-          $saveFile = new File();
-          $saveFile->name = $file->getClientOriginalName();
-          $saveFile->size = $file->getSize();
-          $saveFile->mime = $file->getMimeType();
-          $saveFile->path = '/storage/reports/'.$filePath;
-          $report->files()->save($saveFile);
-        }
-      }
-
-      Log::channel('mysql')->info("[{$request->user()->fullname}] ha creado un reporte [{$report->title}] de la meta [{$request->goal->title}] del objetivo [{$request->objective->title}]", [
-        'objective_id' => $request->objective->id,
-        'objective_title' => $request->objective->title,
-        'goal_id' => $request->goal->id,
-        'goal_title' => $request->goal->title,
-        'report_id' => $report->id,
-        'report_title' => $report->title,
-        'user_id' => $request->user()->id,
-        'user_fullname' => $request->user()->fullname,
-        'user_email' => $request->user()->email
-        ]);
-
-
-      // Notify
-      $notifySubscribers = $request->boolean('notify');
-      if(!$request->objective->hidden && $notifySubscribers){
-        // Goal at 100%?
-        if($request->input('type') == 'progress' && $goal->isSimple() && ($goal->indicator_progress >= $goal->indicator_goal)){
-          Notification::send($request->objective->subscribers, new CompletedGoal($request->objective, $goal, $report));
-        } else {
-        // Send normal notification
-          Notification::send($request->objective->subscribers, new NewReport($request->objective, $goal, $report));
-        }
-      }
-
-      return redirect()->route('objectives.manage.goals.reports.index', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id,'reportId' => $report->id])->with('success','El reporte fue creado con exito');
+    public function formNewGoalReport(Request $request, \App\Services\Reports\ReportReview $review){
+      $report = $review->create($request->goal, $request->user(), $request);
+      return redirect()->route('objectives.manage.goals.reports.index', [
+        'objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $report->id,
+      ])->with('success', $report->isApproved() ? 'El reporte fue publicado.' : 'El reporte fue enviado a revisión.');
     }
 
     public function viewGoalConfiguration(Request $request){
@@ -493,11 +333,12 @@ class GoalPanelController extends Controller
     public function formSkipGoalPeriod(Request $request, $objectiveId, $goalId, $periodId){
       $this->hasAdminPrivileges($request);
       $request->validate(['skip_reason' => 'required|string|max:1000']);
-
-      $period = $request->goal->periods()->with('progressReport')->findOrFail($periodId);
+      return DB::transaction(function () use ($request, $goalId, $periodId) {
+      Goal::whereKey($goalId)->lockForUpdate()->firstOrFail();
+      $period = $request->goal->periods()->with('reservedReport')->lockForUpdate()->findOrFail($periodId);
       $redirect = redirect()->route('objectives.manage.goals.index', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id]);
 
-      if(!is_null($period->progressReport)){
+      if(!is_null($period->reservedReport)){
         return $redirect->with('error', 'No se puede omitir un período que ya tiene un reporte de avance.');
       }
       if($period->isSkipped()){
@@ -512,6 +353,7 @@ class GoalPanelController extends Controller
       $this->logPeriodAction($request, $period, 'ha omitido');
 
       return $redirect->with('success', "Se omitió el {$period->label()}");
+      });
     }
 
     public function formUnskipGoalPeriod(Request $request, $objectiveId, $goalId, $periodId){

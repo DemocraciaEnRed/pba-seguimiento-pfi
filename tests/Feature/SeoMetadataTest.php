@@ -79,6 +79,7 @@ class SeoMetadataTest extends TestCase
         $this->goal->save();
 
         $this->report = new Report();
+        $this->report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $this->report->title = 'Avance de la meta';
         $this->report->content = 'Se publicaron los primeros datos.';
         $this->report->type = 'post';

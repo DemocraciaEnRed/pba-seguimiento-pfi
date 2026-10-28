@@ -91,11 +91,11 @@ class ObjectiveController extends Controller
         $objectives = Objective::query()
             ->with('strategicObjective.category')
             ->where('hidden', false)
-            ->withCount(['goals', 'reports'])
+            ->withCount(['goals', 'reports' => fn ($reports) => $reports->approved()])
             ->withCount(collect(array_keys(Goal::STATUSES))->mapWithKeys(fn (string $status): array => [
                 "goals as goals_{$status}_count" => fn ($goals) => $goals->where('status', $status),
             ])->all())
-            ->withMax('reports as last_report_date', 'reports.date')
+            ->withMax(['reports as last_report_date' => fn ($reports) => $reports->approved()], 'reports.date')
             ->when($validated['category'] ?? null, fn ($query, $category) => $query->whereHas('strategicObjective', fn ($strategicObjectives) => $strategicObjectives->where('category_id', $category)))
             ->when($validated['strategic_objective'] ?? null, fn ($query, $strategicObjective) => $query->where('strategic_objective_id', $strategicObjective));
 
@@ -134,7 +134,7 @@ class ObjectiveController extends Controller
         $detailed = $request->query('detailed');
         $fetchAll = $request->query('all');
         $onlyMappable = $request->query('mappable');
-        $reports = Report::query()->forListing(explode(',', (string) $request->query('with')));
+        $reports = Report::query()->approved()->forListing(explode(',', (string) $request->query('with')));
         if(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);

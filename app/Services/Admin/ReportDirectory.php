@@ -38,8 +38,8 @@ class ReportDirectory
     /**
      * Drops the objective when it does not belong to the chosen category, and the goal when it does not belong to the chosen objective.
      *
-     * @param  array{q?: ?string, eje?: mixed, objetivo?: mixed, meta?: mixed, desde?: ?string, hasta?: ?string, autor?: ?string, comentarios?: ?string, orden?: ?string}  $filters
-     * @return array{q: ?string, eje: ?int, objetivo: ?int, meta: ?int, desde: ?string, hasta: ?string, autor: ?string, comentarios: ?string, orden: ?string}
+     * @param  array{q?: ?string, revision?: ?string, eje?: mixed, objetivo?: mixed, meta?: mixed, desde?: ?string, hasta?: ?string, autor?: ?string, comentarios?: ?string, orden?: ?string}  $filters
+     * @return array{q: ?string, revision: ?string, eje: ?int, objetivo: ?int, meta: ?int, desde: ?string, hasta: ?string, autor: ?string, comentarios: ?string, orden: ?string}
      */
     public function normalize(array $filters): array
     {
@@ -56,6 +56,7 @@ class ReportDirectory
 
         return [
             'q' => $this->text($filters['q'] ?? null),
+            'revision' => in_array($filters['revision'] ?? null, ['pending', 'approved', 'returned'], true) ? $filters['revision'] : null,
             'eje' => $categoryId,
             'objetivo' => $objectiveId,
             'meta' => $goalId,
@@ -70,7 +71,7 @@ class ReportDirectory
     /**
      * Reports of existing goals and objectives (hidden objectives included) filtered by title, hierarchy, upload date, author and comments.
      *
-     * @param  array{q?: ?string, eje?: mixed, objetivo?: mixed, meta?: mixed, desde?: ?string, hasta?: ?string, autor?: ?string, comentarios?: ?string, orden?: ?string}  $filters
+     * @param  array{q?: ?string, revision?: ?string, eje?: mixed, objetivo?: mixed, meta?: mixed, desde?: ?string, hasta?: ?string, autor?: ?string, comentarios?: ?string, orden?: ?string}  $filters
      */
     public function search(array $filters = []): Builder
     {
@@ -81,6 +82,7 @@ class ReportDirectory
             ->with(['goal.objective.strategicObjective.category', 'author'])
             ->withCount(['comments', 'positiveTestimonies'])
             ->whereHas('goal.objective')
+            ->when($filters['revision'], fn (Builder $query, string $state) => $query->where('review_status', $state))
             ->when($filters['q'], fn (Builder $query, string $search) => $query->where('title', 'like', '%'.$search.'%'))
             ->when($filters['meta'], fn (Builder $query, int $goalId) => $query->where('goal_id', $goalId))
             ->when($filters['objetivo'], fn (Builder $query, int $objectiveId) => $query->whereHas('goal', fn (Builder $goals) => $goals->where('objective_id', $objectiveId)))

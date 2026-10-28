@@ -30,6 +30,18 @@ La aplicación y sus dependencias requieren **PHP >= 8.4**. No es muy diferente 
 9. (Optional) A **Mapbox** [https://mapbox.com](https://mapbox.com) to consume map tiles.
 10. (Optional) A **Google Analytics 4** [https://analytics.google.com](https://analytics.google.com) to track the platform's usage.
 
+##### Activación de revisión de reportes
+
+Despliegue código, esquema y datos coordinadamente, con copia de seguridad y escrituras y workers detenidos durante las migraciones. No deje la versión anterior creando reportes durante la actualización.
+
+Las nuevas migraciones incorporan estados de revisión y regularizan una sola vez los reportes preexistentes, incluidos los eliminados lógicamente, como aprobados por el **usuario ID 1**. Antes de actualizar, compruebe que ese usuario existe y tiene rol global `admin`. Si hay reportes históricos y no se cumple, la migración falla explícitamente, sin promover usuarios ni elegir otro administrador. Una instalación vacía no necesita ese usuario para migrar.
+
+La regularización conserva autor, resultados y enlaces; registra la fecha real de migración como fecha de revisión y no reaplica avances/hitos ni notifica. Los nuevos pendientes no se aprueban al abrir administración ni repetir un despliegue. No revierta esta actualización a código anterior mientras existan propuestas: el código anterior no conoce su privacidad.
+
+Los adjuntos nuevos utilizan el disco `reports_private`, en `storage/app/private/reports`. Dé permisos de lectura/escritura al proceso PHP y respalde esa carpeta; **no** la publique mediante enlaces de storage, servidor web o CDN. Las rutas de descarga/fotos/miniaturas pasan por Laravel y utilizan caché privada `no-store`. Los enlaces públicos de archivos históricos se mantienen sin privacidad retroactiva.
+
+Ejecute las migraciones del despliegue y compile el frontend con `npm run build`. Reinicie los workers y verifique las colas `default` y `mailer`, SMTP y las preferencias de correo de los destinatarios. Los avisos internos de revisión son obligatorios; correo depende de las preferencias. Compruebe envío, devolución/reenvío y aprobación con cuentas de prueba antes de reabrir escrituras.
+
 ##### Indexación en buscadores
 
 Después de actualizar la aplicación, ejecute las migraciones del despliegue para crear la opción `app_search_indexing_enabled`. La indexación permanece desactivada por defecto, también cuando la opción todavía no existe.

@@ -261,6 +261,7 @@ class HomeStatsTest extends TestCase
     private function createProgressReport(Goal $goal, float $value): void
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Avance';
         $report->type = 'progress';
         $report->content = 'Contenido';

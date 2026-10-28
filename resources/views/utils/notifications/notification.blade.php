@@ -1,4 +1,8 @@
 @switch($notification->data['type'])
+  @case('report-review')
+    <p class="mb-1">{{ $notification->data['message'] }}</p>
+    <a href="{{ $notification->data['url'] }}">{{ $notification->data['title'] }}</a>
+    @break
   @case('new-goal')
     @include('utils.notifications.newGoal', ['notification' => $notification])
     @break

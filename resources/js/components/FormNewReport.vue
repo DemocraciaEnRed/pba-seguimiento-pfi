@@ -24,7 +24,7 @@
 				<div>
 					<h5 class="">Acerca del reporte de <span class="font-weight-bold">{{typeLabel}}</span></h5>
 					<span v-show="type == 'post'">Un reporte el de novedad utilizado para contar noticias generales, relacionadas a la meta. Es el reporte mas simple. <b>Importante:</b> No utilice este tipo de reporte si quiere especificar que la meta progresa en su indicador o que se completo un hito.</span>
-					<span v-show="type == 'progress' && !isPeriodic">Un reporte de avance implica un aumento en el valor del indicador. Al realizar un reporte de avance, automaticamente la meta aumenta su valor de indicador especificado en el reporte.</span>
+					<span v-show="type == 'progress' && !isPeriodic">Un reporte de avance propone un aumento en el valor del indicador. El cambio se aplica al aprobar el reporte o al publicarlo directamente como administrador.</span>
 					<span v-show="type == 'progress' && isPeriodic">Un reporte de avance informa el valor medido del indicador en un período. Cada período admite un único reporte de avance: si ya fue informado, editá el reporte existente.</span>
 					<span v-show="type == 'milestone'">Un reporte de hito implica que se ha cumplido uno de los hitos que han sido cargados en la meta. <b>Importante:</b> El hito que se completa debe haber sido cargado en la meta previamente. No puede crear un reporte de hito sin asociar el hito que se completa</span>
 				</div>
@@ -84,9 +84,12 @@
 					<i class="fas fa-triangle-exclamation fa-fw"></i>&nbsp;No hay períodos pendientes de informar en este momento.
 				</div>
 				<div class="mb-3" v-if="reportedPeriods.length > 0">
-					<small class="text-muted">Períodos ya informados (para corregirlos, editá el reporte existente):</small>
+					<small class="text-muted">Períodos reservados o informados:</small>
 					<ul class="list-unstyled mb-0">
-						<li v-for="period in reportedPeriods" :key="`reported${period.id}`"><a :href="period.edit_url"><i class="fas fa-pen fa-fw"></i>&nbsp;{{period.label}} ({{period.range}})</a></li>
+						<li v-for="period in reportedPeriods" :key="`reported${period.id}`">
+							<a v-if="period.edit_url" :href="period.edit_url">{{period.label}} ({{period.range}}) — {{period.state_label}}</a>
+							<span v-else>{{period.label}} ({{period.range}}) — {{period.state_label}}</span>
+						</li>
 					</ul>
 				</div>
 			</section>
@@ -163,7 +166,7 @@
 			<div class="form-group">
 				<div class="card">
 					<div class="card-body">
-						<label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Enviar notificación a suscriptores</label>
+						<label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Notificar a suscriptores al publicar</label>
 						<div class="custom-control custom-switch" v-if="!objective.hidden">
 							<input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true">
 							<label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>
@@ -171,14 +174,14 @@
 						<div class="alert alert-warning" v-else>
 							<i class="fas fa-triangle-exclamation"></i>&nbsp;El objetivo se encuentra <i class="fas fa-eye-slash"></i> oculto, no se enviarán notificaciones a los usuarios.
 						</div>
-						<small class="form-text text-muted">Se le enviará una notificación por email (si lo tienen habilitado) y por sistema, de que hay un nuevo reporte.</small>
+						<small class="form-text text-muted">Los avisos se envían al publicar, nunca mientras el reporte espera revisión. El administrador confirma esta opción al aprobar.</small>
 					</div>
 					</div>
 				</div>
 			<br>
 			<div class="form-group">
 				<input type="hidden" name="_token" :value="crsfToken" />
-				<button type="submit" class="btn btn-primary" :disabled="type == 'progress' && isPeriodic && !selectedPeriod"><i class="fas fa-plus"></i> Crear reporte</button>
+				<button type="submit" class="btn btn-primary" :disabled="type == 'progress' && isPeriodic && !selectedPeriod"><i class="fas fa-plus"></i> {{ directPublish ? 'Publicar' : 'Enviar a revisión' }}</button>
 			</div>
 		</section>
   </form>
@@ -193,6 +196,7 @@ import InputTag from "./inputs/InputTag.vue"
 export default {
   props: {
 		formUrl: String,
+		directPublish: Boolean,
 		crsfToken: String,
 		goal: Object,
 		objective: Object,
@@ -232,7 +236,7 @@ export default {
 			return this.periods.filter(period => period.reportable)
 		},
 		reportedPeriods: function(){
-			return this.periods.filter(period => period.edit_url)
+			return this.periods.filter(period => period.reserved)
 		},
 		selectedPeriod: function(){
 			return this.reportablePeriods.find(period => period.id === this.selectedPeriodId) || null

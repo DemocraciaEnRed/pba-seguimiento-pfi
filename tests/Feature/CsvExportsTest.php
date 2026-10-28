@@ -86,6 +86,7 @@ class CsvExportsTest extends TestCase
         ]);
 
         $this->report = new Report();
+        $this->report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $this->report->title = 'Avance, primer trimestre';
         $this->report->type = 'progress';
         $this->report->content = 'Contenido';

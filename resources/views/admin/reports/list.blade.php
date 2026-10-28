@@ -6,9 +6,19 @@
 <section>
   <h3 class="is-700">Reportes</h3>
   <p class="lead">Todos los reportes cargados en la plataforma, incluidos los de objetivos ocultos.</p>
+  <a href="{{ route('admin.reports', ['revision' => 'pending']) }}" class="btn btn-outline-primary mb-3">Pendientes de revisión: {{ $pendingCount }}</a>
 
   <form method="GET" action="{{ route('admin.reports') }}" class="mb-3">
     <div class="d-grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3 gap-2 align-items-end">
+      <div>
+        <label for="revision">Revisión</label>
+        <select id="revision" name="revision" class="form-control">
+          <option value="">Todos</option>
+          @foreach(\App\Services\Reports\ReviewStatus::cases() as $state)
+          <option value="{{ $state->value }}" @selected($filters['revision'] === $state->value)>{{ $state->label() }}</option>
+          @endforeach
+        </select>
+      </div>
       <div>
         <label for="q" class="text-smaller mb-1">Título</label>
         <input type="search" id="q" name="q" value="{{ $filters['q'] }}" class="form-control" placeholder="Buscar por título">
@@ -94,6 +104,7 @@
       <div class="flex-grow-1 min-w-0">
         <p class="mb-0 text-smaller text-muted">
           {{ $report->date?->format('d/m/Y') ?? '-' }} · {{ $report->type_label }}
+          <span class="badge badge-secondary">{{ $report->review_status_label }}</span>
           @if($objective->hidden)
           <span class="badge badge-secondary align-middle">Objetivo oculto</span>
           @endif
@@ -107,7 +118,9 @@
       <div class="text-right text-smaller text-nowrap">
         <span class="d-block" title="Comentarios">{{ $report->comments_count }}<i class="far fa-comments fa-fw ml-1"></i></span>
         <span class="d-block" title="Me gusta">{{ $report->positive_testimonies_count }}<i class="far fa-thumbs-up fa-fw ml-1"></i></span>
+        @if($report->isApproved())
         <a href="{{ route('reports.index', ['reportId' => $report->id]) }}" target="_blank" rel="noopener" title="Ver en el portal">Portal<i class="fas fa-arrow-up-right-from-square fa-fw ml-1"></i></a>
+        @endif
       </div>
     </div>
     @empty

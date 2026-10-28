@@ -31,6 +31,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/reportes/{reportId}/adjuntos/{kind}/{attachmentId}', [\App\Http\Controllers\ReportAttachmentController::class, 'show'])
+    ->where('kind', 'file|photo|thumbnail')->name('reports.attachments');
+Route::post('/reportes/{reportId}/aprobar', [\App\Http\Controllers\ReportReviewController::class, 'approve'])->name('reports.review.approve');
+Route::post('/reportes/{reportId}/devolver', [\App\Http\Controllers\ReportReviewController::class, 'returnReport'])->name('reports.review.return');
+Route::post('/reportes/{reportId}/reenviar', [\App\Http\Controllers\ReportReviewController::class, 'resubmit'])->name('reports.review.resubmit');
 Route::get('/robots.txt', [SearchEngineController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SearchEngineController::class, 'sitemap'])->name('sitemap');
 Route::get('/sitemaps/{section}/{page}.xml', [SearchEngineController::class, 'sitemapPart'])

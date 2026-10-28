@@ -39,6 +39,11 @@ class GoalPeriod extends Model
 
     public function progressReport(): HasOne
     {
+        return $this->hasOne(Report::class, 'goal_period_id')->where('type', 'progress')->approved();
+    }
+
+    public function reservedReport(): HasOne
+    {
         return $this->hasOne(Report::class, 'goal_period_id')->where('type', 'progress');
     }
 

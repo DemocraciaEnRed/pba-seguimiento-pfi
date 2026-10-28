@@ -14,10 +14,14 @@
       </ul>
   </div>
   @endif
+  @if($report->isApproved())
   <div class="alert alert-warning">
     <h6 class="is-700"><i class="fas fa-triangle-exclamation"></i> Importante</h6>
     El objetivo es un objetivo de avance. Si usted modifica las cantidades, considere que puede afectar la cronologia de otros reportes, y los datos de la misma meta. De ser asi, considere modificar la meta y otros reportes para mantener consistencia en la información.
   </div>
+  @else
+  <div class="alert alert-info">Editar la propuesta no modifica la meta ni publica el reporte. Si fue devuelta, deberá reenviarla explícitamente después de corregirla.</div>
+  @endif
   <ul class="nav nav-tabs justify-content-center mb-3">
     <li class="nav-item">
       <a class="nav-link {{$report->type == 'post' ? 'font-primary active font-weight-bold' : 'text-muted'}}" ><i class="fas fa-bullhorn"></i>&nbsp;&nbsp;Novedad</a>
@@ -32,6 +36,7 @@
   <form action="{{route('objectives.manage.goals.reports.edit.form',['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])}}" method="POST" enctype="multipart/form-data">
     @method('PUT')
     @csrf
+    <input type="hidden" name="review_version" value="{{ $report->review_version }}">
     <div class="form-group">
       <label>Titulo del reporte</label>
       <input type="text" name="title" class="form-control" value="{{$report->title}}" />
@@ -54,7 +59,7 @@
         <div class="form-group">
           <label>Estado de la meta previo al reporte</label>
             <div class="form-group">
-              <select class="custom-select" name="previous_status">
+              <select class="custom-select" name="previous_status" @disabled(!$report->isApproved())>
                   <option value="" {{$report->status ?: 'selected'}}>- No aplica -</option>
                   <option value="ongoing" {{$report->previous_status == 'ongoing' ? 'selected' : null}}>En progreso</option>
                   <option value="delayed" {{$report->previous_status == 'delayed' ? 'selected' : null}}>No cumplida</option>
@@ -86,7 +91,7 @@
     @if($report->type == 'milestone')
     <div class="form-group">
       <label>¿En que fecha se alcanzó el hito?</label>
-      <input name="milestone_date" type="date" value="@dateInputFormat($report->milestone->completed)" class="form-control" />
+      <input name="milestone_date" type="date" value="{{ ($report->isApproved() ? $report->milestone->completed : $report->proposed_milestone_date)?->format('Y-m-d') }}" class="form-control" />
       <small class="form-text text-muted">Si la fecha en que el hito se alcanzó es distinta a la fecha del reporte, por favor, ingrese la fecha aquí. De no definirla, se define la fecha de hito alcanzado la misma fecha que el reporte.</small>
     </div>
     <div class="form-group">
@@ -117,16 +122,18 @@
       </div>
     </div>
     @elseif($report->type == 'progress')
+    @if($report->isApproved())
     <div class="alert alert-warning">
       <h6 class="is-700"><i class="fas fa-triangle-exclamation"></i> Importante</h6>
       Corrobore que, si cuenta con reportes de <i class="fas fa-forward-fast"></i> <b>avance</b> previos, y modifica el "Progreso de la meta antes del reporte" debe hacer las modificaciones pertinentes sobre reportes previos de avance, y sobre el valor de la meta en si.
     </div>
+    @endif
     <div class="form-row">
       <div class="col">
         <div class="form-group">
           <label>Progreso de la meta antes del reporte</label>
           <div class="form-group">
-          <input type="number" min="0" value="{{$report->previous_progress}}" name="previous_progress" class="form-control">
+          <input type="number" min="0" value="{{$report->previous_progress}}" name="previous_progress" class="form-control" @disabled(!$report->isApproved())>
           <small class="form-text text-muted">Este es el valor que la meta se entcontraba previo al reporte del avante</small>
           </div>
         </div>
@@ -146,7 +153,7 @@
       <label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Enviar notificacion a suscriptores</label>
       @if(!$objective->hidden)
       <div class="custom-control custom-switch">
-        <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true">
+        <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true" @checked(!$report->isApproved() && $report->notify_subscribers)>
         <label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>
       </div>
       @else
@@ -154,10 +161,10 @@
         <i class="fas fa-triangle-exclamation"></i>&nbsp;El objetivo se encuentra <i class="fas fa-eye-slash"></i> oculto, no se enviarán notificaciones a los usuarios.
       </div>
       @endif
-      <small class="form-text text-muted">Se le enviará una notificación por sistema, de que el reporte ha sido editado invitandolos a verlo.</small>
+      <small class="form-text text-muted">{{ $report->isApproved() ? 'Se notificará a los suscriptores que el reporte fue editado.' : 'Esta preferencia se tendrá en cuenta al aprobar y publicar. Guardar la propuesta no envía avisos a suscriptores.' }}</small>
     </div>
     <br>
-    <button type="submit" class="btn btn-primary">Editar</button>
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
   </form>
 
 

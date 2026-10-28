@@ -51,12 +51,13 @@
         <a href="{{ route('objectives.manage.goals.reports.index', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="is-700 text-dark">{{ $report->title }}</a>
         <div class="text-smaller text-muted">
           {{ $report->type_label }} &middot; <span title="{{ $report->date }}">@justdate($report->date)</span>
+          &middot; <strong>{{ $report->review_status_label }}</strong>
           @if($report->author)
           &middot; {{ $report->author->fullname }}
           @endif
         </div>
         @if($report->period)
-        <div class="text-smaller"><i class="far fa-calendar fa-fw text-muted"></i>Período {{ $report->period->label() }} &middot; {{ indicator_number($report->progress) }} {{ $goal->indicator_unit }}</div>
+        <div class="text-smaller"><i class="far fa-calendar fa-fw text-muted"></i>{{ $report->period->label() }} &middot; {{ indicator_number($report->measured_value) }} {{ $goal->indicator_unit }}</div>
         @elseif($report->type === 'progress' && $report->progress !== null)
         <div class="text-smaller">Progreso declarado: {{ indicator_number($report->progress) }} {{ $goal->indicator_unit }}</div>
         @elseif($report->milestone)

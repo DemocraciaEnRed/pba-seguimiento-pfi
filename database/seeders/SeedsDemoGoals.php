@@ -87,6 +87,7 @@ trait SeedsDemoGoals
             $reportDate = $faker->dateTimeBetween($fromDate, $toDate);
 
             $report = new Report();
+            $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
             $report->type = $faker->randomElement($types);
             $report->tags = $faker->words(3);
             $report->title = $faker->sentence();
@@ -148,6 +149,7 @@ trait SeedsDemoGoals
             $reportDate = $period->ends_on->addDays(5);
 
             $report = new Report();
+            $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
             $report->type = 'progress';
             $report->tags = $faker->words(3);
             $report->title = "Medición del {$period->label()}";
@@ -171,6 +173,7 @@ trait SeedsDemoGoals
         $reportDate = $faker->dateTimeBetween(Carbon::now()->subWeeks(1)->toDateTimeString(), Carbon::now()->toDateTimeString());
 
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->type = 'progress';
         $report->tags = $faker->words(3);
         $report->title = $faker->sentence();

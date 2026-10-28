@@ -82,6 +82,7 @@ class AdminPanelController extends Controller
         $filters = $reportDirectory->normalize($this->reportFilters($request));
 
         return view('admin.reports.list', [
+            'pendingCount' => Report::where('review_status', 'pending')->whereHas('goal.objective')->count(),
             'reports' => $reportDirectory->search($filters)->paginate(20)->withQueryString(),
             'filters' => $filters,
             ...$reportDirectory->hierarchyOptions($filters),
@@ -100,7 +101,7 @@ class AdminPanelController extends Controller
      */
     private function reportFilters(Request $request): array
     {
-        return $request->only(['q', 'eje', 'objetivo', 'meta', 'desde', 'hasta', 'autor', 'comentarios', 'orden']);
+        return $request->only(['q', 'eje', 'objetivo', 'meta', 'desde', 'hasta', 'autor', 'comentarios', 'orden', 'revision']);
     }
 
     // ====================================

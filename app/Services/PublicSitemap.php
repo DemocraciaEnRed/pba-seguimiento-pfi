@@ -62,7 +62,7 @@ class PublicSitemap
         return [
             'objectives' => Objective::query()->where('hidden', false),
             'goals' => Goal::query()->whereHas('objective', fn (Builder $objectives) => $objectives->where('hidden', false)),
-            'reports' => Report::query()->fromVisibleObjectives(),
+            'reports' => Report::query()->approved()->fromVisibleObjectives(),
             'events' => Event::query(),
         ];
     }

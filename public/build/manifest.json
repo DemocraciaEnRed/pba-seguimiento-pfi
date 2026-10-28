@@ -1,37 +1,37 @@
 {
-  "_Stats-B5r34Iwz.js": {
-    "file": "assets/Stats-B5r34Iwz.js",
-    "name": "Stats",
+  "_Map-CmFpT_kq.css": {
+    "file": "assets/Map-CmFpT_kq.css",
+    "src": "_Map-CmFpT_kq.css"
+  },
+  "_Map-CrK_96zL.js": {
+    "file": "assets/Map-CrK_96zL.js",
+    "name": "Map",
     "css": [
-      "assets/Stats-CZHyKgU2.css"
+      "assets/Map-CmFpT_kq.css"
     ]
   },
-  "_Stats-CZHyKgU2.css": {
-    "file": "assets/Stats-CZHyKgU2.css",
-    "src": "_Stats-CZHyKgU2.css"
-  },
   "resources/js/admin-app.js": {
-    "file": "assets/admin-app-BTBe1Oyp.js",
+    "file": "assets/admin-app-B1JgnMc2.js",
     "name": "admin-app",
     "src": "resources/js/admin-app.js",
     "isEntry": true,
     "imports": [
-      "_Stats-B5r34Iwz.js"
+      "_Map-CrK_96zL.js"
     ],
     "css": [
       "assets/admin-app-BAMniqtx.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DEaob7yK.js",
+    "file": "assets/app-Djd8r2Vk.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_Stats-B5r34Iwz.js"
+      "_Map-CrK_96zL.js"
     ],
     "css": [
-      "assets/app-BA2H0m-b.css"
+      "assets/app-BFIOQeiD.css"
     ]
   }
 }

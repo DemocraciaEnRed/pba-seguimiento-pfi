@@ -220,6 +220,7 @@ class AdminObjectivesListTest extends TestCase
     private function createReport(string $title, Goal $goal, string $date): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = $title;
         $report->type = 'post';
         $report->content = 'Contenido';

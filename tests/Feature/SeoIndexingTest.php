@@ -71,6 +71,7 @@ class SeoIndexingTest extends TestCase
         $this->goal->save();
 
         $this->report = new Report();
+        $this->report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $this->report->title = 'Primer avance';
         $this->report->content = 'Contenido del reporte';
         $this->report->type = 'post';

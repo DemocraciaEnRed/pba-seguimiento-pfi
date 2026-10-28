@@ -18,7 +18,8 @@
   <h5 class="is-700 has-text-danger"><i class="fas fa-trash"></i> Eliminar reporte</h5>
   <p>Al eliminar el reporte, tenga en cuenta lo siguiente</p>
   <ul>
-    <li>El objetivo deja de ser visible publicamente</li>
+    <li>El reporte deja de estar disponible. Si reservaba un período, lo libera.</li>
+    <li>Eliminar un aprobado no revierte automáticamente avances ni hitos ya aplicados.</li>
   </ul>
   <form action="{{ route('objectives.manage.goals.reports.delete.form',['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" method="POST">
     @method('DELETE')
@@ -28,6 +29,7 @@
       <input type="password" class="form-control" name="password">
       <small class="form-text text-muted">Para poder eliminar el reporte, ingrese su contraseña para confirmar.</small>
     </div>
+    @if($report->isApproved())
     <div class="form-group">
      <label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Enviar notificación a suscriptores</label>
       @if(!$objective->hidden)
@@ -35,6 +37,7 @@
         <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true">
         <label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>
       </div>
+      @endif
       @else
       <div class="alert alert-warning">
         <i class="fas fa-triangle-exclamation"></i>&nbsp;El objetivo se encuentra <i class="fas fa-eye-slash"></i> oculto, no se enviarán notificaciones a los usuarios.

@@ -30,6 +30,7 @@ import SetMapDefault from './components/maps/SetMapDefault.vue';
 import DrawMap from './components/maps/DrawMap.vue';
 import MapReports from './components/maps/MapReports.vue';
 import PortalObjectiveStats from './components/portal/objective/Stats.vue';
+import PortalReportMap from './components/portal/report/Map.vue';
 
 window.Vue = Vue;
 
@@ -65,6 +66,7 @@ Vue.component('set-map-default', SetMapDefault);
 Vue.component('draw-map', DrawMap);
 Vue.component('map-reports', MapReports);
 Vue.component('portal-objective-stats', PortalObjectiveStats);
+Vue.component('portal-report-map', PortalReportMap);
 
 Vue.prototype.$http = http
 

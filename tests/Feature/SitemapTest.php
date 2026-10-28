@@ -383,6 +383,7 @@ class SitemapTest extends TestCase
     private function createReport(Goal $goal): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Avance';
         $report->content = 'Publicación de datos';
         $report->type = 'post';

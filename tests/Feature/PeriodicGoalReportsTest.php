@@ -149,7 +149,8 @@ class PeriodicGoalReportsTest extends TestCase
             ->assertSessionHasErrors(['goal_period_id' => GoalPanelController::PERIOD_ALREADY_REPORTED_MESSAGE]);
 
         $this->assertSame(1, $goal->reports()->count());
-        $this->assertSame(15.49, $period->fresh()->progressReport->measured_value);
+        $this->assertNull($period->fresh()->progressReport);
+        $this->assertSame(15.49, $period->fresh()->reservedReport->measured_value);
     }
 
     public function test_the_database_rejects_a_second_live_progress_report_for_the_same_period(): void
@@ -170,7 +171,8 @@ class PeriodicGoalReportsTest extends TestCase
 
         $this->postProgress($this->reporter, $goal, $period, 12)->assertSessionHasNoErrors();
 
-        $this->assertSame(12.0, $period->fresh()->progressReport->measured_value);
+        $this->assertNull($period->fresh()->progressReport);
+        $this->assertSame(12.0, $period->fresh()->reservedReport->measured_value);
     }
 
     public function test_editing_a_periodic_progress_report_updates_the_value_but_not_the_period(): void
@@ -180,7 +182,7 @@ class PeriodicGoalReportsTest extends TestCase
         $secondPeriod = $goal->periods->firstWhere('number', 2);
         $report = $this->createProgressReport($goal, $firstPeriod, 10);
 
-        $response = $this->actingAs($this->reporter)->put(route('objectives.manage.goals.reports.edit.form', [
+        $response = $this->actingAs($this->admin)->put(route('objectives.manage.goals.reports.edit.form', [
             'objectiveId' => $this->objective->id,
             'goalId' => $goal->id,
             'reportId' => $report->id,
@@ -256,7 +258,7 @@ class PeriodicGoalReportsTest extends TestCase
         $goal->save();
 
         foreach ([30, 25.5] as $progress) {
-            $this->actingAs($this->reporter)->post($this->newReportUrl($goal), [
+            $this->actingAs($this->admin)->post($this->newReportUrl($goal), [
                 'title' => 'Avance',
                 'type' => 'progress',
                 'content' => 'Contenido',
@@ -407,7 +409,7 @@ class PeriodicGoalReportsTest extends TestCase
         $this->actingAs($this->manager)->get(route('objectives.manage.goals.index', $objectiveParameters + ['goalId' => $periodic->id]))
             ->assertOk()
             ->assertDontSee('Omitir');
-        $this->actingAs($this->reporter)->get(route('objectives.manage.goals.reports.edit', $objectiveParameters + ['goalId' => $periodic->id, 'reportId' => $report->id]))
+        $this->actingAs($this->admin)->get(route('objectives.manage.goals.reports.edit', $objectiveParameters + ['goalId' => $periodic->id, 'reportId' => $report->id]))
             ->assertOk()
             ->assertSee('Resultado del período')
             ->assertSee('Meta del período:')
@@ -432,6 +434,7 @@ class PeriodicGoalReportsTest extends TestCase
             ->assertSee('-11,51 días', false);
 
         $simpleReport = new Report();
+        $simpleReport->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $simpleReport->title = 'Avance acumulado';
         $simpleReport->type = 'progress';
         $simpleReport->content = 'Contenido';
@@ -574,6 +577,7 @@ class PeriodicGoalReportsTest extends TestCase
     private function createProgressReport(Goal $goal, GoalPeriod $period, float $value): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Avance';
         $report->type = 'progress';
         $report->content = 'Contenido';

@@ -202,6 +202,7 @@ class ObjectivePanelListsTest extends TestCase
     private function createReport(Goal $goal, string $title, string $type = 'post'): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = $title;
         $report->type = $type;
         $report->content = 'Contenido';

@@ -262,6 +262,7 @@ class HomeReportsGridTest extends TestCase
     private function createReport(array $attributes = []): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Reporte';
         $report->type = 'post';
         $report->content = 'Contenido';

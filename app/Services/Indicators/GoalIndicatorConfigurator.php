@@ -129,6 +129,12 @@ class GoalIndicatorConfigurator
 
         DB::transaction(function () use ($goal, $targets, $isLocked): void {
             $structureChanged = $goal->isDirty(['measurement_mode', 'period_type', 'period_start', 'period_count']);
+            if ($goal->exists) {
+                Goal::whereKey($goal->id)->lockForUpdate()->firstOrFail();
+                if (! $isLocked && $goal->hasProgressReports()) {
+                    throw ValidationException::withMessages(['measurement_mode' => 'Se recibió un reporte mientras se editaba la meta. Recargá para conservar su estructura.']);
+                }
+            }
             $goal->save();
 
             if (! $isLocked && ($structureChanged || ! $goal->isPeriodic())) {

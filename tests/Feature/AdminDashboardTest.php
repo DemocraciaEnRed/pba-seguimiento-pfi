@@ -125,6 +125,7 @@ class AdminDashboardTest extends TestCase
     #[DataProvider('activityRanges')]
     public function test_activity_is_counted_for_the_selected_range(?string $range, array $expected): void
     {
+        $referenceTime = now();
         foreach (['2026-10-14 10:00:00', '2026-09-20 10:00:00', '2026-08-01 10:00:00', '2025-01-01 10:00:00'] as $date) {
             $this->travelTo($date, function (): void {
                 $report = $this->createReport();
@@ -132,6 +133,7 @@ class AdminDashboardTest extends TestCase
             });
         }
         $this->travelTo('2025-01-01 10:00:00', fn () => $this->createLike($this->createReport(), $this->createUser('old@example.com')));
+        $this->travelTo($referenceTime);
         $recentReport = Report::orderBy('date', 'desc')->first();
         $this->createLike($recentReport, $this->admin);
         $this->createLike($recentReport, User::where('email', 'old@example.com')->first(), value: false);
@@ -174,6 +176,7 @@ class AdminDashboardTest extends TestCase
     private function createReport(): Report
     {
         $report = new Report();
+        $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $report->title = 'Reporte';
         $report->type = 'post';
         $report->content = 'Contenido';

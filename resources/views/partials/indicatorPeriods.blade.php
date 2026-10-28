@@ -86,6 +86,7 @@
         @php
           $result = $summary->period($period->number);
           $light = TrafficLight::fromCompliance($result->compliance);
+          $reservation = $reportLinks === 'panel' ? $period->reservedReport : null;
         @endphp
         <tr>
           <td>
@@ -107,6 +108,9 @@
           </td>
           <td class="align-middle">
             <span class="badge badge-{{ $stateColors[$result->state->value] }}">{{ $result->state->label() }}</span>
+            @if($reservation && !$reservation->isApproved())
+              <small class="d-block text-muted">{{ $reservation->review_status_label }} — sin medición aprobada</small>
+            @endif
             @if($period->isSkipped())
               <small class="d-block text-muted" title="Omitido por {{ $period->skippedBy?->fullname }}">{{ $period->skip_reason }}</small>
             @endif
@@ -114,6 +118,8 @@
           <td class="align-middle text-center">
             @if($period->progressReport)
               <a href="{{ $periodReportUrl($period->progressReport) }}" class="btn btn-outline-primary btn-sm text-nowrap" title="{{ $period->progressReport->title }}"><i class="far fa-file-lines fa-fw"></i> Ver</a>
+            @elseif($reservation && $reservation->canViewInManagement(auth()->user()))
+              <a href="{{ $periodReportUrl($reservation) }}" class="btn btn-outline-secondary btn-sm">Ver propuesta</a>
             @else
               <span class="text-muted">—</span>
             @endif
@@ -126,7 +132,7 @@
                 @method('DELETE')
                 <button type="submit" class="btn btn-link btn-sm p-0">Revertir omisión</button>
               </form>
-            @elseif(in_array($result->state, [PeriodState::Overdue, PeriodState::Open, PeriodState::Upcoming], true))
+            @elseif(!$reservation && in_array($result->state, [PeriodState::Overdue, PeriodState::Open, PeriodState::Upcoming], true))
               <form method="POST" class="form-inline justify-content-end flex-nowrap" action="{{ route('objectives.manage.goals.periods.skip.form', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'periodId' => $period->id]) }}">
                 @csrf
                 <input type="text" name="skip_reason" class="form-control form-control-sm mr-1" placeholder="Motivo" required maxlength="1000">

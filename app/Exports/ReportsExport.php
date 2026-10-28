@@ -32,6 +32,7 @@ class ReportsExport implements CsvExport
             'Comentarios',
             'Me gusta',
             'Fecha de carga',
+            'Revisión',
         ];
     }
 
@@ -52,6 +53,7 @@ class ReportsExport implements CsvExport
             $report->comments_count,
             $report->positive_testimonies_count,
             $report->created_at?->format('d/m/Y H:i:s') ?? '-',
+            $report->review_status_label,
         ];
     }
 }
