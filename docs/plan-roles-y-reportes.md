@@ -20,7 +20,7 @@ Cada punto lleva una etiqueta:
 - **Rama:** `feature/roles-y-reportes`, creada desde `dev/0.3.0`.
 - **Sin migración de asignaciones:** `objective_user` no se convierte. Administración asigna Responsables y Reporteros desde cero. La tabla se conserva como referencia de solo lectura hasta la fase de cierre.
 - **Metas existentes:** quedan **públicas**. El portal no cambia.
-- **Metas nuevas:** en el formulario hay que elegir la visibilidad, que no tiene valor por defecto. El importador las crea **internas**.
+- **Metas nuevas:** en el formulario hay que elegir la visibilidad, que no tiene valor por defecto. En la importación se elige una visibilidad obligatoria para las metas nuevas (ver D4).
 - **Reportes cargados por Administración:** se mantiene la publicación directa en metas públicas, con una acción explícita.
 - **Pertenencia PFI (D1 resuelta):** catálogo administrable por Administración, con una o varias categorías por persona. Las categorías se desactivan en lugar de eliminarse: se conservan las asociaciones y no se ofrecen para nuevas altas. Los ejemplos recibidos (Integrante MISTO, Ente, Empresa, Organismos MISP) orientan el catálogo; no se convierten en un enum cerrado ni en permisos.
 - **Baja y continuidad (D2 resuelta):** al quitar un Responsable, advertir si conviene asignar otro para mantener la cobertura; no exigir reemplazo si ya hay otros Responsables y no introducir unanimidad para validar. Al retirar un Reportero con pendientes no validados, exigir que Administración o quien tenga facultad sobre esa meta elija quién los continúa. Puede seleccionar otro Reportero asignado o incorporar uno nuevo del universo PFI. Se conserva la autoría histórica.
@@ -29,6 +29,11 @@ Cada punto lleva una etiqueta:
 - **D3, cierre interno:** después de validar, Administración realiza una acción explícita de cierre. Desde ese momento se aplican los cambios y el reporte se consolida para el seguimiento interno; no se publica. El reporte cerrado no se puede editar ni eliminar.
 - **D5, cupos:** no se agrega un cupo global. Se conserva un Avance por período; el período permanece reservado mientras exista el reporte, incluso devuelto o validado. Un Hito puede coexistir con el Avance.
 - **Devolución desde Administración:** no se habilita. Administración corrige directamente; la devolución corresponde a Responsables sobre propuestas pendientes.
+- **D4, visibilidad fija:** la visibilidad se define al crear la meta y no cambia nunca. Una meta interna no puede pasar a pública ni una pública a interna. Así no hay reportes históricos que tratar ni cambios que comunicar. Una posible «representación pública» de metas internas queda fuera del alcance actual.
+- **Importación:** Administración elige obligatoriamente Pública o Interna al importar; esa visibilidad se aplica a todas las metas nuevas del archivo. Las metas existentes actualizadas por el importador conservan la suya.
+- **D6, catálogo:** se reutiliza `organizations` con el nombre **Organizaciones**, sin tipo. Cada meta tiene una **Organización responsable** y puede tener **Organizaciones participantes**. Los vínculos objetivo-organización (`objective_organization`) se retiran: la ficha del objetivo muestra la unión de las organizaciones de sus metas visibles. La tabla se archiva y elimina en la fase 9.
+- **D7, historial:** cada reporte publicado conserva una copia de las organizaciones que tenía la meta al publicarse. Los reportes publicados antes de existir esa copia no muestran organizaciones. Una organización dada de baja se desactiva: no se ofrece para nuevas asociaciones y conserva su nombre en el historial.
+- **D8, Mesa de trabajo:** se adoptan como primera versión las secciones Mis metas, Requiere mi acción y Esperando a otra persona; filtros por rol, objetivo/eje y tipo de tarea, con orden por antigüedad. Administración suma validados por resolver (separando Publicar y Cerrar), alertas de continuidad y acceso a la vista pública.
 - **Manual sincronizado por fase:** actualizar los capítulos afectados de `docs/manual-usuario`, su índice, historial e instrucciones de capturas al cerrar cada fase, antes de iniciar la siguiente. La fase 9 conserva una revisión integral final, no la primera actualización. Documentar lo implementado y distinguirlo de lo aún no desplegado.
 
 **Estado de ejecución**
@@ -36,7 +41,7 @@ Cada punto lleva una etiqueta:
 - **Fase 0, pasos 1 a 4 implementados:** policies registradas y utilizadas por controladores, middleware, servicio de revisión y vistas; gate administrativo reparado; precarga por petición; visibilidad del objetivo reservada a Administración.
 - En aquel primer incremento, los permisos generales seguían basados en `objective_user`. Las fases 2 y 3 prepararon asignaciones y visibilidad, y la fase 4 realizó el corte a `goal_user`. El circuito inicial conservaba `pending|returned|approved`; la fase 5 agrega `validated` y mantiene `approved` como valor técnico de los reportes publicados.
 - El contrato de audiencia del paso 5 quedó diseñado abajo. Su implementación y las pruebas ejecutables 20/23/40 se incorporaron con el esquema de las fases 2 y 3.
-- **D1 y D2 resueltas después del primer incremento.** La fase 1 puede incorporar catálogo, altas y clasificación PFI. La baja de personas se habilita con la reasignación efectiva de la fase 4, no antes. D3 y D5 quedaron resueltas para la fase 5; D4 y D6 a D8 siguen pendientes.
+- **D1 y D2 resueltas después del primer incremento.** La fase 1 puede incorporar catálogo, altas y clasificación PFI. La baja de personas se habilita con la reasignación efectiva de la fase 4, no antes. D3 y D5 quedaron resueltas para la fase 5. D4 y D6 a D8 se resolvieron después del commit de la fase 5.
 - **Fase 1, pasos 6 a 9 implementados:** catálogo de categorías PFI (`pfi_categories`), pertenencia (`pfi_memberships`) y clasificación (`pfi_category_user`). Administración da de alta y reclasifica desde la ficha del usuario, filtra por pertenencia y categoría y exporta ambas columnas en el CSV. Cada operación queda en `action_logs`. Ser PFI no da acceso a nada.
 - **Decisiones de implementación de la fase 1, confirmadas por el usuario:**
   - El catálogo arranca con las cuatro categorías de ejemplo, cargadas por una migración de datos idempotente. Administración puede editarlas o desactivarlas.
@@ -45,12 +50,13 @@ Cada punto lleva una etiqueta:
   - La baja PFI no estaba disponible en la fase 1; quedó habilitada con continuidad efectiva en la fase 4.
 - **Fase 2, pasos 10 a 13 implementados:** `goal_user` almacena asignaciones `responsible` y `reporter`, con `assigned_by`, unicidad por meta/persona/rol y borrado en cascada al borrar una meta. Administración administra ambos roles por meta y puede sumar Reporteros a las metas existentes de un objetivo. Un Responsable solo puede sumar o quitar Reporteros de sus metas asignadas. La búsqueda de candidatos habilita ese mismo alcance; para Administración sigue siendo global. La ficha administrativa conserva `objective_user` como referencia de solo lectura.
 - Las asignaciones de fase 2 no se convirtieron desde `objective_user` ni alteraron por sí solas los permisos generales. Las metas futuras no heredan la asignación por objetivo; requieren asignación expresa. La coexistencia con la gestión del equipo anterior terminó en la fase 4.
-- **Fase 3, pasos 14 a 17 implementados:** las metas existentes se migran como públicas; las nuevas requieren una elección explícita y las importadas son internas. `GoalAudience` delimita consultas públicas, de gestión y de trabajo para metas y reportes, incluidos accesos por ID, agregados, exportaciones y avisos. Los recursos públicos no exponen nombres de personas. El paso 18 sigue bloqueado por D4: no se habilitan cambios de visibilidad en metas con historial. La migración se añadió, pero no se aplicó fuera de las bases de prueba.
+- **Fase 3, pasos 14 a 17 implementados:** las metas existentes se migran como públicas; las nuevas requieren una elección explícita y las importadas son internas. `GoalAudience` delimita consultas públicas, de gestión y de trabajo para metas y reportes, incluidos accesos por ID, agregados, exportaciones y avisos. Los recursos públicos no exponen nombres de personas. El paso 18 quedó bloqueado por D4 hasta su resolución posterior a la fase 5. La migración se añadió, pero no se aplicó fuera de las bases de prueba.
 - **Fase 4, pasos 19 a 23 implementados:** policies, paneles, directorios, acciones y moderación usan asignaciones por meta. Administración conserva la estructura; una meta pública del mismo objetivo no habilita acciones fuera de las asignaciones. `objective_user` queda únicamente como referencia histórica administrativa, sin permisos ni mutadores. La etiqueta «Equipo» depende de la asignación del autor del comentario o respuesta, no de quien lo lee.
 - **Continuidad de fase 4:** `attendant_id` separa la atención de la autoría. La baja PFI, los retiros por meta y la reasignación individual validan destinos vigentes, permisos y estado dentro de la transacción. Las bajas exigen resolver todos los pendientes afectados, incluidos los que aparecieron desde la confirmación. Se bloquean primero las personas participantes y destinos por ID, luego las metas y los reportes; la carga y modificación de reportes respetan ese orden. Las devoluciones se notifican a quien atiende actualmente.
 - **Despliegue de fase 4 pendiente de coordinación:** preparar manualmente las asignaciones antes del corte; no se convierten los equipos anteriores. Aplicar las nuevas migraciones incrementales con backup: una agrega `attendant_id` y otra inicializa la atención de `pending|returned` con su autor sin sobreescribir reasignaciones. Revisar antes de habilitar el acceso los pendientes cuyos autores no tengan una asignación vigente ni facultades administrativas, y resolver su continuidad. Estas migraciones no se aplicaron a la base de la aplicación.
 - **Fase 5, pasos 24 a 30 implementados en el código y con pruebas focalizadas aprobadas:** se documentan abajo; sus migraciones aún no se aplicaron a la base de la aplicación.
 - **Manual actualizado al cerrar la fase 5:** v0.4.5, con los capítulos afectados, índice, historial e instrucciones de capturas. Las áreas por meta y la Mesa de trabajo todavía no se describen como disponibles.
+- **Fase 3, paso 18 implementado tras D4:** la edición de metas rechaza cualquier cambio de visibilidad y la importación exige elegir Pública o Interna para las metas nuevas, sin alterar las existentes. `StructureImportTest` y `GoalConfidentialityTest` pasaron: **18 pruebas y 159 aserciones**. Manual v0.4.6.
 - El análisis siguiente conserva la línea de base anterior al primer incremento; no describe como pendientes los cambios ya registrados arriba.
 
 ### 1. Análisis de brechas
@@ -233,9 +239,9 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 
     En la gestión de un objetivo, las metas internas no asignadas desaparecen incluso para los miembros por objetivo que todavía existen.
 17. Quitar los nombres de personas del portal: el bloque del equipo, el autor del reporte y `author_id` en los Resources públicos **[Acordado §5]**. El área llega en la fase 6.
-18. Cambios de visibilidad:
-    - El acceso futuro debe respetar la nueva visibilidad y no se pueden recuperar copias ya descargadas **[Acordado §6.2]**.
-    - El tratamiento de publicaciones históricas y la comunicación en ambas direcciones están **bloqueados por D4**. No habilitar esas transiciones con historial antes de resolverlo; pasar a pública nunca autoriza automáticamente sus reportes.
+18. Visibilidad fija **[D4 resuelta]**:
+    - La visibilidad se elige al crear la meta y no se puede modificar después, ni desde la edición ni desde la importación.
+    - La importación exige elegir Pública o Interna para las metas nuevas del archivo; las existentes conservan la suya.
 
 **Fase 4: corte a autorización por meta** (*depende de las fases 2 y 3; despliegue coordinado*)
 19. Las policies pasan a leer `goal_user`:
@@ -278,18 +284,18 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 29. Se mantiene el único Avance por período: su reserva persiste mientras exista, incluso devuelto o validado; el Hito puede coexistir. No se agrega un cupo global **[D5 resuelta]**.
 30. Si dos Responsables resuelven a la vez, `mutate()` usa bloqueo y versión, y el segundo ve "ya resuelto". La validación simultánea tampoco aplica cambios ni genera dos resoluciones.
 
-**Fase 6: áreas por meta** (*depende de la fase 3; puede ir en paralelo con la fase 5*)
-31. Definir el catálogo de áreas (D6). La propuesta es reutilizar `organizations` y llamarlas "Áreas" en la interfaz.
-32. Crear la tabla `goal_organization(goal_id, organization_id, kind responsible|linked)`:
-    - índice único por meta y área;
-    - como máximo un área `responsible` por meta.
+**Fase 6: organizaciones por meta** (*depende de la fase 3; puede ir en paralelo con la fase 5*)
+31. Reutilizar `organizations` con el nombre **Organizaciones**, sin tipo, y agregar su desactivación **[D6 resuelta]**.
+32. Crear la tabla `goal_organization(goal_id, organization_id, kind responsible|participant)`:
+    - índice único por meta y organización;
+    - como máximo una organización `responsible` por meta.
 
-    Las metas existentes quedan sin área hasta que Administración la cargue. Mientras tanto, el portal no muestra nada.
-33. Las áreas de objetivos y ejes son la unión, sin duplicados, de las áreas de sus metas dentro del conjunto de la audiencia **[Acordado §5]**.
-34. En el portal, mostrar el área responsable como dato principal y las vinculadas con menor jerarquía, en la meta y en sus reportes publicados.
-    - Guardar una copia del área al publicar es una **propuesta condicionada a D7**, no una decisión cerrada.
-    - Qué área se muestra en los reportes históricos está **bloqueado por D7**.
-35. El filtro por áreas y las sugerencias del Responsable quedan fuera hasta que se definan [Pendiente §7].
+    Las metas existentes quedan sin organización hasta que Administración la cargue. Mientras tanto, el portal no muestra nada.
+33. Las organizaciones de objetivos y ejes son la unión, sin duplicados, de las de sus metas dentro del conjunto de la audiencia **[Acordado §5]**. `objective_organization` deja de usarse y se elimina en la fase 9.
+34. En el portal, mostrar la organización responsable como dato principal y las participantes con menor jerarquía, en la meta y en sus reportes publicados.
+    - Cada reporte guarda una copia de las organizaciones de la meta al publicarse; los reportes publicados antes de esa copia no muestran organizaciones **[D7 resuelta]**.
+    - Una organización desactivada no se ofrece para nuevas asociaciones y conserva su nombre en el historial.
+35. El filtro por organizaciones y las sugerencias del Responsable quedan fuera hasta que se definan [Pendiente §7].
 
 **Fase 7: avisos por meta** (*depende de la fase 5*)
 36. Implementar los eventos de la tabla del §5, que son una base a ajustar:
@@ -309,7 +315,7 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 
     Las tareas se calculan a partir del estado de los reportes, no de las notificaciones **[Propuesta §8]**.
 40. Sumar una sección de pendientes de Administración: reportes validados por resolver, que distingue las metas internas de las públicas.
-41. Antes de diseñar las pantallas hay que acordar las secciones de §8: Requiere mi acción, Esperando a otra persona, filtros, alertas de continuidad y vista pública identificable. Ver D8.
+41. Secciones acordadas **[D8 resuelta]**: Mis metas, Requiere mi acción y Esperando a otra persona; filtros por rol, objetivo/eje y tipo de tarea, ordenados por antigüedad. Administración suma validados por resolver, alertas de continuidad y acceso a la vista pública.
 
 **Fase 9: cierre**
 42. Realizar la revisión integral final del manual de usuario, sus capturas y recorridos. Los capítulos afectados, el índice y `historial.md` se actualizan durante cada fase, antes de pasar a la siguiente; no se acumulan para este cierre.
@@ -345,14 +351,7 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 
 **Bloqueantes**
 
-| # | Decisión | Fuente | Bloquea |
-| --- | --- | --- | --- |
-| D4 | Al pasar de interna a pública o al revés, ¿qué pasa con los reportes históricos y cómo se comunica el cambio? | §6.2 | Fase 3, paso 18 |
-| D6 | ¿Se reutiliza `organizations` como catálogo de áreas o se crea una tabla nueva? ¿Qué pasa con `objective_organization`? | Técnica | Fase 6 |
-| D7 | ¿Los reportes muestran el área que tenían al publicarse o la actual? ¿Qué pasa con un área dada de baja? | §7 | Fase 6, paso 34 |
-| D8 | Secciones y filtros de la Mesa de trabajo | §8, propuestas | Diseño de la fase 8 |
-
-D1 a D3 y D5 se resolvieron en las conversaciones posteriores a la implementación inicial; sus definiciones están en **Tus decisiones incorporadas**. La dependencia técnica de la baja con la continuidad en fase 4 no es una decisión de producto pendiente.
+No quedan decisiones bloqueantes. D1 a D8 se resolvieron en las conversaciones posteriores a la implementación inicial; sus definiciones están en **Tus decisiones incorporadas**. La dependencia técnica de la baja con la continuidad en fase 4 no es una decisión de producto pendiente.
 
 **No bloqueantes**
 - **Devolución desde Administración** (§7): resuelto; no se habilita. Administración edita directamente.

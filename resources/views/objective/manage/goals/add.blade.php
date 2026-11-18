@@ -30,7 +30,7 @@
         <option value="internal" @selected(old('visibility') === 'internal')>Interna</option>
         @endif
       </select>
-      <small class="form-text text-muted">Las metas internas solo están disponibles para Administración y las personas asignadas.</small>
+      <small class="form-text text-muted">Las metas internas solo están disponibles para Administración y las personas asignadas. La visibilidad no se puede cambiar después de crear la meta.</small>
     </div>
     <input-goal-indicator :initial='@json($indicatorForm)' :old='@json(old())' :options='@json($indicatorOptions)'></input-goal-indicator>
     <div class="form-group">

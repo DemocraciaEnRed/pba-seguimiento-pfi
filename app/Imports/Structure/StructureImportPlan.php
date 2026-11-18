@@ -37,6 +37,11 @@ final class StructureImportPlan
         return false;
     }
 
+    public function newGoalsCount(): int
+    {
+        return $this->summary()['Metas'][ImportAction::Create->value];
+    }
+
     /**
      * @return array<string, array<string, int>> Entity label => action => count.
      */

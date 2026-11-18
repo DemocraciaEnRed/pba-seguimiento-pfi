@@ -9,17 +9,23 @@ use App\StrategicObjective;
 use App\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 /**
  * Applies a validated plan in a single transaction. Subscribers are not notified.
+ * New goals take the visibility chosen by Administración; existing goals keep theirs.
  */
 class StructureImporter
 {
     public function __construct(private GoalIndicatorConfigurator $indicatorConfigurator) {}
 
-    public function import(StructureImportPlan $plan, User $user): void
+    public function import(StructureImportPlan $plan, User $user, ?string $newGoalVisibility): void
     {
-        DB::transaction(function () use ($plan, $user): void {
+        if ($plan->newGoalsCount() > 0 && ! in_array($newGoalVisibility, ['public', 'internal'], true)) {
+            throw new InvalidArgumentException('New goals require an explicit visibility.');
+        }
+
+        DB::transaction(function () use ($plan, $user, $newGoalVisibility): void {
             foreach ($plan->strategicObjectives as $strategicObjectiveItem) {
                 /** @var StrategicObjective $strategicObjective */
                 $strategicObjective = $strategicObjectiveItem->model;
@@ -37,7 +43,7 @@ class StructureImporter
                     $this->save($objectiveItem, $user, 'el objetivo');
 
                     foreach ($objectiveItem->children as $goalItem) {
-                        $this->saveGoal($goalItem, $objective, $user);
+                        $this->saveGoal($goalItem, $objective, $user, $newGoalVisibility);
                     }
                 }
             }
@@ -62,7 +68,7 @@ class StructureImporter
         ]);
     }
 
-    private function saveGoal(PlannedItem $item, Objective $objective, User $user): void
+    private function saveGoal(PlannedItem $item, Objective $objective, User $user, ?string $newGoalVisibility): void
     {
         if ($item->action === ImportAction::Unchanged) {
             return;
@@ -71,7 +77,7 @@ class StructureImporter
         /** @var Goal $goal */
         $goal = $item->model;
         if ($item->action === ImportAction::Create) {
-            $goal->visibility = 'internal';
+            $goal->visibility = $newGoalVisibility;
         }
         $goal->title = $item->input['title'];
         $goal->status = $item->input['status'];

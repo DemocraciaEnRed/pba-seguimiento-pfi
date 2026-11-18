@@ -4,7 +4,7 @@
 
 **Última actualización:** 18 de noviembre de 2026.
 
-**Estado:** roles y visibilidad definidos; Mesa de trabajo incorporada como requisito; propuestas de diseño y calidad separadas de los pendientes.
+**Estado:** roles y visibilidad definidos; visibilidad fija desde la creación; organizaciones por meta y primera versión de la Mesa de trabajo acordadas; propuestas de diseño y calidad separadas de los pendientes.
 
 **Alcance:** decisiones de producto y requisitos. No describe funciones ya implementadas ni incluye arquitectura, tareas de implementación o un plan técnico.
 
@@ -25,9 +25,9 @@ Puede:
 - Asignar y quitar Reporteros, además de administrar el conjunto de usuarios que podrán ser seleccionados para esa tarea.
 - Intervenir en la revisión y corrección de cualquier reporte.
 - Editar los reportes que ya fueron validados por un Responsable, incluso antes de su publicación. En esa etapa es el único rol que puede editarlos.
-- Definir qué metas son públicas o completamente internas y autorizar la publicación de reportes de metas públicas. Un reporte de una meta interna no puede publicarse externamente.
+- Definir, al crear cada meta, si es pública o completamente interna, y autorizar la publicación de reportes de metas públicas. La visibilidad no cambia después de la creación. Un reporte de una meta interna no puede publicarse externamente.
 - Validar cualquier modificación de información ya publicada.
-- Administrar el catálogo de áreas y confirmar sus asociaciones con las metas.
+- Administrar el catálogo de organizaciones y confirmar sus asociaciones con las metas.
 
 **No tiene restricciones de alcance por meta:** conserva el control completo de la plataforma. La validación realizada por un Responsable no reemplaza su autorización de publicación.
 
@@ -44,7 +44,7 @@ Puede:
 - Validar los reportes o devolverlos con comentarios.
 - Validar sus propios reportes mediante una acción explícita y separada de la carga. También puede dejar la revisión a otro Responsable asignado a la misma meta.
 - Solicitar correcciones de información ya publicada y trabajar con quien reporta en la preparación de la propuesta, sin modificar directamente lo publicado.
-- Sugerir cambios en las áreas asociadas; la decisión final es de Administración.
+- Sugerir cambios en las organizaciones asociadas; la decisión final es de Administración.
 
 No puede:
 
@@ -81,7 +81,7 @@ No puede:
 ### Reglas comunes
 
 - Una persona puede ser Responsable de algunas metas y Reportero de otras. Cada función se ejerce únicamente dentro de su alcance.
-- Las áreas identifican participación institucional: no otorgan permisos a las personas.
+- Las organizaciones (áreas, organismos, instituciones y otras entidades) identifican participación institucional: no otorgan permisos a las personas.
 - Los Reporteros pueden asignarse por meta o por objetivo general. Las metas nuevas siempre requieren asignación expresa.
 - Los avisos de trabajo se recibirán dentro de la plataforma y por correo electrónico, vinculados al trabajo asignado.
 - **Después de la validación del Responsable, solo Administración puede editar el reporte.** La validación y la publicación son decisiones distintas.
@@ -172,7 +172,7 @@ Administración no devuelve reportes: si necesita corregir uno validado, lo edit
 
 ### Meta completamente interna — definido el 18 de noviembre
 
-- Administración determina si una meta es pública o completamente interna.
+- Administración determina si una meta es pública o completamente interna al crearla, también cuando la crea mediante importación. **La visibilidad no cambia después** (definido el 18 de noviembre, después de la fase 5): una meta interna no pasa a pública ni una pública a interna. Una eventual «representación pública» de metas internas queda fuera del alcance actual.
 - Una meta interna no tiene ficha pública, ni siquiera una ficha vacía o un cartel que revele su existencia.
 - No se exponen públicamente su descripción, valores previstos, resultados, avances, reportes ni adjuntos. Validar o aprobar un reporte no permite eludir la visibilidad de la meta.
 - Solo Administración y los Responsables y Reporteros asignados pueden consultarla. El acceso de lectura no amplía sus permisos de edición.
@@ -192,7 +192,7 @@ Ejemplo acordado: **40 metas en total, 20 públicas y 20 internas**.
 | Mesa de trabajo personal | Las metas asignadas a esa persona, públicas o internas. No incorpora todas las públicas solo por ser consultables. |
 
 - Totales, porcentajes, gráficos e indicadores se calculan con el mismo conjunto autorizado y los filtros aplicados. No se ocultan fichas mientras se conserva un denominador o una agregación sobre las 40 metas.
-- La misma regla alcanza las agregaciones por objetivo, eje y área: el ámbito público solo incorpora información pública.
+- La misma regla alcanza las agregaciones por objetivo, eje y organización: el ámbito público solo incorpora información pública.
 - La visibilidad de una meta no determina por sí sola qué reportes son datos consolidados para los indicadores. Los públicos se consolidan al publicarse; los internos, solo cuando Administración los cierra explícitamente después de validar. Los internos cerrados cuentan en gestión, nunca en agregados públicos.
 - Un dashboard personal no representa necesariamente el total del plan. Su alcance debe estar identificado para no presentar un subconjunto como el total general.
 
@@ -202,14 +202,16 @@ Ejemplo acordado: **40 metas en total, 20 públicas y 20 internas**.
 - Se conserva la regla existente: un solo reporte de Avance por período; el Avance reserva ese período aunque esté devuelto o validado, hasta que el reporte se elimine.
 - No se añade un cupo global de pendientes. Los Hitos pueden coexistir con el Avance del período.
 
-### Áreas y presentación pública
+### Organizaciones y presentación pública
 
-- Cada meta tiene un área responsable de su reporte y puede tener varias áreas vinculadas, independientes de las personas que cargan o validan.
-- Las áreas de objetivos y ejes se reúnen desde sus metas, sin duplicados ni concesión de permisos.
-- Administración mantiene el catálogo y confirma las asociaciones. Los Responsables solo pueden sugerir cambios.
-- En la vista pública de una meta pública y de sus reportes publicados se muestra el área responsable como información principal y las áreas vinculadas con menor jerarquía. Las asociaciones de metas internas no se exponen por esta vía.
+- El concepto se denomina **Organizaciones** y engloba áreas, organismos, instituciones y otras entidades, sin clasificarlas por tipo por ahora (definido el 18 de noviembre). Se reutiliza el catálogo existente de organizaciones.
+- Cada meta tiene una **organización responsable** de su reporte y puede tener varias **organizaciones participantes**, independientes de las personas que cargan o validan.
+- Las organizaciones de objetivos y ejes se reúnen desde sus metas, sin duplicados ni concesión de permisos. Las asociaciones directas entre objetivos y organizaciones dejan de usarse.
+- Administración mantiene el catálogo y confirma las asociaciones. Los Responsables solo pueden sugerir cambios. Una organización dada de baja se desactiva: no se ofrece para nuevas asociaciones y conserva su nombre en el historial.
+- En la vista pública de una meta pública y de sus reportes publicados se muestra la organización responsable como información principal y las participantes con menor jerarquía. Las asociaciones de metas internas no se exponen por esta vía.
+- Cada reporte publicado conserva las organizaciones que tenía la meta al publicarse. Los reportes publicados antes de existir ese registro no muestran organizaciones.
 - No se muestra el nombre y apellido del reportero como identificación pública; la autoría y las acciones se conservan internamente.
-- Se mantiene la solicitud de filtrar metas por áreas vinculadas. El componente visual y los detalles del filtro no están definidos.
+- Se mantiene la solicitud de filtrar metas por organizaciones participantes. El componente visual y los detalles del filtro no están definidos.
 
 ### Notificaciones
 
@@ -251,6 +253,8 @@ Quedan estas precisiones que afectan comportamientos concretos y no deben resolv
 
 **Cerrado:** Administración realiza una acción explícita de **Cerrar y consolidar** sobre un reporte interno validado. Desde ese momento sus cambios se aplican y el resultado cuenta para los indicadores de gestión, pero no se publica ni contribuye a agregados públicos. El cierre es terminal: el reporte no se puede editar ni eliminar. La visibilidad de una meta y sus datos sigue limitada a Administración y las personas asignadas.
 
+**Cerrado:** la visibilidad de una meta se fija al crearla y no cambia en ninguna dirección. Las preguntas sobre reportes históricos y comunicación del cambio dejan de aplicar.
+
 ### 6.3. Cupo de reportes pendientes
 
 - ¿Qué tipos se distinguen además de avance e hito? ¿Se permiten pendientes del mismo tipo en períodos diferentes?
@@ -267,9 +271,9 @@ No reabren las facultades ya definidas. Deben resolverse antes de habilitar los 
 | --- | --- | --- |
 | Devolución desde Administración | ¿Se necesita un circuito formal para pedir una nueva revisión? ¿Cómo se registra y comunica? Si Administración cambia contenido validado, ¿se requiere otra revisión del Responsable? | **Resuelto:** Administración no devuelve; edita directamente. No se reabre la edición a Responsables o Reporteros. |
 | Propuestas de corrección de lo publicado | ¿Cómo se presentan, revisan y comunican las propuestas del Responsable y quien reporta? | No alteran la versión pública sin validación de Administración. |
-| Áreas históricas | ¿Los reportes conservan las áreas de su publicación o muestran las actuales? ¿Qué sucede con un área dada de baja? | Administración confirma los vínculos; se conserva la autoría personal interna. |
-| Sugerencias de áreas | ¿Se comunican fuera de la plataforma o necesitan un circuito propio? | El Responsable sugiere; Administración decide. |
-| Filtro y presentación de áreas | ¿Dónde se ofrece el filtro y cómo se muestran las áreas vinculadas? ¿Incluye al área responsable? | Se pidió consultar metas por áreas vinculadas y distinguirlas visualmente del área responsable. |
+| Organizaciones históricas | ¿Los reportes conservan las organizaciones de su publicación o muestran las actuales? ¿Qué sucede con una organización dada de baja? | **Resuelto:** cada reporte conserva las de su publicación; los anteriores a ese registro no muestran organizaciones. Una organización dada de baja se desactiva y conserva su nombre en el historial. |
+| Sugerencias de organizaciones | ¿Se comunican fuera de la plataforma o necesitan un circuito propio? | El Responsable sugiere; Administración decide. |
+| Filtro y presentación de organizaciones | ¿Dónde se ofrece el filtro? | Se pidió consultar metas por organizaciones participantes y distinguirlas visualmente de la responsable. |
 | Avisos operativos | ¿Qué administradores reciben las tareas? ¿Hay recordatorios o resúmenes? ¿Cómo se evitan duplicados y avisos a quien acaba de actuar? | Plataforma y correo, con destinatarios vinculados al trabajo y avisos de publicación. |
 | Fechas | ¿Cómo se muestran las fechas de reporte, validación, publicación y corrección? ¿Cómo se tratan los datos históricos? | Validación y publicación siguen siendo hechos distintos. |
 
@@ -284,7 +288,9 @@ No reabren las facultades ya definidas. Deben resolverse antes de habilitar los 
 
 ### Propuestas de diseño para acordar
 
-Son recomendaciones, no decisiones cerradas sobre pantallas o nuevos permisos.
+**Primera versión acordada el 18 de noviembre:** se adoptan Mis metas, Requiere mi acción, Esperando a otra persona, los filtros por rol, objetivo/eje y tipo de tarea, y el orden por antigüedad. Para Administración se adoptan los validados por resolver (separando Publicar y Cerrar), las alertas de continuidad y el acceso a la vista pública. Las solicitudes de corrección de lo publicado se incorporarán cuando se defina ese circuito.
+
+Las demás filas siguen siendo recomendaciones, no decisiones cerradas sobre pantallas o nuevos permisos.
 
 | Propuesta | Comportamiento esperado |
 | --- | --- |
@@ -311,7 +317,7 @@ Los requisitos anteriores describen **qué puede hacer el sistema**. Estos crite
 | **Confidencialidad en todos los accesos** | Consecuencia de la meta completamente interna. | Una persona que no es Administración ni está asignada a la meta no obtiene contenido ni pistas sobre ella desde enlaces directos, búsquedas, listados, descargas, adjuntos, exportaciones, mapas, avisos o respuestas reutilizadas entre usuarios. Ocultar una tarjeta no es suficiente. |
 | **Coherencia de cifras** | Consecuencia del alcance de consulta acordado. | En el ejemplo de 40 metas, las vistas generales muestran 20, 23 o 40 según el contexto definido, y sus indicadores usan ese mismo conjunto. El portal público sigue mostrando 20 aunque se consulte con una cuenta administradora. |
 | **Permisos vigentes** | Consecuencia del acceso por asignación. | Al retirarse una asignación, esa persona deja de poder consultar la meta interna o actuar sobre ella, salvo que conserve otra asignación válida o sea Administración. Un enlace o aviso anterior no conserva el acceso; no se borran la autoría ni el historial. |
-| **Trazabilidad** | Base conservada; detalle por acordar. | Se puede identificar quién y cuándo cargó, corrigió, validó, publicó o cambió asignaciones y visibilidad. Registrar los cambios de contenido, incluidos los que hace Administración después de validar, sin exhibir autoría personal en el portal público. |
+| **Trazabilidad** | Base conservada; detalle por acordar. | Se puede identificar quién y cuándo cargó, corrigió, validó, publicó, cerró o cambió asignaciones, y quién definió la visibilidad al crear la meta. Registrar los cambios de contenido, incluidos los que hace Administración después de validar, sin exhibir autoría personal en el portal público. |
 | **Consistencia ante acciones simultáneas** | Propuesta de confiabilidad. | Dos Responsables no dejan resoluciones contradictorias sobre un mismo reporte. Validar corresponde al contenido efectivamente revisado; una pantalla desactualizada no permite editar después de la validación ni sobrescribir cambios ajenos silenciosamente. |
 | **Errores y conservación del trabajo** | Propuesta de confiabilidad. | No mostrar éxito si no se guardó una acción. Explicar el problema y conservar el trabajo ingresado cuando sea posible; un reintento no debe crear reportes ni resoluciones duplicadas. |
 | **Avisos confiables y sin ruido** | Propuesta de calidad operativa. | No duplicar avisos por tener varios roles. Las tareas siguen disponibles aunque falle el correo, y sus enlaces respetan los permisos actuales. El contenido enviado no expone detalles internos a personas no autorizadas. |

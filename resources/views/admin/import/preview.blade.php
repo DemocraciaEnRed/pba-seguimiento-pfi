@@ -41,17 +41,39 @@
   </div>
   @endif
 
+  @if (! $plan->hasErrors() && $plan->hasChanges())
+  <form method="POST" action="{{ route('admin.import.confirm') }}" class="my-4">
+    @csrf
+    @if ($plan->newGoalsCount() > 0)
+    <fieldset class="form-group">
+      <legend class="col-form-label is-700 pt-0">Visibilidad de {{ $plan->newGoalsCount() === 1 ? 'la meta nueva' : 'las '.$plan->newGoalsCount().' metas nuevas' }}<span class="text-danger">*</span></legend>
+      <div class="custom-control custom-radio">
+        <input type="radio" id="import-visibility-public" name="visibility" value="public" class="custom-control-input" required @checked(old('visibility') === 'public')>
+        <label class="custom-control-label" for="import-visibility-public">Pública</label>
+      </div>
+      <div class="custom-control custom-radio">
+        <input type="radio" id="import-visibility-internal" name="visibility" value="internal" class="custom-control-input" required @checked(old('visibility') === 'internal')>
+        <label class="custom-control-label" for="import-visibility-internal">Interna</label>
+      </div>
+      <small class="form-text text-muted">Las metas internas solo están disponibles para Administración y las personas asignadas. La visibilidad no se puede cambiar después. Las metas existentes conservan la suya.</small>
+      @error('visibility')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+      @enderror
+    </fieldset>
+    @endif
+    <div class="d-flex">
+      <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-check fa-fw"></i>&nbsp;Confirmar importación</button>
+      <a href="{{ route('admin.import') }}" class="btn btn-outline-secondary">Subir otro archivo</a>
+    </div>
+  </form>
+  @else
   <div class="d-flex my-4">
-    @if (! $plan->hasErrors() && $plan->hasChanges())
-    <form method="POST" action="{{ route('admin.import.confirm') }}" class="mr-2">
-      @csrf
-      <button type="submit" class="btn btn-primary"><i class="fas fa-check fa-fw"></i>&nbsp;Confirmar importación</button>
-    </form>
-    @elseif (! $plan->hasErrors())
+    @if (! $plan->hasErrors())
     <p class="text-muted mr-3 my-auto">El archivo no tiene cambios para aplicar.</p>
     @endif
     <a href="{{ route('admin.import') }}" class="btn btn-outline-secondary">Subir otro archivo</a>
   </div>
+  @endif
 
   @foreach ($plan->strategicObjectives as $strategicObjective)
   <div class="card my-3 shadow-sm">

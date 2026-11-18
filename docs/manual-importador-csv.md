@@ -26,7 +26,7 @@ Los cambios se aplican **todos juntos o ninguno**: si el archivo tiene un solo e
 3. Guardala como CSV (ver [sección 9](#9-cómo-guardar-el-archivo)).
 4. Subila con **Validar y ver vista previa**. El archivo puede pesar hasta 5 MB.
 5. Revisá la vista previa. Si hay errores, corregilos en la planilla y volvé a subirla.
-6. Cuando no haya errores, tocá **Confirmar importación**.
+6. Cuando no haya errores, elegí la visibilidad de las metas nuevas si el archivo crea alguna y tocá **Confirmar importación**.
 
 Hasta el paso 6 **no se guarda nada**. Al confirmar, el sistema vuelve a validar todo contra los datos actuales, por si alguien cambió algo mientras revisabas.
 
@@ -205,6 +205,8 @@ La vista previa tiene tres partes:
 
 El botón **Confirmar importación** solo aparece si no hay errores y hay algo para crear o actualizar.
 
+Si el archivo crea metas, antes de confirmar hay que elegir **Pública** o **Interna**. No hay una opción preseleccionada y la elección se aplica a todas las metas nuevas del archivo. La visibilidad no se puede cambiar después. Las metas existentes que se actualizan conservan la suya. Si el archivo mezcla metas públicas e internas, importalas en dos archivos separados.
+
 Al confirmar se vuelve a la pantalla de importación con un resumen de lo creado y actualizado. Cada cambio queda registrado en la **Bitácora de acciones** con la aclaración "mediante importación".
 
 ## 8. Errores frecuentes
@@ -245,6 +247,9 @@ No. Para eliminar algo, hacelo desde la pantalla correspondiente.
 
 **¿Los objetivos importados quedan visibles?**
 Los nuevos se crean ocultos. Publicalos desde la configuración de cada objetivo cuando estén listos. Los existentes mantienen su visibilidad.
+
+**¿Y las metas importadas?**
+Las nuevas toman la visibilidad elegida al confirmar: **Pública** o **Interna**. Es definitiva. Una meta pública solo aparece en el portal si su objetivo está visible.
 
 **¿Quién queda como autor de los objetivos nuevos?**
 El administrador que confirmó la importación.

@@ -128,6 +128,24 @@ class GoalConfidentialityTest extends TestCase
             ->assertJsonPath('data.goals_total', 20);
     }
 
+    public function test_goal_visibility_cannot_change_after_creation(): void
+    {
+        foreach ([[$this->goals[0], 'internal'], [$this->goals[20], 'public']] as [$goal, $otherVisibility]) {
+            $originalVisibility = $goal->visibility;
+
+            $this->actingAs($this->admin)
+                ->put(route('objectives.manage.goals.edit.form', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]), [
+                    'title' => 'Meta editada',
+                    'status' => 'ongoing',
+                    'measurement_mode' => 'none',
+                    'visibility' => $otherVisibility,
+                ])
+                ->assertSessionHasErrors('visibility');
+
+            $this->assertSame([$originalVisibility, $goal->title], [$goal->fresh()->visibility, $goal->fresh()->title]);
+        }
+    }
+
     public function test_internal_goal_report_and_attachment_require_an_assignment(): void
     {
         Storage::fake('reports_private');

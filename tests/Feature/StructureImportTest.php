@@ -117,6 +117,8 @@ class StructureImportTest extends TestCase
     public function test_the_preview_explains_the_actions_without_saving_and_confirm_applies_them(): void
     {
         $existingGoal = $this->createGoal('Manual aprobado');
+        $existingGoal->visibility = 'internal';
+        $existingGoal->save();
 
         $this->upload($this->csv([
             [Column::CATEGORY => 'Transparencia', Column::STRATEGIC_OBJECTIVE => 'Nuevo objetivo estratégico', Column::OBJECTIVE => 'Nuevo objetivo', Column::OBJECTIVE_DESCRIPTION => 'Descripción nueva',
@@ -128,7 +130,9 @@ class StructureImportTest extends TestCase
                 Column::GOAL => 'Manual aprobado', Column::STATUS => 'Inactiva', Column::MODE => 'Sin indicador numérico'],
         ]))->assertRedirect(route('admin.import.preview'));
 
-        $response = $this->actingAs($this->admin)->get(route('admin.import.preview'))->assertOk()->assertSee('Confirmar importación');
+        $response = $this->actingAs($this->admin)->get(route('admin.import.preview'))->assertOk()
+            ->assertSee('Confirmar importación')
+            ->assertSee('Visibilidad de las 2 metas nuevas');
         $plan = $response->viewData('plan');
 
         $this->assertSame([], $plan->errors);
@@ -141,8 +145,17 @@ class StructureImportTest extends TestCase
         $this->assertSame(1, StrategicObjective::count());
         $this->assertSame(1, Goal::count());
 
+        foreach ([[], ['visibility' => 'hidden']] as $invalidChoice) {
+            $this->actingAs($this->admin)
+                ->from(route('admin.import.preview'))
+                ->post(route('admin.import.confirm'), $invalidChoice)
+                ->assertRedirect(route('admin.import.preview'))
+                ->assertSessionHasErrors('visibility');
+        }
+        $this->assertSame([1, 1], [StrategicObjective::count(), Goal::count()]);
+
         $this->actingAs($this->admin)
-            ->post(route('admin.import.confirm'))
+            ->post(route('admin.import.confirm'), ['visibility' => 'public'])
             ->assertRedirect(route('admin.import'))
             ->assertSessionHas('success');
 
@@ -161,6 +174,7 @@ class StructureImportTest extends TestCase
         $this->assertSame('Publicar datos abiertos y reutilizables', $this->objective->fresh()->title);
         $this->assertSame('Descripción', $this->objective->fresh()->content);
         $this->assertSame('inactive', $existingGoal->fresh()->status);
+        $this->assertSame([['public', 'public'], 'internal'], [[$periodicGoal->visibility, $simpleGoal->visibility], $existingGoal->fresh()->visibility]);
         $this->assertSame([], Storage::disk('local')->files('imports'));
     }
 
@@ -176,9 +190,10 @@ class StructureImportTest extends TestCase
         $this->upload(mb_convert_encoding($csv, 'Windows-1252', 'UTF-8'));
         $this->assertSame([], $this->preview()->errors);
 
-        $this->actingAs($this->admin)->post(route('admin.import.confirm'))->assertRedirect(route('admin.import'));
+        $this->actingAs($this->admin)->post(route('admin.import.confirm'), ['visibility' => 'internal'])->assertRedirect(route('admin.import'));
 
         $goal = Goal::where('title', 'Personas capacitadas')->sole();
+        $this->assertSame('internal', $goal->visibility);
         $this->assertSame(['2027-07', Direction::HigherIsBetter], [$goal->period_start->format('Y-m'), $goal->indicator_direction]);
         $this->assertSame([1 => 1234.5, 2 => 10.0], $goal->periods->pluck('target_value', 'number')->all());
         $this->assertSame('Formación continua', $goal->objective->title);

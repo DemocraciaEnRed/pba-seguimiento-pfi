@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -84,7 +85,11 @@ class StructureImportController extends Controller
             return redirect()->route('admin.import.preview')->with('warning', 'El archivo tiene errores: corregilos y volvé a subirlo.');
         }
 
-        $importer->import($plan, $request->user());
+        $validated = $request->validate([
+            'visibility' => [Rule::requiredIf($plan->newGoalsCount() > 0), 'nullable', 'string', Rule::in(['public', 'internal'])],
+        ], [], ['visibility' => 'visibilidad de las metas nuevas']);
+
+        $importer->import($plan, $request->user(), $validated['visibility'] ?? null);
         $this->discardUpload($request);
 
         $summary = collect($plan->summary())
