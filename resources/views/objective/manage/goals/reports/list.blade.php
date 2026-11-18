@@ -35,10 +35,12 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
     <span class="text-smaller text-muted">{{ $reports->total() }} resultado(s)</span>
     <div class="d-flex flex-wrap gap-2">
-      @isManager($objective->id)
+      @can('view', $goal)
       <a href="{{ route('objectives.manage.goals.reports.download', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-download fa-fw"></i>Descargar CSV</a>
-      @endisManager
+      @endcan
+      @can('create', [\App\Report::class, $goal])
       <a href="{{ route('objectives.manage.goals.reports.add', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}" class="btn btn-primary btn-sm"><i class="fas fa-plus fa-fw"></i>Nuevo reporte</a>
+      @endcan
     </div>
   </div>
   @endif
@@ -77,7 +79,10 @@
       @if($hasReports)
       No hay reportes que coincidan con los filtros.
       @else
-      No hay reportes creados. <a href="{{ route('objectives.manage.goals.reports.add', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}">Crear el primer reporte</a>
+      No hay reportes creados.
+      @can('create', [\App\Report::class, $goal])
+      <a href="{{ route('objectives.manage.goals.reports.add', ['objectiveId' => $objective->id, 'goalId' => $goal->id]) }}">Crear el primer reporte</a>
+      @endcan
       @endif
     </div>
     @endforelse

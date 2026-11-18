@@ -4,6 +4,8 @@ use App\Http\Controllers\MiscController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminPanelController;
 use App\Http\Controllers\InitiativeController;
+use App\Http\Controllers\PfiCategoryController;
+use App\Http\Controllers\PfiMembershipController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserPanelController;
 use App\Http\Controllers\EventController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\ObjectiveController;
 use App\Http\Controllers\ObjectivePanelController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalPanelController;
+use App\Http\Controllers\GoalAssignmentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportPanelController;
 use App\Http\Controllers\StructureImportController;
@@ -86,6 +89,11 @@ Route::group([
     Route::get('/objetivos', [UserPanelController::class, 'viewListObjectives'])->name('objectives');
     // Mis suscripciones
     Route::get('/suscripciones', [UserPanelController::class, 'viewListSubscriptions'])->name('subscriptions');
+    Route::get('/metas-responsables', [GoalAssignmentController::class, 'showResponsibleGoals'])->name('goal-assignments.index');
+    Route::get('/metas-responsables/{goalId}', [GoalAssignmentController::class, 'showResponsibleGoal'])->whereNumber('goalId')->name('goal-assignments.goal');
+    Route::post('/metas-responsables/{goalId}/reporteros/{userId}', [GoalAssignmentController::class, 'storeReporter'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.reporters.store');
+    Route::delete('/metas-responsables/{goalId}/reporteros/{userId}', [GoalAssignmentController::class, 'destroyReporter'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.reporters.delete');
+    Route::get('/metas-responsables/{goalId}/reporteros/{userId}/quitar', [GoalAssignmentController::class, 'confirmReporterRemoval'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.reporters.remove');
     Route::post('/suscripciones/{objectiveId}/desuscribir', [UserPanelController::class, 'formUnsubSubscription'])->name('subscriptions.unsubscribe.form');
     // Mis notificaciones
     Route::get('/notificaciones', [UserPanelController::class, 'viewListNotifications'])->name('notifications');
@@ -112,6 +120,17 @@ Route::group([
     ],function () {
     Route::get('/', [AdminPanelController::class, 'index'])->name('index');
     Route::get('/bitacora', [AdminPanelController::class, 'viewLogs'])->name('logs');
+    // Asignaciones por meta (sin reemplazar todavía el equipo heredado por objetivo)
+    Route::get('/asignaciones-por-meta', [GoalAssignmentController::class, 'index'])->name('goal-assignments');
+    Route::get('/objetivos/{objectiveId}/asignaciones', [GoalAssignmentController::class, 'showObjective'])->whereNumber('objectiveId')->name('goal-assignments.objective');
+    Route::post('/objetivos/{objectiveId}/reporteros/{userId}/metas-existentes', [GoalAssignmentController::class, 'assignReporterToObjective'])->whereNumber('objectiveId')->whereNumber('userId')->name('goal-assignments.objective.reporters.store');
+    Route::get('/metas/{goalId}/asignaciones', [GoalAssignmentController::class, 'showAdminGoal'])->whereNumber('goalId')->name('goal-assignments.goal');
+    Route::post('/metas/{goalId}/responsables/{userId}', [GoalAssignmentController::class, 'storeResponsible'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.responsibles.store');
+    Route::delete('/metas/{goalId}/responsables/{userId}', [GoalAssignmentController::class, 'destroyResponsible'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.responsibles.delete');
+    Route::get('/metas/{goalId}/responsables/{userId}/quitar', [GoalAssignmentController::class, 'confirmResponsibleRemoval'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.responsibles.remove');
+    Route::post('/metas/{goalId}/reporteros/{userId}', [GoalAssignmentController::class, 'storeReporter'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.reporters.store');
+    Route::delete('/metas/{goalId}/reporteros/{userId}', [GoalAssignmentController::class, 'destroyReporter'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.reporters.delete');
+    Route::get('/metas/{goalId}/reporteros/{userId}/quitar', [GoalAssignmentController::class, 'confirmReporterRemoval'])->whereNumber('goalId')->whereNumber('userId')->name('goal-assignments.reporters.remove');
     // Reportes
     Route::get('/reportes', [AdminPanelController::class, 'viewListReports'])->name('reports');
     Route::get('/reportes/descargar', [AdminPanelController::class, 'downloadReports'])->name('reports.download');
@@ -165,8 +184,16 @@ Route::group([
     Route::post('/usuarios/{userId}/administrador', [AdminPanelController::class, 'formGrantUserAdmin'])->name('users.admin.grant.form');
     Route::delete('/usuarios/{userId}/administrador', [AdminPanelController::class, 'formRevokeUserAdmin'])->name('users.admin.revoke.form');
     Route::get('/usuarios/{userId}/objetivos', [AdminPanelController::class, 'viewUserObjectives'])->name('users.objectives');
-    Route::put('/usuarios/{userId}/objetivos/{objectiveId}', [AdminPanelController::class, 'formUpdateUserObjectiveRole'])->name('users.objectives.role.form');
-    Route::delete('/usuarios/{userId}/objetivos/{objectiveId}', [AdminPanelController::class, 'formRemoveUserObjective'])->name('users.objectives.remove.form');
+    Route::post('/usuarios/{userId}/pfi', [PfiMembershipController::class, 'store'])->whereNumber('userId')->name('users.pfi.store.form');
+    Route::put('/usuarios/{userId}/pfi', [PfiMembershipController::class, 'update'])->whereNumber('userId')->name('users.pfi.update.form');
+    Route::get('/usuarios/{userId}/pfi/quitar', [PfiMembershipController::class, 'confirmRemoval'])->whereNumber('userId')->name('users.pfi.remove');
+    Route::delete('/usuarios/{userId}/pfi', [PfiMembershipController::class, 'destroy'])->whereNumber('userId')->name('users.pfi.delete.form');
+    // Categorías PFI
+    Route::get('/categorias-pfi', [PfiCategoryController::class, 'index'])->name('pfi-categories');
+    Route::get('/categorias-pfi/nueva', [PfiCategoryController::class, 'create'])->name('pfi-categories.create');
+    Route::post('/categorias-pfi/nueva', [PfiCategoryController::class, 'store'])->name('pfi-categories.create.form');
+    Route::get('/categorias-pfi/{pfiCategory}/editar', [PfiCategoryController::class, 'edit'])->name('pfi-categories.edit');
+    Route::put('/categorias-pfi/{pfiCategory}/editar', [PfiCategoryController::class, 'update'])->name('pfi-categories.edit.form');
     // Objectives
     Route::get('/objetivos', [AdminPanelController::class, 'viewListObjectives'])->name('objectives');
     Route::get('/objetivos/descargar', [AdminPanelController::class, 'downloadListObjectives'])->name('objectives.download');
@@ -208,6 +235,7 @@ Route::group([
     Route::get('/home/stats', [HomeController::class, 'fetchStats'])->name('home.stats');
     Route::get('/users', [UserController::class, 'fetch'])->name('users');
     Route::get('/users/avatar', [UserController::class, 'fetchAvatar'])->name('users.avatar');
+    Route::get('/pfi/candidates', [UserController::class, 'fetchPfiCandidates'])->name('pfi.candidates');
     Route::get('/users/{id}', [UserController::class, 'fetchOne'])->name('users.fetch');
     Route::put('/notification/read', [NotificationController::class, 'markAllRead'])->name('notification.mark.all');
     Route::put('/notification/read/{id}', [NotificationController::class, 'markOneRead'])->name('notification.mark.one');
@@ -226,6 +254,9 @@ Route::group([
     Route::get('/objectives/{objectiveId}/reports', [ObjectiveController::class, 'fetchReports'])->name('objectives.reports');
     Route::get('/objectives/{objectiveId}/stats', [ObjectiveController::class, 'fetchStats'])->name('objectives.stats');
     Route::get('/goal/{goalId}/reports', [GoalController::class, 'fetchReports'])->name('goals.reports');
+    Route::get('/goal/{goalId}/management-reports', [GoalController::class, 'fetchManagementReports'])
+        ->middleware('auth')
+        ->name('goals.management-reports');
 
 
 
@@ -274,9 +305,6 @@ Route::group([
         Route::get('/suscriptores/descargar', [ObjectivePanelController::class, 'downloadListSubscribers'])->name('subscribers.download');
         // Equipo
         Route::get('/equipo', [ObjectivePanelController::class, 'viewListTeam'])->name('team');
-        Route::get('/equipo/agregar', [ObjectivePanelController::class, 'viewAddTeam'])->name('team.add');
-        Route::post('/equipo/agregar', [ObjectivePanelController::class, 'formAddTeam'])->name('team.add.form');
-        Route::delete('/equipo/{usrId}/eliminar', [ObjectivePanelController::class, 'formRemoveTeam'])->name('team.remove.form');
         // Equipo
         Route::get('/comunidades', [ObjectivePanelController::class, 'viewListCommunities'])->name('communities');
         Route::get('/comunidades/agregar', [ObjectivePanelController::class, 'viewAddCommunities'])->name('communities.add');
@@ -314,6 +342,7 @@ Route::group([
         Route::get('/metas/{goalId}/reportes/nuevo', [GoalPanelController::class, 'viewNewGoalReport'])->name('goals.reports.add');
         Route::post('/metas/{goalId}/reportes/nuevo', [GoalPanelController::class, 'formNewGoalReport'])->name('goals.reports.add.form');
         Route::get('/metas/{goalId}/reportes/{reportId}', [ReportPanelController::class, 'viewReport'])->name('goals.reports.index');
+        Route::put('/metas/{goalId}/reportes/{reportId}/atencion', [ReportPanelController::class, 'reassignAttendant'])->name('goals.reports.attendant');
         Route::get('/metas/{goalId}/reportes/{reportId}/editar', [ReportPanelController::class, 'viewEditReport'])->name('goals.reports.edit');
         Route::put('/metas/{goalId}/reportes/{reportId}/editar', [ReportPanelController::class, 'formEditReport'])->name('goals.reports.edit.form');
         Route::get('/metas/{goalId}/reportes/{reportId}/comentarios', [ReportPanelController::class, 'viewReportComments'])->name('goals.reports.comments');

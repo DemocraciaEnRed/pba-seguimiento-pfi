@@ -3,16 +3,26 @@
 namespace App\Exports;
 
 use App\Goal;
+use App\Services\Goals\GoalAudience;
+use App\User;
 use Illuminate\Support\Collection;
 
 class GoalReportsExport implements CsvExport
 {
 
-    public function __construct(private int $id) {}
+    public function __construct(private int $id, private ?User $user = null) {}
 
     public function collection(): Collection
     {
-        return Goal::findorfail($this->id)->reports()->get();
+        $goalAudience = $this->user === null
+            ? app(GoalAudience::class)->publicQuery()
+            : app(GoalAudience::class)->managementQuery($this->user);
+        $goal = Goal::query()->visibleIn($goalAudience)->findOrFail($this->id);
+        $reports = $goal->reports()->with(['author', 'comments', 'positiveTestimonies', 'period', 'milestone']);
+
+        return $this->user === null
+            ? $reports->approved()->get()
+            : $reports->manageableBy($this->user)->get();
     }
 
     public function headings(): array

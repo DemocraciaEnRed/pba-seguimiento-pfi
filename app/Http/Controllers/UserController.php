@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 use Storage;
 use Str;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Goal;
 use App\User;
 use App\Http\Resources\User as UserResource;
+use App\Services\Pfi\PfiMemberships;
 
 
 class UserController extends Controller
@@ -31,6 +34,27 @@ class UserController extends Controller
         $users = $users->paginate(10)->withQueryString();
 
         return UserResource::collection($users);
+    }
+
+    /**
+     * Only PFI members can be offered for assignments.
+     */
+    public function fetchPfiCandidates(Request $request, PfiMemberships $pfiMemberships): AnonymousResourceCollection
+    {
+        $isAdmin = $request->user()->hasRole('admin');
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:3', 'max:255'],
+            'goal_id' => ['nullable', 'integer', 'exists:goals,id'],
+        ]);
+        if (! $isAdmin && empty($validated['goal_id'])) {
+            abort(403);
+        }
+        $goal = empty($validated['goal_id']) ? null : Goal::findOrFail($validated['goal_id']);
+        $this->authorize('searchPfiCandidates', $goal);
+
+        return UserResource::collection(
+            $pfiMemberships->candidates($validated['name'])->paginate(10)->withQueryString()
+        );
     }
     public function fetchOne(Request $request, $id){
         $user = User::find($id);

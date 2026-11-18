@@ -19,7 +19,7 @@
 @endphp
 
 @section('hero')
-<x-hero :align="'center'" :image="$coverPhoto ? asset($coverPhoto->path) : null" :accent="$objective->category?->color" size="md" class="report-hero">
+<x-hero :align="'center'" :image="$coverPhoto?->path" :accent="$objective->category?->color" size="md" class="report-hero">
   {{--
   @include('partials.hierarchy-breadcrumb', ['objective' => $objective])
   <p class="my-1 text-smaller">
@@ -29,10 +29,6 @@
   <span class="badge badge-white text-black px-2 py-1 mt-4 mb-2"><i class="{{$report->type_icon}} fa-fw"></i> Reporte de {{$report->type_label}}</span>
   <h1 class="hero__title">{{$report->title}}</h1>
   <ul class="list-inline report-hero__meta mt-3 mb-0">
-    <li class="list-inline-item mr-4 mb-2">
-      @include('utils.avatar',['avatar' => $report->author->avatar, 'size' => 28, 'thumbnail' => true])
-      {{$report->author->name}} {{$report->author->surname}}
-    </li>
     <li class="list-inline-item mr-4 mb-2"><i class="far fa-calendar fa-fw"></i> Fecha del reporte: @justdate($report->date)</li>
     <li class="list-inline-item mb-2"><i class="far fa-clock fa-fw"></i> Publicado el @datetime($report->created_at)</li>
   </ul>
@@ -53,10 +49,10 @@
       login-url="{{route('login')}}"
       verify-url="{{route('panel.account.verify')}}"></report-like-button>
     <a href="#comentarios" class="btn btn-outline-white is-700"><i class="far fa-comment fa-fw"></i> Comentar <span class="badge badge-white ml-1">{{$report->comments()->count()}}</span></a>
-    @isMember($objective->id)
+    @can('accessManagement', $objective)
     <a href="{{route('objectives.manage.goals.reports.index',['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])}}"
       class="btn btn-white is-700"><i class="fas fa-pen-to-square fa-fw"></i> Editar</a>
-    @endisMember
+    @endcan
   </x-slot:actions>
 </x-hero>
 @endsection

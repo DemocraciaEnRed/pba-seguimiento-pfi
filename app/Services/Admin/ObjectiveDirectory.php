@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Category;
+use App\Goal;
 use App\Objective;
 use App\StrategicObjective;
 use Illuminate\Database\Eloquent\Builder;
@@ -86,7 +87,9 @@ class ObjectiveDirectory
 
         return Objective::query()
             ->with('strategicObjective.category')
-            ->withCount(['goals', 'reports', 'members'])
+            ->withCount(['goals', 'reports'])
+            ->addSelect(['members_count' => Goal::query()->join('goal_user', 'goal_user.goal_id', '=', 'goals.id')
+                ->whereColumn('goals.objective_id', 'objectives.id')->selectRaw('count(distinct goal_user.user_id)')])
             ->withMax('reports as last_report_date', 'reports.date')
             ->when($filters['q'], fn (Builder $query, string $search) => $query->where('title', 'like', '%'.$search.'%'))
             ->when($filters['estrategico'], fn (Builder $query, int $strategicObjectiveId) => $query->where('strategic_objective_id', $strategicObjectiveId))

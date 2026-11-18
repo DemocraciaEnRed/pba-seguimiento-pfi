@@ -73,6 +73,8 @@ class ReportReviewTest extends TestCase
         $this->goal->indicator_progress = 40;
         $this->goal->objective()->associate($this->objective);
         $this->goal->save();
+        $this->goal->responsibles()->attach($this->manager);
+        $this->goal->reporters()->attach([$this->reporter->id, $this->other->id]);
         Notification::fake();
     }
 
@@ -340,12 +342,18 @@ class ReportReviewTest extends TestCase
         $hidden = $this->submit(['type' => 'post', 'notify' => 'true']);
         $this->actingAs($this->admin)->post(route('reports.review.approve', $hidden->id), $this->reviewData($hidden) + ['notify' => 'true'])->assertSessionHasNoErrors();
         Notification::assertNotSentTo($subscriber, NewReport::class);
+
+        $this->goal->visibility = 'internal';
+        $this->goal->save();
+        Notification::fake();
+        $this->submit(['type' => 'post', 'notify' => 'true'], $this->admin);
+        Notification::assertNotSentTo($subscriber, NewReport::class);
     }
 
     public function test_removing_membership_revokes_access_to_proposal_and_its_mutations(): void
     {
         $report = $this->submit();
-        $this->objective->members()->detach($this->reporter);
+        $this->goal->reporters()->detach($this->reporter);
         $this->actingAs($this->reporter)->get($this->panelUrl($report))->assertForbidden();
         $this->actingAs($this->reporter)->post(route('reports.review.resubmit', $report->id), ['review_version' => 1])->assertForbidden();
     }

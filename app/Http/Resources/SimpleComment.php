@@ -19,7 +19,6 @@ class SimpleComment extends JsonResource
         // return parent::toArray($request);
         // dd($request->report->objective->id);
         // dd($request->user());
-        // dd(Auth::user()->isMemberObjective($request->report->objective->id));}
         $res = [
             'id' => $this->id,
             'content' => $this->content,

@@ -6,7 +6,6 @@ use App\ActionLog;
 use App\Category;
 use App\Comment;
 use App\Goal;
-use App\Notifications\RemoveObjectiveTeam;
 use App\Objective;
 use App\Report;
 use App\Role;
@@ -64,6 +63,10 @@ class AdminUsersTest extends TestCase
         $goal->status = 'ongoing';
         $goal->objective()->associate($this->objective);
         $goal->save();
+        $goal->responsibles()->attach($this->member);
+        $otherGoal = new Goal();
+        $otherGoal->forceFill(['title' => 'Ciclovías', 'status' => 'ongoing', 'objective_id' => $this->otherObjective->id])->save();
+        $otherGoal->reporters()->attach($this->member);
 
         $report = new Report();
         $report->review_status = \App\Services\Reports\ReviewStatus::Approved;
@@ -181,7 +184,7 @@ class AdminUsersTest extends TestCase
             ->get(route('admin.users.show', ['userId' => $this->member->id]))
             ->assertOk()
             ->assertSee('Coordinadora, Marta')
-            ->assertSeeInOrder(['Coordina', '1', 'Reporta', '1', 'Suscripciones', '1', 'Comentarios', '1', 'Reportes', '1'])
+            ->assertSeeInOrder(['Metas como Responsable', '1', 'Metas como Reportero', '1', 'Suscripciones', '1', 'Comentarios', '1', 'Reportes', '1'])
             ->assertSee('ha creado un reporte')
             ->assertDontSee('Se envio una notificación a Marta')
             ->assertSee('value="Fundación Verde"', false);
@@ -298,39 +301,33 @@ class AdminUsersTest extends TestCase
             ->assertOk()
             ->assertSee('Reducir emisiones')
             ->assertSee('Sumar ciclovías')
-            ->assertSee('<option value="manager" selected>', false)
+            ->assertSee('Responsable')
+            ->assertSee('Reportero')
+            ->assertDontSee('Cambiar rol')
             ->assertSee(route('objectives.manage.index', ['objectiveId' => $this->objective->id]))
             ->assertSee('Suscripciones');
     }
 
-    public function test_admin_can_change_the_role_in_an_objective(): void
+    public function test_legacy_objective_role_changes_are_retired(): void
     {
         $this->actingAs($this->admin)
-            ->put(route('admin.users.objectives.role.form', ['userId' => $this->member->id, 'objectiveId' => $this->otherObjective->id]), ['role' => 'manager'])
-            ->assertRedirect(route('admin.users.objectives', ['userId' => $this->member->id]));
-
-        $this->assertTrue($this->member->isManagerObjective($this->otherObjective->id));
-
-        $this->actingAs($this->admin)
-            ->put(route('admin.users.objectives.role.form', ['userId' => $this->member->id, 'objectiveId' => $this->otherObjective->id]), ['role' => 'owner'])
-            ->assertSessionHasErrors('role');
-        $this->actingAs($this->admin)
-            ->put(route('admin.users.objectives.role.form', ['userId' => $this->pending->id, 'objectiveId' => $this->objective->id]), ['role' => 'manager'])
+            ->put("/admin/usuarios/{$this->member->id}/objetivos/{$this->otherObjective->id}", ['role' => 'manager'])
             ->assertNotFound();
+        $this->assertDatabaseHas('objective_user', [
+            'objective_id' => $this->otherObjective->id, 'user_id' => $this->member->id, 'role' => 'reporter',
+        ]);
     }
 
-    public function test_admin_can_remove_the_user_from_an_objective_team(): void
+    public function test_legacy_objective_team_removal_is_retired(): void
     {
         Notification::fake();
 
         $this->actingAs($this->admin)
-            ->delete(route('admin.users.objectives.remove.form', ['userId' => $this->member->id, 'objectiveId' => $this->objective->id]))
-            ->assertSessionHas('success');
-
-        $this->assertFalse($this->member->isMemberObjective($this->objective->id));
-        $this->assertTrue($this->member->isMemberObjective($this->otherObjective->id));
-        Notification::assertSentTo($this->member, RemoveObjectiveTeam::class);
-        $this->assertStringContainsString('ha quitado a [Coordinadora, Marta] del equipo del objetivo [Reducir emisiones]', ActionLog::latest('id')->first()->message);
+            ->delete("/admin/usuarios/{$this->member->id}/objetivos/{$this->objective->id}")
+            ->assertNotFound();
+        $this->assertDatabaseHas('objective_user', ['objective_id' => $this->objective->id, 'user_id' => $this->member->id]);
+        $this->assertTrue($this->member->hasAssignedGoalInObjective($this->objective->id));
+        Notification::assertNothingSent();
     }
 
     public function test_old_administrators_routes_were_removed(): void

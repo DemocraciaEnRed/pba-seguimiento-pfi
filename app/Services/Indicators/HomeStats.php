@@ -5,8 +5,10 @@ namespace App\Services\Indicators;
 use App\Category;
 use App\Goal;
 use App\Objective;
+use App\Services\Goals\GoalAudience;
 use App\StrategicObjective;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 
 class HomeStats
@@ -41,10 +43,18 @@ class HomeStats
      */
     public function compute(): array
     {
+        return $this->computeFor(app(GoalAudience::class)->publicQuery());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function computeFor(Builder $goalAudience): array
+    {
         $today = CarbonImmutable::today();
 
         $goals = Goal::query()
-            ->whereHas('objective', fn ($query) => $query->where('hidden', false))
+            ->visibleIn($goalAudience)
             ->with(['objective:id,strategic_objective_id', 'objective.strategicObjective:id,category_id', 'periods.progressReport'])
             ->get()
             ->map(function (Goal $goal) use ($today): array {

@@ -4,8 +4,10 @@ namespace App\Exports;
 
 use App\Goal;
 use App\Objective;
+use App\Services\Goals\GoalAudience;
 use App\Services\Indicators\MeasurementMode;
 use Illuminate\Support\Collection;
+use App\User;
 
 /**
  * Mirrors the client's monitoring spreadsheet: one row per periodic goal, targets and results per period.
@@ -14,13 +16,18 @@ class ObjectiveIndicatorsExport implements CsvExport
 {
     private ?Collection $goals = null;
 
-    public function __construct(private int $objectiveId) {}
+    public function __construct(private int $objectiveId, private ?User $user = null) {}
 
     public function collection(): Collection
     {
+        $goalAudience = $this->user === null
+            ? app(GoalAudience::class)->publicQuery()
+            : app(GoalAudience::class)->managementQuery($this->user);
+
         return $this->goals ??= Objective::with('strategicObjective.category')
             ->findOrFail($this->objectiveId)
             ->goals()
+            ->visibleIn($goalAudience)
             ->where('measurement_mode', MeasurementMode::Periodic->value)
             ->with('periods.progressReport')
             ->get();

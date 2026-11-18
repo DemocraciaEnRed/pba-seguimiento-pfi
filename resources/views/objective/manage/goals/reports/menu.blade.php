@@ -17,15 +17,15 @@ $reportParams = ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'report
 </x-side-menu.group>
 @endif
 <x-side-menu.group label="Contenido">
-  @if($report->canManage(auth()->user()))
+  @can('update', $report)
   <x-side-menu.category label="Editar reporte" icon="fas fa-pen" :href="route('objectives.manage.goals.reports.edit', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.edit')" />
-  @endif
+  @endcan
   <x-side-menu.category label="Álbum de fotos" icon="far fa-images" :href="route('objectives.manage.goals.reports.album', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.album')" />
   <x-side-menu.category label="Repositorio de archivos" icon="far fa-folder-open" :href="route('objectives.manage.goals.reports.files', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.files')" />
-  @if(app_setting('app_map_enabled') && $report->canManage(auth()->user()))
+  @if(app_setting('app_map_enabled') && auth()->user()->can('update', $report))
   <x-side-menu.category label="Mapa" icon="fas fa-map-location-dot" :href="route('objectives.manage.goals.reports.map', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.map')" />
   @endif
-  @if($report->canDelete(auth()->user()))
+  @can('delete', $report)
   <x-side-menu.category label="Configuración" icon="fas fa-gear" :href="route('objectives.manage.goals.reports.configuration', $reportParams)" :active="request()->routeIs('objectives.manage.goals.reports.configuration')" />
-  @endif
+  @endcan
 </x-side-menu.group>

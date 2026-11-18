@@ -8,7 +8,7 @@ use Illuminate\Support\LazyCollection;
 class UsersExport implements CsvExport
 {
     /**
-     * @param  array{q?: ?string, verificado?: ?string, rol?: ?string, equipo?: ?string, orden?: ?string}  $filters
+     * @param  array{q?: ?string, verificado?: ?string, rol?: ?string, equipo?: ?string, pfi?: ?string, categoria_pfi?: ?string, orden?: ?string}  $filters
      */
     public function __construct(private array $filters = []) {}
 
@@ -32,6 +32,8 @@ class UsersExport implements CsvExport
             'Comentarios',
             'Reportes',
             'Fecha de alta',
+            'Integrante PFI',
+            'Categorías PFI',
         ];
     }
 
@@ -50,6 +52,8 @@ class UsersExport implements CsvExport
             $user->comments_count,
             $user->reports_count,
             $user->created_at?->format('d/m/Y H:i:s') ?? '-',
+            $user->isPfiMember() ? 'Sí' : 'No',
+            $user->pfiCategories->pluck('name')->join(', ') ?: '-',
         ];
     }
 }

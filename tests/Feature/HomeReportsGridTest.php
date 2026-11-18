@@ -242,7 +242,7 @@ class HomeReportsGridTest extends TestCase
         $response = $this->getJson(route('apiService.goals.reports', [
             'goalId' => $this->goal->id,
             'with' => 'report_hierarchy,report_cover,report_excerpt,report_highlights',
-            'order_by' => 'id,ASC',
+            'order_by' => 'created_at,asc',
         ]));
         $countQueries = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'comments'));
 

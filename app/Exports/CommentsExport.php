@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Services\Comments\CommentModeration;
+use App\User;
 use Illuminate\Support\LazyCollection;
 
 class CommentsExport implements CsvExport
@@ -12,11 +13,12 @@ class CommentsExport implements CsvExport
         private ?string $type = null,
         private ?int $objectiveId = null,
         private ?int $goalId = null,
+        private ?User $user = null,
     ) {}
 
     public function collection(): LazyCollection
     {
-        return app(CommentModeration::class)->search($this->search, $this->type, $this->objectiveId, $this->goalId)->lazy();
+        return app(CommentModeration::class)->search($this->search, $this->type, $this->objectiveId, $this->goalId, $this->user)->lazy();
     }
 
     public function headings(): array

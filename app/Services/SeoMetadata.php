@@ -46,7 +46,7 @@ class SeoMetadata
         return $this->build(
             $objective->title,
             $this->text($objective->content) ?: $objective->title,
-            $objective->isVisibleTo(null) ? route('objectives.index', ['objectiveId' => $objective->id]) : null,
+            ! $objective->hidden ? route('objectives.index', ['objectiveId' => $objective->id]) : null,
             $objective->cover?->path,
         );
     }
@@ -63,7 +63,9 @@ class SeoMetadata
         return $this->build(
             $goal->title,
             $description,
-            $objective->isVisibleTo(null) ? route('goals.index', ['goalId' => $goal->id]) : null,
+            ! $objective->hidden && $goal->visibility === 'public'
+                ? route('goals.index', ['goalId' => $goal->id])
+                : null,
             $objective->cover?->path,
         );
     }
@@ -79,7 +81,9 @@ class SeoMetadata
         return $this->build(
             $title,
             $this->text($report->content) ?: 'Reporte de la meta '.$goal->title.'. Objetivo: '.$objective->title.'.',
-            $objective->isVisibleTo(null) ? route('reports.index', ['reportId' => $report->id]) : null,
+            $report->isApproved() && ! $objective->hidden && $goal->visibility === 'public'
+                ? route('reports.index', ['reportId' => $report->id])
+                : null,
             $report->photos->sortBy('id')->first()?->path,
         );
     }

@@ -70,6 +70,9 @@ class StructureImporter
 
         /** @var Goal $goal */
         $goal = $item->model;
+        if ($item->action === ImportAction::Create) {
+            $goal->visibility = 'internal';
+        }
         $goal->title = $item->input['title'];
         $goal->status = $item->input['status'];
         $goal->source = $item->input['source'];

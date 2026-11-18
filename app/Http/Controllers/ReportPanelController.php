@@ -20,17 +20,28 @@ class ReportPanelController extends Controller
 {
     public function __construct(private ReportReview $review)
     {
-        $this->middleware(['auth', 'verified', 'fetch_objective', 'goal_belongs_objective', 'fetch_goal', 'report_belongs_goal', 'fetch_report', 'can_manage_objective', AuthorizeReportManagement::class]);
+        $this->middleware(['auth', 'verified', 'fetch_objective', 'goal_belongs_objective', 'fetch_goal', 'report_belongs_goal', 'fetch_report', \App\Http\Middleware\AuthorizeObjectiveManagement::class, AuthorizeReportManagement::class]);
     }
 
     public function viewReport(Request $request): \Illuminate\Contracts\View\View
     {
-        $request->report->load(['goal', 'milestone', 'period', 'photos']);
+        $request->report->load(['goal', 'milestone', 'period', 'photos', 'attendant']);
         return view('objective.manage.goals.reports.view', [
             'objective' => $request->objective, 'goal' => $request->report->goal, 'report' => $request->report,
             'reviewContext' => $this->review->context($request->report),
             'files' => $request->report->files()->paginate(10, ['*'], 'files_page'),
+            'attendantCandidates' => ! $request->report->isApproved() && $request->user()->can('manageReporters', $request->goal)
+                ? $request->goal->reporters()->whereHas('pfiMembership')->get()
+                : collect(),
         ]);
+    }
+
+    public function reassignAttendant(Request $request, \App\Services\Reports\ReportContinuity $continuity): RedirectResponse
+    {
+        $data = $request->validate(['attendant_id' => ['required', 'integer'], 'review_version' => ['required', 'integer', 'min:1']]);
+        $continuity->reassign($request->report, $request->user(), (int) $data['attendant_id'], (int) $data['review_version']);
+
+        return $this->redirectToReport($request)->with('success', 'Se reasignó la atención del pendiente sin cambiar su autoría.');
     }
 
     public function viewEditReport(Request $request): \Illuminate\Contracts\View\View
@@ -66,7 +77,7 @@ class ReportPanelController extends Controller
                     $report->milestone()->associate($milestone);
                 }
             });
-            if (! $request->objective->hidden && $request->boolean('notify')) {
+            if (! $request->objective->hidden && $request->goal->visibility === 'public' && $request->boolean('notify')) {
                 Notification::send($request->objective->subscribers, new EditReport($request->objective, $request->goal, $report));
             }
         }
@@ -80,7 +91,7 @@ class ReportPanelController extends Controller
 
     public function downloadReportComments(Request $request, CsvDownload $csvDownload): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        abort_unless($request->user()->hasRole('admin') || $request->user()->isManagerObjective($request->objective->id), 403);
+        $this->authorize('viewInManagement', $request->report);
         return $csvDownload->download(new ReportCommentsExport($request->report->id), now()->format('Ymd').'-comentarios-reporte-'.$request->report->id.'.csv');
     }
 
@@ -91,7 +102,7 @@ class ReportPanelController extends Controller
 
     public function downloadReportTestimonies(Request $request, CsvDownload $csvDownload): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        abort_unless($request->user()->hasRole('admin') || $request->user()->isManagerObjective($request->objective->id), 403);
+        $this->authorize('viewInManagement', $request->report);
         return $csvDownload->download(new ReportTestimoniesExport($request->report->id), now()->format('Ymd').'-me-gusta-reporte-'.$request->report->id.'.csv');
     }
 
@@ -169,7 +180,7 @@ class ReportPanelController extends Controller
         $request->validate(['password' => ['required', new MatchOldPassword], 'notify' => 'nullable|in:true']);
         $report = $request->report;
         $this->review->delete($report, $request->user());
-        if ($report->isApproved() && ! $request->objective->hidden && $request->boolean('notify')) {
+        if ($report->isApproved() && ! $request->objective->hidden && $request->goal->visibility === 'public' && $request->boolean('notify')) {
             Notification::send($request->objective->subscribers, new DeleteReport($request->objective, $request->goal, $report));
         }
         return redirect()->route('objectives.manage.goals.reports', ['objectiveId' => $request->objective->id, 'goalId' => $request->goal->id])->with('success', 'Reporte eliminado.');

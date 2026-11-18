@@ -34,6 +34,8 @@ use App\Exports\UsersExport;
 use App\Exports\ReportsExport;
 use App\Notifications\RemoveObjectiveTeam;
 use App\Services\Admin\UserDirectory;
+use App\Services\Pfi\PfiMemberships;
+use App\PfiCategory;
 use App\Services\Admin\ReportDirectory;
 use App\Services\Admin\ObjectiveDirectory;
 use Illuminate\Support\Facades\Password;
@@ -71,7 +73,7 @@ class AdminPanelController extends Controller
             'range' => $range,
             'ranges' => ActivityRange::cases(),
             'logs' => $logs,
-            'latestComments' => $commentModeration->search()->take(5)->get(),
+            'latestComments' => $commentModeration->search(user: $request->user())->take(5)->get(),
         ]);
     }
 
@@ -114,7 +116,7 @@ class AdminPanelController extends Controller
         $type = $request->query('tipo');
 
         return view('admin.comments.list', [
-            'comments' => $commentModeration->search($search, $type)->paginate(25)->withQueryString(),
+            'comments' => $commentModeration->search($search, $type, user: $request->user())->paginate(25)->withQueryString(),
             'search' => $search,
             'type' => $type,
         ]);
@@ -122,7 +124,7 @@ class AdminPanelController extends Controller
 
     public function downloadComments(Request $request, CsvDownload $csvDownload){
         return $csvDownload->download(
-            new CommentsExport($request->query('q'), $request->query('tipo')),
+            new CommentsExport($request->query('q'), $request->query('tipo'), user: $request->user()),
             Carbon::now()->format('Ymd').'-comentarios.csv',
         );
     }
@@ -536,6 +538,7 @@ class AdminPanelController extends Controller
         return view('admin.users.list', [
             'users' => $userDirectory->search($filters)->paginate(25)->withQueryString(),
             'filters' => $filters,
+            'pfiCategories' => PfiCategory::query()->ordered()->get(),
         ]);
     }
 
@@ -546,13 +549,14 @@ class AdminPanelController extends Controller
         );
     }
 
-    public function viewUser(Request $request, UserDirectory $userDirectory, $userId){
-        $user = User::with(['avatar', 'roles'])->findOrFail($userId);
+    public function viewUser(Request $request, UserDirectory $userDirectory, PfiMemberships $pfiMemberships, $userId){
+        $user = User::with(['avatar', 'roles', 'pfiMembership.addedBy', 'pfiCategories'])->findOrFail($userId);
 
         return view('admin.users.show', [
             'user' => $user,
             'counts' => $userDirectory->profileCounts($user),
             'latestActions' => $userDirectory->latestActions($user),
+            'selectablePfiCategories' => $pfiMemberships->selectableCategories($user),
         ]);
     }
 
@@ -631,48 +635,17 @@ class AdminPanelController extends Controller
     }
 
     public function viewUserObjectives(Request $request, $userId){
-        $user = User::with(['avatar', 'roles'])->findOrFail($userId);
+        $user = User::with(['avatar', 'roles', 'pfiMembership', 'pfiCategories'])->findOrFail($userId);
 
         return view('admin.users.objectives', [
             'user' => $user,
-            'objectives' => $user->objectives()->with('strategicObjective.category')->orderBy('title')->get(),
+            'goals' => $user->assignedGoals()->withPivot('role')->with('objective.strategicObjective.category')->orderBy('title')->get(),
             'subscriptions' => $user->subscriptions()->with('strategicObjective.category')->orderBy('title')->get(),
         ]);
     }
 
-    public function formUpdateUserObjectiveRole(Request $request, $userId, $objectiveId){
-        $user = User::findOrFail($userId);
-        $objective = $user->objectives()->findOrFail($objectiveId);
-        $validated = $request->validate(['role' => 'required|string|in:manager,reporter']);
-
-        $user->objectives()->updateExistingPivot($objective->id, ['role' => $validated['role']]);
-        $this->logUserAction($request, $user, "ha cambiado el rol de [{$user->fullname}] en el objetivo [{$objective->title}]", [
-            'objective_id' => $objective->id,
-            'objective_title' => $objective->title,
-            'member_previous_role' => $objective->pivot->role,
-            'member_role' => $validated['role'],
-        ]);
-
-        return redirect()->route('admin.users.objectives', ['userId' => $user->id])->with('success', 'Se actualizó el rol en el objetivo');
-    }
-
-    public function formRemoveUserObjective(Request $request, $userId, $objectiveId){
-        $user = User::findOrFail($userId);
-        $objective = $user->objectives()->findOrFail($objectiveId);
-
-        $user->objectives()->detach($objective->id);
-        $this->logUserAction($request, $user, "ha quitado a [{$user->fullname}] del equipo del objetivo [{$objective->title}]", [
-            'objective_id' => $objective->id,
-            'objective_title' => $objective->title,
-            'member_role' => $objective->pivot->role,
-        ]);
-        $user->notify(new RemoveObjectiveTeam($objective, $objective->pivot->role));
-
-        return redirect()->route('admin.users.objectives', ['userId' => $user->id])->with('success', 'Se quitó al usuario del equipo del objetivo');
-    }
-
     /**
-     * @return array{q: ?string, verificado: ?string, rol: ?string, equipo: ?string, orden: ?string}
+     * @return array{q: ?string, verificado: ?string, rol: ?string, equipo: ?string, pfi: ?string, categoria_pfi: ?string, orden: ?string}
      */
     private function userFilters(Request $request): array
     {
@@ -681,6 +654,8 @@ class AdminPanelController extends Controller
             'verificado' => $request->query('verificado'),
             'rol' => $request->query('rol'),
             'equipo' => $request->query('equipo'),
+            'pfi' => $request->query('pfi'),
+            'categoria_pfi' => $request->query('categoria_pfi'),
             'orden' => $request->query('orden'),
         ];
     }

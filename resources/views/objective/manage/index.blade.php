@@ -37,22 +37,14 @@
     </div>
   </div>
   @endif
-  @if($objective->goals->isEmpty())
+  @if($stats['goals_total'] === 0)
   <div class="card border-secondary my-2">
     <div class="card-body">
       <h6><b><i class="fas fa-triangle-exclamation"></i> ¡El objetivo no cuenta con metas!</b></h6>
       <span class="text-muted">Debe comenzar creando las metas para el objetivo para que luego se puedan crear reportes a futuro.</span>
     </div>
   </div>
-  @endempty
-  @if($objective->members->isEmpty())
-  <div class="card border-secondary my-2">
-    <div class="card-body">
-      <h6><b><i class="fas fa-triangle-exclamation"></i> ¡El objetivo no cuenta con miembros en el equipo!</b></h6>
-      <span class="text-muted">Por lo tanto, solamente usuarios administradores de la plataforma pueden gestionar el objetivo, sus metas, o reportes. Para que otros usuarios puedan administrar el objetivo, debe asignar usuarios para que <b>coordinen</b> el objetivo o para que <b>reporten</b> sobre las metas del objetivo</span>
-    </div>
-  </div>
-  @endempty
+  @endif
   @include('objective.manage.partials.latest-comments', [
     'listUrl' => route('objectives.manage.comments', ['objectiveId' => $objective->id]),
   ])

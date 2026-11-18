@@ -22,7 +22,7 @@
       <span class="d-block text-truncate" title="{{ $file->name }}">{{ $file->name }}</span>
       <span class="text-smaller text-muted">{{ $mime }}</span>
     </div>
-    <a href="{{ asset($file->path) }}" class="btn btn-outline-primary btn-sm text-nowrap" download><i class="fas fa-download fa-fw"></i>Descargar</a>
+    <a href="{{ $file->disk === 'reports_private' ? $file->path : asset($file->path) }}" class="btn btn-outline-primary btn-sm text-nowrap" download><i class="fas fa-download fa-fw"></i>Descargar</a>
   </div>
   @empty
   <div class="list-group-item text-center text-muted py-4">No hay archivos cargados</div>

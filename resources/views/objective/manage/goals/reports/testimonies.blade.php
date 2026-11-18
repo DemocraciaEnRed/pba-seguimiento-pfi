@@ -4,13 +4,13 @@
 
 <section>
   <h3 class="is-700">Me gusta</h3>
-  @isManager($objective->id)
+  @can('viewInManagement', $report)
   @if(!$testimonies->isEmpty())
   <div class="my-3">
     <a href="{{route('objectives.manage.goals.reports.testimonies.download', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="fas fa-file-csv fa-fw"></i>Descargar .csv</a>
   </div>
   @endif
-  @endisManager
+  @endcan
   @forelse($testimonies as $testimony)
       <div class="card my-2 shadow-sm">
     <div class="card-body py-2 d-flex align-items-center">
@@ -20,9 +20,9 @@
       <div class="w-100">
         <h6 class="is-600 m-0">{{$testimony->user->surname}}, {{$testimony->user->name}}</h6>
         <span class="text-smaller text-muted">
-        @isManager($objective->id)
+        @can('update', $goal)
           Email: {{$testimony->user->email}}
-        @endisManager
+        @endcan
       </div>
       <div>
         <i class="fas fa-lg fa-thumbs-up"></i>

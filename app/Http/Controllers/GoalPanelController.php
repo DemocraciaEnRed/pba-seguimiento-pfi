@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Closure;
 use Notification;
 use Image;
 use Storage;
@@ -29,6 +30,7 @@ use App\Rules\MatchOldPassword;
 use App\Services\Indicators\GoalIndicatorConfigurator;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use App\Services\Comments\CommentModeration;
 use App\Exports\CommentsExport;
 use Illuminate\Support\Facades\DB;
@@ -52,14 +54,12 @@ class GoalPanelController extends Controller
         $this->middleware('fetch_objective');
         $this->middleware('goal_belongs_objective');
         $this->middleware('fetch_goal');
-        $this->middleware('can_manage_objective');
-    }
+        $this->middleware(\App\Http\Middleware\AuthorizeObjectiveManagement::class);
+        $this->middleware(function (Request $request, Closure $next): Response {
+            abort_unless($request->user()->can('view', $request->goal), 404);
 
-    private function hasManagerPrivileges(Request $request){
-      if(!$request->user()->hasRole('admin') && !$request->user()->isManagerObjective($request->objective->id)){
-        abort(403, 'No autorizado');
-      }
-      return;
+            return $next($request);
+        });
     }
 
     private function hasAdminPrivileges(Request $request): void
@@ -88,12 +88,15 @@ class GoalPanelController extends Controller
     }
 
     public function viewGoal(Request $request, CommentModeration $commentModeration, $objectiveId, $goalId){
-      $request->goal->load(['reports' => fn ($reports) => $reports->manageableBy($request->user()), 'periods.reservedReport']);
+      $request->goal->load([
+        'reports' => fn ($reports) => $reports->manageableBy($request->user()),
+        'periods.reservedReport' => fn ($reports) => $reports->manageableBy($request->user()),
+      ]);
       return view('objective.manage.goals.view',[
         'objective' => $request->objective,
         'goal' => $request->goal->loadMissing(['milestones', 'reports']),
-        'commentsCount' => $commentModeration->search(goalId: $request->goal->id)->count(),
-        'latestComments' => $commentModeration->search(goalId: $request->goal->id)->take(3)->get(),
+        'commentsCount' => $commentModeration->search(goalId: $request->goal->id, user: $request->user())->count(),
+        'latestComments' => $commentModeration->search(goalId: $request->goal->id, user: $request->user())->take(3)->get(),
       ]);
     }
 
@@ -104,30 +107,30 @@ class GoalPanelController extends Controller
       return view('objective.manage.goals.comments', [
         'objective' => $request->objective,
         'goal' => $request->goal,
-        'comments' => $commentModeration->search($search, $type, goalId: $request->goal->id)->paginate(20)->withQueryString(),
+        'comments' => $commentModeration->search($search, $type, goalId: $request->goal->id, user: $request->user())->paginate(20)->withQueryString(),
         'search' => $search,
         'type' => $type,
       ]);
     }
 
     public function downloadGoalComments(Request $request, CsvDownload $csvDownload, $objectiveId, $goalId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('view', $request->goal);
 
       return $csvDownload->download(
-        new CommentsExport($request->query('q'), $request->query('tipo'), goalId: $request->goal->id),
+        new CommentsExport($request->query('q'), $request->query('tipo'), goalId: $request->goal->id, user: $request->user()),
         Carbon::now()->format('Ymd').'-comentarios-meta-'.$request->goal->id.'.csv',
       );
     }
 
     public function formDeleteGoalComment(Request $request, CommentModeration $commentModeration, $objectiveId, $goalId, $commentId){
-      $comment = $commentModeration->search(goalId: $request->goal->id)->findOrFail($commentId);
+      $comment = $commentModeration->search(goalId: $request->goal->id, user: $request->user())->findOrFail($commentId);
       $commentModeration->delete($comment, $request->user(), $request->user()->hasRole('admin') ? 'Administrador' : 'Miembro del equipo');
 
       return redirect()->back()->with('success', CommentModeration::deletedMessage($comment));
     }
 
     public function viewEditGoal(Request $request, $objectiveId, $goalId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
       return view('objective.manage.goals.edit',[
         'objective' => $request->objective,
         'goal' => $request->goal,
@@ -137,11 +140,12 @@ class GoalPanelController extends Controller
     }
 
     public function formEditGoal(Request $request, $objectiveId, $goalId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
 
       $rules = [
         'title' => 'required|string|max:550',
         'status' => 'required|string|in:ongoing,delayed,inactive,reached',
+        'visibility' => ['prohibited'],
         'source' => 'nullable|string|max:550',
         'notify' => 'nullable|string|in:true',
       ];
@@ -166,7 +170,7 @@ class GoalPanelController extends Controller
 
 
       $notifySubscribers = $request->boolean('notify');
-      if(!$request->objective->hidden && $notifySubscribers){
+      if(!$request->objective->hidden && $goal->visibility === 'public' && $notifySubscribers){
         Notification::send($request->objective->subscribers, new EditGoal($request->objective, $goal));
       }
 
@@ -178,12 +182,12 @@ class GoalPanelController extends Controller
     }
 
     public function viewAddGoalMilestone(Request $request, $objectiveId, $goalId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
       return view('objective.manage.goals.milestones.add',['objective' => $request->objective, 'goal' => $request->goal]);
     }
 
     public function formAddGoalMilestone(Request $request, $objectiveId, $goalId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
 
       $rules = [
         'title' => 'required|string|max:550',
@@ -208,14 +212,14 @@ class GoalPanelController extends Controller
     }
 
     public function viewEditGoalMilestone(Request $request, $objectiveId, $goalId, $milestoneId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
       $milestone = Milestone::findorfail($milestoneId);
 
       return view('objective.manage.goals.milestones.edit',['objective' => $request->objective, 'goal' => $request->goal, 'milestone' => $milestone]);
     }
 
     public function formEditGoalMilestone(Request $request, $objectiveId, $goalId, $milestoneId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
 
       $rules = [
         'title' => 'required|string|max:550',
@@ -233,7 +237,7 @@ class GoalPanelController extends Controller
     }
 
     public function viewDeleteGoalMilestone(Request $request, $objectiveId, $goalId, $milestoneId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
       $milestone = Milestone::findorfail($milestoneId);
 
       if(!is_null($milestone->completed)){
@@ -243,7 +247,7 @@ class GoalPanelController extends Controller
     }
 
     public function formDeleteGoalMilestone(Request $request, $objectiveId, $goalId, $milestoneId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->goal);
 
       $rules = [
         'password' =>  ['required', new MatchOldPassword],
@@ -295,11 +299,12 @@ class GoalPanelController extends Controller
     }
 
     public function downloadListGoalReports(Request $request, CsvDownload $csvDownload, $objectiveId, $goalId){
-      $this->hasManagerPrivileges($request);
-      return $csvDownload->download(new GoalReportsExport($goalId), Carbon::now()->format('Ymd').'-reportes-meta-'.$goalId.'-objetivo-'.$objectiveId.'.csv');
+      $this->authorize('view', $request->goal);
+      return $csvDownload->download(new GoalReportsExport((int) $goalId, $request->user()), Carbon::now()->format('Ymd').'-reportes-meta-'.$goalId.'-objetivo-'.$objectiveId.'.csv');
     }
 
     public function viewNewGoalReport(Request $request, $objectiveId, $goalId){
+      $this->authorize('create', [Report::class, $request->goal]);
       $goal = $request->goal;
       $periods = [];
       if($goal->isPeriodic()){
@@ -308,10 +313,12 @@ class GoalPanelController extends Controller
           'label' => $period->label(),
           'range' => $period->rangeLabel(),
           'target' => $period->target_value,
-          'state_label' => $period->reservedReport?->review_status_label ?? $period->state()->label(),
+          'state_label' => $period->reservedReport
+            ? ($request->user()->can('viewInManagement', $period->reservedReport) ? $period->reservedReport->review_status_label : 'Período reservado')
+            : $period->state()->label(),
           'reportable' => ! $period->reservedReport && $period->state()->isReportable(),
           'reserved' => $period->reservedReport !== null,
-          'edit_url' => $period->reservedReport?->canManage($request->user())
+          'edit_url' => $period->reservedReport && $request->user()->can('update', $period->reservedReport)
             ? route('objectives.manage.goals.reports.edit', ['objectiveId' => $request->objective->id, 'goalId' => $goal->id, 'reportId' => $period->reservedReport->id])
             : null,
         ])->values()->all();
@@ -327,6 +334,7 @@ class GoalPanelController extends Controller
     }
 
     public function viewGoalConfiguration(Request $request){
+      $this->authorize('update', $request->goal);
       return view('objective.manage.goals.configuration',['objective' => $request->objective, 'goal' => $request->goal]);
     }
 
@@ -386,7 +394,7 @@ class GoalPanelController extends Controller
     }
 
     public function formDeleteGoal(Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('delete', $request->goal);
 
       $rules = [
         'password' =>  ['required', new MatchOldPassword],
@@ -413,7 +421,7 @@ class GoalPanelController extends Controller
 
       //Notify
       $notifySubscribers = $request->boolean('notify');
-      if(!$request->objective->hidden && $notifySubscribers){
+      if(!$request->objective->hidden && $request->goal->visibility === 'public' && $notifySubscribers){
         Notification::send($request->objective->subscribers, new DeleteGoal($request->objective, $request->goal));
       }
 

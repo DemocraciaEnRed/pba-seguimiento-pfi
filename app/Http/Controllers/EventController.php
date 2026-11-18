@@ -18,13 +18,6 @@ class EventController extends Controller
         
     }
 
-    private function hasManagerPrivileges(Request $request){
-      if(!$request->user()->hasRole('admin') && !$request->user()->isManagerObjective($request->objective->id)){
-        return response()->json(['message' => 'Not authorized'],403);
-      }
-      return;
-    }
-
     public function showUpcomingEvents(Request $request){
       $events = Event::where('date', '>=', Carbon::today())->orderBy('date','ASC')->paginate(6);
       

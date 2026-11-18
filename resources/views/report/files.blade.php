@@ -13,7 +13,7 @@
             <p class="text-card text-smaller text-muted mb-0">{{ $file->mime }}</p>
           </div>
           <div class="ml-3 mt-2">
-            <a href="{{ asset($file->path) }}" class="card-link text-smaller"><i class="fas fa-download fa-lg"></i></a>
+            <a href="{{ $file->disk === 'reports_private' ? $file->path : asset($file->path) }}" class="card-link text-smaller"><i class="fas fa-download fa-lg"></i></a>
           </div>
         </div>
       </div>

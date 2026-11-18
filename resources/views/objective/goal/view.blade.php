@@ -10,14 +10,14 @@
   <hr class="bg-white">
   <span class="badge badge-white text-black px-2 py-1 mt-2 mb-2 is-size-6"><i class="far fa-circle-dot fa-fw text-{{$goal->status}}"></i> Meta {{$goal->status_label}}</span>
   <h1 class="hero__title">{{ $goal->title }}</h1>
-  @isMember($objective->id)
+  @can('accessManagement', $objective)
   <x-slot:actions>
+    @can('create', [\App\Report::class, $goal])
     <a href="{{route('objectives.manage.goals.reports.add',['objectiveId'=> $objective->id, 'goalId' => $goal->id])}}" class="btn btn-white"><i class="fas fa-plus fa-fw"></i> Nuevo reporte</a>
-    @isManager($objective->id)
+    @endcan
     <a href="{{route('objectives.manage.goals.index',['objectiveId'=> $objective->id, 'goalId' => $goal->id])}}" class="btn btn-outline-white"><i class="fas fa-up-right-from-square fa-fw"></i> Panel meta</a>
-    @endisManager
   </x-slot:actions>
-  @endisMember
+  @endcan
 </x-hero>
 @endsection
 
@@ -118,7 +118,7 @@
 	</div>
 	<section class="mt-5" id="reportes">
 		<h3 class="is-700 mb-3">Reportes</h3>
-		<search-reports fetch-url="{{route('apiService.reports')}}" :fixed-goal="{{ $goal->id }}">
+		<search-reports fetch-url="{{ $reportsFetchUrl }}" :fixed-goal="{{ $goal->id }}">
 			@include('partials.loading')
 		</search-reports>
 	</section>

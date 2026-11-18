@@ -4,91 +4,26 @@ namespace App\Policies;
 
 use App\Objective;
 use App\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ObjectivePolicy
 {
-    use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     *
-     * @param  \App\User  $user
-     * @return mixed
-     */
-    public function viewAny(User $user)
+    public function accessManagement(User $user, Objective $objective): bool
     {
-        //
+        return $user->hasRole('admin') || $user->hasAssignedGoalInObjective($objective->id);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     *
-     * @param  \App\User  $user
-     * @param  \App\Objective  $objective
-     * @return mixed
-     */
-    public function view(User $user, Objective $objective)
+    public function update(User $user, Objective $objective): bool
     {
-        //
+        return $user->hasRole('admin');
     }
 
-    /**
-     * Determine whether the user can create models.
-     *
-     * @param  \App\User  $user
-     * @return mixed
-     */
-    public function create(User $user)
+    public function delete(User $user, Objective $objective): bool
     {
-        //
+        return $this->update($user, $objective);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     *
-     * @param  \App\User  $user
-     * @param  \App\Objective  $objective
-     * @return mixed
-     */
-    public function update(User $user, Objective $objective)
+    public function changeVisibility(User $user, Objective $objective): bool
     {
-        //
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     *
-     * @param  \App\User  $user
-     * @param  \App\Objective  $objective
-     * @return mixed
-     */
-    public function delete(User $user, Objective $objective)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     *
-     * @param  \App\User  $user
-     * @param  \App\Objective  $objective
-     * @return mixed
-     */
-    public function restore(User $user, Objective $objective)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     *
-     * @param  \App\User  $user
-     * @param  \App\Objective  $objective
-     * @return mixed
-     */
-    public function forceDelete(User $user, Objective $objective)
-    {
-        //
+        return $user->hasRole('admin');
     }
 }

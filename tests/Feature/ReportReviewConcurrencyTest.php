@@ -6,6 +6,8 @@ use App\Goal;
 use App\Report;
 use App\User;
 use App\Services\Reports\ReportReview;
+use App\Services\Pfi\PfiMemberships;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +44,7 @@ class ReportReviewConcurrencyTest extends TestCase
         DB::table('objectives')->insert(['id' => 1, 'title' => 'Objetivo', 'content' => 'Contenido', 'author_id' => 1, 'strategic_objective_id' => $strategic]);
         DB::table('objective_user')->insert(['objective_id' => 1, 'user_id' => 2, 'role' => 'reporter']);
         DB::table('goals')->insert(['id' => 1, 'objective_id' => 1, 'title' => 'Meta', 'status' => 'ongoing', 'measurement_mode' => 'simple', 'indicator_goal' => 100, 'indicator_progress' => 40]);
+        DB::table('goal_user')->insert(['goal_id' => 1, 'user_id' => 2, 'role' => 'reporter']);
         Notification::fake();
     }
 
@@ -103,6 +106,53 @@ class ReportReviewConcurrencyTest extends TestCase
         return Report::findOrFail($id);
     }
 
+    public function test_simultaneous_pfi_removals_cannot_transfer_to_a_departing_reporter(): void
+    {
+        $this->prepareContinuity();
+        $report = $this->proposal();
+        $results = $this->race([
+            fn () => app(PfiMemberships::class)->remove(User::findOrFail(3), User::findOrFail(4), []),
+            fn () => app(PfiMemberships::class)->remove(User::findOrFail(2), User::findOrFail(1), [$report->id => 3]),
+        ]);
+        sort($results);
+        $this->assertSame(['conflict', 'ok'], $results);
+        $report->refresh();
+        $attendant = User::findOrFail($report->attendant_id ?? $report->author_id);
+        $this->assertTrue($attendant->isPfiMember());
+        $this->assertTrue($attendant->isReporterForGoal(1));
+        $this->assertSame(2, $report->author_id);
+    }
+
+    public function test_submission_racing_with_pfi_removal_never_leaves_an_unattended_pending(): void
+    {
+        $this->prepareContinuity();
+        $report = $this->proposal();
+        $results = $this->race([
+            fn () => app(PfiMemberships::class)->remove(User::findOrFail(2), User::findOrFail(1), [$report->id => 3]),
+            fn () => app(ReportReview::class)->create(Goal::findOrFail(1), User::findOrFail(2), new Request([
+                'title' => 'Nueva propuesta', 'content' => 'Contenido', 'type' => 'post', 'date' => '2026-08-01',
+            ])),
+        ]);
+        sort($results);
+        $this->assertSame(['conflict', 'ok'], $results);
+        foreach (Report::all() as $pending) {
+            $attendant = User::findOrFail($pending->attendant_id ?? $pending->author_id);
+            $this->assertTrue($attendant->isPfiMember());
+            $this->assertTrue($attendant->isReporterForGoal(1));
+        }
+    }
+
+    private function prepareContinuity(): void
+    {
+        DB::table('users')->insert(['id' => 3, 'name' => 'Reemplazo', 'surname' => 'Prueba', 'email' => '3@example.com', 'password' => 'hash']);
+        DB::table('users')->insert(['id' => 4, 'name' => 'Administración', 'surname' => 'Prueba', 'email' => '4@example.com', 'password' => 'hash']);
+        DB::table('role_user')->insert(['role_id' => DB::table('roles')->where('name', 'admin')->value('id'), 'user_id' => 4]);
+        DB::table('goal_user')->insert(['goal_id' => 1, 'user_id' => 3, 'role' => 'reporter']);
+        foreach ([2, 3] as $id) {
+            DB::table('pfi_memberships')->insert(['user_id' => $id, 'added_by' => 1]);
+        }
+    }
+
     /** @return array{review_version: int, context: string} */
     private function approvalData(Report $report): array
     {
@@ -138,8 +188,8 @@ class ReportReviewConcurrencyTest extends TestCase
                     try {
                         $operation();
                         $result = 'ok';
-                    } catch (ValidationException|HttpException $exception) {
-                        $result = $exception instanceof ValidationException || $exception->getStatusCode() === 403
+                    } catch (ValidationException|AuthorizationException|HttpException $exception) {
+                        $result = $exception instanceof ValidationException || $exception instanceof AuthorizationException || $exception->getStatusCode() === 403
                             ? 'conflict' : $exception->getMessage();
                     } catch (Throwable $exception) {
                         $result = get_class($exception).': '.$exception->getMessage();

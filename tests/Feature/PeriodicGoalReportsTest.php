@@ -63,6 +63,7 @@ class PeriodicGoalReportsTest extends TestCase
         $this->objective = new Objective();
         $this->objective->title = 'Optimizar plazos';
         $this->objective->content = 'Descripción';
+        $this->objective->hidden = false;
         $this->objective->author()->associate($this->admin);
         $this->objective->strategicObjective()->associate($strategicObjective);
         $this->objective->save();
@@ -73,10 +74,11 @@ class PeriodicGoalReportsTest extends TestCase
         $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
     }
 
-    public function test_a_manager_creates_a_periodic_goal_and_its_periods_are_generated(): void
+    public function test_an_admin_creates_a_periodic_goal_and_its_periods_are_generated(): void
     {
-        $response = $this->actingAs($this->manager)->post(route('objectives.manage.goals.add.form', ['objectiveId' => $this->objective->id]), [
+        $response = $this->actingAs($this->admin)->post(route('objectives.manage.goals.add.form', ['objectiveId' => $this->objective->id]), [
             'title' => 'Certificados de capacidad técnico financiera',
+            'visibility' => 'public',
             'status' => 'ongoing',
             'measurement_mode' => 'periodic',
             'indicator' => 'Días promedio de emisión',
@@ -101,8 +103,9 @@ class PeriodicGoalReportsTest extends TestCase
 
     public function test_a_periodic_goal_needs_at_least_one_target(): void
     {
-        $response = $this->actingAs($this->manager)->post(route('objectives.manage.goals.add.form', ['objectiveId' => $this->objective->id]), [
+        $response = $this->actingAs($this->admin)->post(route('objectives.manage.goals.add.form', ['objectiveId' => $this->objective->id]), [
             'title' => 'Meta sin objetivos',
+            'visibility' => 'public',
             'status' => 'ongoing',
             'measurement_mode' => 'periodic',
             'indicator' => 'Indicador',
@@ -121,8 +124,9 @@ class PeriodicGoalReportsTest extends TestCase
 
     public function test_higher_is_better_rejects_zero_targets(): void
     {
-        $response = $this->actingAs($this->manager)->post(route('objectives.manage.goals.add.form', ['objectiveId' => $this->objective->id]), [
+        $response = $this->actingAs($this->admin)->post(route('objectives.manage.goals.add.form', ['objectiveId' => $this->objective->id]), [
             'title' => 'Personas capacitadas',
+            'visibility' => 'public',
             'status' => 'ongoing',
             'measurement_mode' => 'periodic',
             'indicator' => 'Personas',
@@ -231,6 +235,7 @@ class PeriodicGoalReportsTest extends TestCase
         $goal->status = 'ongoing';
         $goal->objective()->associate($this->objective);
         $goal->save();
+        $goal->reporters()->attach($this->reporter);
 
         $response = $this->actingAs($this->reporter)->post($this->newReportUrl($goal), [
             'title' => 'Avance',
@@ -316,7 +321,7 @@ class PeriodicGoalReportsTest extends TestCase
         $goal = $this->createPeriodicGoal();
         $this->createProgressReport($goal, $goal->periods->firstWhere('number', 1), 10);
 
-        $response = $this->actingAs($this->manager)->put(route('objectives.manage.goals.edit.form', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]), [
+        $response = $this->actingAs($this->admin)->put(route('objectives.manage.goals.edit.form', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]), [
             'title' => 'Meta editada',
             'status' => 'ongoing',
             'measurement_mode' => 'simple',
@@ -338,7 +343,7 @@ class PeriodicGoalReportsTest extends TestCase
     {
         $goal = $this->createPeriodicGoal();
 
-        $this->actingAs($this->manager)->put(route('objectives.manage.goals.edit.form', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]), [
+        $this->actingAs($this->admin)->put(route('objectives.manage.goals.edit.form', ['objectiveId' => $this->objective->id, 'goalId' => $goal->id]), [
             'title' => 'Meta editada',
             'status' => 'ongoing',
             'measurement_mode' => 'periodic',
@@ -552,6 +557,27 @@ class PeriodicGoalReportsTest extends TestCase
         $this->assertSame(3, substr_count($response->getContent(), '<span class="text-muted">—</span>'));
     }
 
+    public function test_period_reservations_do_not_reveal_another_reporters_pending(): void
+    {
+        $this->withoutVite();
+        $goal = $this->createPeriodicGoal();
+        $report = $this->createProgressReport($goal, $goal->periods->first(), 26);
+        $report->review_status = \App\Services\Reports\ReviewStatus::Returned;
+        $report->save();
+        $other = $this->createUser('other-reporter@example.com');
+        $goal->reporters()->attach($other);
+        $parameters = ['objectiveId' => $this->objective->id, 'goalId' => $goal->id];
+        $panelUrl = route('objectives.manage.goals.reports.index', $parameters + ['reportId' => $report->id]);
+        $this->actingAs($other)->get(route('objectives.manage.goals.index', $parameters))->assertOk()
+            ->assertDontSee('sin medición aprobada')->assertDontSee($panelUrl, false);
+        $this->get(route('objectives.manage.goals.reports.add', $parameters))->assertOk()
+            ->assertViewHas('periods', fn (array $periods): bool => $periods[0]['reserved']
+                && ! $periods[0]['reportable'] && $periods[0]['edit_url'] === null
+                && $periods[0]['state_label'] === 'Período reservado');
+        $this->actingAs($this->reporter)->get(route('objectives.manage.goals.index', $parameters))->assertOk()
+            ->assertSee('sin medición aprobada')->assertSee($panelUrl, false);
+    }
+
     public function test_multiyear_periods_offer_the_same_year_filter_in_portal_and_management(): void
     {
         $this->withoutVite();
@@ -636,6 +662,9 @@ class PeriodicGoalReportsTest extends TestCase
             'period_count' => count($targets),
             'period_targets' => $targets,
         ]);
+
+        $goal->responsibles()->attach($this->manager);
+        $goal->reporters()->attach($this->reporter);
 
         return $goal->load('periods');
     }

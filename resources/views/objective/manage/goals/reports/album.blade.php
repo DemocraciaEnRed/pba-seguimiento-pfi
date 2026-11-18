@@ -5,7 +5,7 @@
 <section>
   <h3 class="is-700">Album de fotos</h3>
   <p class="lead">En esta sección encontrarás todas las fotos asociadas al reporte</p>
-  @if($report->canManage(auth()->user()))
+  @can('update', $report)
   <h5 class="font-weight-bold"><i class="fas fa-upload"></i> Nueva imagen</h5>
   <p>Debe ser una imagen JPG o JPEG , hasta 8 MB. Si el ancho de la imagen es mayor a 1366px, sera ajustada a este
     tamaño.</p>  
@@ -17,19 +17,19 @@
       <button class="btn btn-primary" type="submit">Subir imagen</button>
     </div>
   </form>
-  @endif
+  @endcan
   <hr>
  @forelse($report->photos as $photo)
   <div class="d-inline-block mr-2 my-1">
-    <a href="{{asset($photo->path)}}" target="_blank"><img src="{{asset($photo->thumbnail_path)}}" height="80" class="img rounded mb-1 align-top" alt=""></a> 
-    @if($report->canManage(auth()->user()))
+    <a href="{{ $photo->path }}" target="_blank" rel="noopener"><img src="{{ $photo->thumbnail_path }}" height="80" class="img rounded mb-1 align-top" alt=""></a>
+    @can('update', $report)
     <a class="is-clickable text-danger" onclick="event.preventDefault();document.getElementById('delete-photo-{{$photo->id}}').submit();"><i class="fas fa-xmark fa-lg fa-fw"></i></a>
     <form id="delete-photo-{{$photo->id}}" action="{{route('objectives.manage.goals.reports.album.delete.form',['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id, 'pictureId' => $photo->id]) }}" method="POST" style="display: none;">
         @method('DELETE')
         @csrf
         <input type="hidden" name="review_version" value="{{ $report->review_version }}">
     </form>
-    @endif
+    @endcan
   </div>
   @empty
   <p class="text-muted">No hay fotos cargadas en el reporte</p>

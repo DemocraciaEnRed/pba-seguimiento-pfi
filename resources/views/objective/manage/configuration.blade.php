@@ -32,10 +32,11 @@
   <ul>
     <li>El objetivo deja de ser visible publicamente</li>
     <li>Administradores y miembros del equipo pueden acceder al panel de control del objetivo</li>
-    <li>Coordinadores pueden volver a hacer visible el objetivo</li>
+    <li>Solo Administración puede ocultar o volver a hacer visible el objetivo</li>
     <li>Miembros del equipo pueden crear reportes, pero los suscriptores no serán notificados</li>
     <li>Coordinadores pueden seguir creando metas.</li>
   </ul>
+  @can('changeVisibility', $objective)
   <form action="{{ route('objectives.manage.configuration.hide.form',['objectiveId' => $objective->id]) }}" method="POST">
     @method('PUT')
     @csrf
@@ -47,6 +48,7 @@
     </div>
     <button type="submit" class="btn btn-primary">Guardar</button>
   </form>
+  @endcan
   @if(app_setting('app_map_enabled'))
   <hr>
   <form action="{{ route('objectives.manage.configuration.map.form',['objectiveId' => $objective->id]) }}" method="POST">

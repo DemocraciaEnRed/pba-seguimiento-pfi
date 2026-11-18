@@ -4,6 +4,9 @@ namespace App\Services\Indicators;
 
 use App\Goal;
 use App\Objective;
+use App\Report;
+use App\Services\Goals\GoalAudience;
+use App\User;
 use Carbon\CarbonImmutable;
 
 class ObjectiveStats
@@ -22,11 +25,15 @@ class ObjectiveStats
      *     traffic_lights: array{green: int, yellow: int, red: int, measured: int, unmeasured: int}
      * }
      */
-    public function compute(Objective $objective): array
+    public function compute(Objective $objective, ?User $user = null): array
     {
         $today = CarbonImmutable::today();
+        $goalAudience = $user === null
+            ? app(GoalAudience::class)->publicQuery()
+            : app(GoalAudience::class)->managementQuery($user);
 
         $goals = $objective->goals()
+            ->visibleIn($goalAudience)
             ->with('periods.progressReport')
             ->get()
             ->map(function (Goal $goal) use ($today): array {
@@ -41,7 +48,11 @@ class ObjectiveStats
         $statusCounts = $goals->countBy('status');
         $lightCounts = $goals->pluck('light')->filter()->countBy(fn (TrafficLight $light): string => $light->value);
         $measured = $lightCounts->sum();
-        $lastReportDate = $objective->reports()->approved()->max('reports.date');
+        $reports = Report::query()
+            ->approved()
+            ->visibleIn($goalAudience)
+            ->whereHas('goal', fn ($query) => $query->where('objective_id', $objective->getKey()));
+        $lastReportDate = (clone $reports)->max('reports.date');
 
         return [
             'goals_total' => $goals->count(),
@@ -49,7 +60,7 @@ class ObjectiveStats
             'goals_ongoing' => $statusCounts->get('ongoing', 0),
             'goals_delayed' => $statusCounts->get('delayed', 0),
             'goals_inactive' => $statusCounts->get('inactive', 0),
-            'reports_total' => $objective->reports()->approved()->count(),
+            'reports_total' => $reports->count(),
             'last_report_date' => $lastReportDate ? CarbonImmutable::parse($lastReportDate)->toDateString() : null,
             'traffic_lights' => [
                 'green' => $lightCounts->get(TrafficLight::Green->value, 0),

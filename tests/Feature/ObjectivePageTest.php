@@ -88,6 +88,18 @@ class ObjectivePageTest extends TestCase
             ->assertDontSee('¡Recibí notificaciones del objetivo, las metas y los reportes!');
     }
 
+    public function test_hidden_objectives_cannot_be_subscribed_to_by_identifier(): void
+    {
+        $this->hideObjective();
+        $user = $this->createUser('subscriber@example.com');
+
+        $this->actingAs($user)
+            ->post(route('objectives.subscribers.form', ['objectiveId' => $this->objective->id]))
+            ->assertNotFound();
+
+        $this->assertSame(0, $this->objective->subscribers()->count());
+    }
+
     public function test_goal_page_renders_the_goal_in_a_hero_with_the_axis_color(): void
     {
         $this->get(route('goals.index', ['goalId' => $this->goal->id]))
@@ -98,10 +110,10 @@ class ObjectivePageTest extends TestCase
             ->assertDontSee('Nuevo reporte');
     }
 
-    public function test_goal_page_offers_new_report_to_members(): void
+    public function test_goal_page_offers_new_report_to_assigned_reporters(): void
     {
         $member = $this->createUser('member@example.com');
-        $this->objective->members()->attach($member, ['role' => 'reporter']);
+        $this->goal->reporters()->attach($member);
 
         $this->actingAs($member)
             ->get(route('goals.index', ['goalId' => $this->goal->id]))
@@ -117,20 +129,21 @@ class ObjectivePageTest extends TestCase
         $this->get(route('objectives.index', ['objectiveId' => $this->objective->id]))->assertNotFound();
         $this->get(route('goals.index', ['goalId' => $this->goal->id]))->assertNotFound();
         $this->actingAs($outsider)->get(route('objectives.index', ['objectiveId' => $this->objective->id]))->assertNotFound();
+        $this->actingAs($outsider)->getJson(route('apiService.objectives.fetch', ['objectiveId' => $this->objective->id]))->assertNotFound();
         $this->actingAs($outsider)->getJson(route('apiService.objectives.stats', ['objectiveId' => $this->objective->id]))->assertNotFound();
         $this->actingAs($outsider)->getJson(route('apiService.objectives.reports', ['objectiveId' => $this->objective->id]))->assertNotFound();
         $this->actingAs($outsider)->getJson(route('apiService.goals.reports', ['goalId' => $this->goal->id]))->assertNotFound();
     }
 
-    public function test_hidden_objective_pages_are_visible_to_members(): void
+    public function test_hidden_objective_pages_are_visible_to_assigned_users(): void
     {
         $this->hideObjective();
-        $member = $this->createUser('member@example.com');
-        $this->objective->members()->attach($member, ['role' => 'reporter']);
+        $assigned = $this->createUser('assigned@example.com');
+        $this->goal->reporters()->attach($assigned->id, ['assigned_by' => $this->author->id]);
 
-        $this->actingAs($member)->get(route('objectives.index', ['objectiveId' => $this->objective->id]))->assertOk();
-        $this->actingAs($member)->get(route('goals.index', ['goalId' => $this->goal->id]))->assertOk();
-        $this->actingAs($member)->getJson(route('apiService.objectives.stats', ['objectiveId' => $this->objective->id]))->assertOk();
+        $this->actingAs($assigned)->get(route('objectives.index', ['objectiveId' => $this->objective->id]))->assertOk();
+        $this->actingAs($assigned)->get(route('goals.index', ['goalId' => $this->goal->id]))->assertOk();
+        $this->actingAs($assigned)->getJson(route('apiService.objectives.stats', ['objectiveId' => $this->objective->id]))->assertOk();
     }
 
     public function test_stats_summarize_goals_reports_and_last_report_date(): void

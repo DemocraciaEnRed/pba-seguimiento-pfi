@@ -27,12 +27,11 @@ use App\Services\Csv\CsvDownload;
 use App\Notifications\NewGoal;
 use App\Notifications\EditObjective;
 use App\Notifications\DeleteObjective;
-use App\Notifications\JoinObjectiveTeam;
-use App\Notifications\RemoveObjectiveTeam;
 use App\Rules\MatchOldPassword;
 use App\Services\Indicators\GoalIndicatorConfigurator;
 use App\Services\Indicators\ObjectiveStats;
 use App\Services\Indicators\MeasurementMode;
+use App\Services\Goals\GoalAudience;
 use Illuminate\Http\Request;
 use App\Services\Comments\CommentModeration;
 use App\Exports\CommentsExport;
@@ -50,25 +49,18 @@ class ObjectivePanelController extends Controller
         $this->middleware('auth');
         $this->middleware('verified');
         $this->middleware('fetch_objective');
-        $this->middleware('can_manage_objective');
-    }
-
-    private function hasManagerPrivileges(Request $request){
-      if(!$request->user()->hasRole('admin') && !$request->user()->isManagerObjective($request->objective->id)){
-        abort(403, 'No autorizado');
-      }
-      return;
+        $this->middleware(\App\Http\Middleware\AuthorizeObjectiveManagement::class);
     }
 
     public function viewEditObjective(Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
       $ejes = Category::with('strategicObjectives')->orderBy('order')->get();
       $organizations = Organization::all();
       return view('objective.manage.edit',['objective' => $request->objective, 'ejes' => $ejes, 'organizations' => $organizations]);
     }
 
     public function formEditObjective(Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
       $rules = [
           'title' => 'required|string|max:550' ,
           'content' => 'required|string|max:2000',
@@ -109,9 +101,9 @@ class ObjectivePanelController extends Controller
     public function index(Request $request, CommentModeration $commentModeration, ObjectiveStats $objectiveStats){
       return view('objective.manage.index', [
         'objective' => $request->objective,
-        'stats' => $objectiveStats->compute($request->objective),
-        'commentsCount' => $commentModeration->search(objectiveId: $request->objective->id)->count(),
-        'latestComments' => $commentModeration->search(objectiveId: $request->objective->id)->take(3)->get(),
+        'stats' => $objectiveStats->compute($request->objective, $request->user()),
+        'commentsCount' => $commentModeration->search(objectiveId: $request->objective->id, user: $request->user())->count(),
+        'latestComments' => $commentModeration->search(objectiveId: $request->objective->id, user: $request->user())->take(3)->get(),
       ]);
     }
 
@@ -122,7 +114,7 @@ class ObjectivePanelController extends Controller
 
       return view('objective.manage.comments', [
         'objective' => $request->objective,
-        'comments' => $commentModeration->search($search, $type, objectiveId: $request->objective->id)->paginate(20)->withQueryString(),
+        'comments' => $commentModeration->search($search, $type, objectiveId: $request->objective->id, user: $request->user())->paginate(20)->withQueryString(),
         'search' => $search,
         'type' => $type,
       ]);
@@ -130,17 +122,17 @@ class ObjectivePanelController extends Controller
 
     public function downloadComments(Request $request, CsvDownload $csvDownload, $objectiveId)
     {
-      $this->hasManagerPrivileges($request);
+      $this->authorize('accessManagement', $request->objective);
 
       return $csvDownload->download(
-        new CommentsExport($request->query('q'), $request->query('tipo'), objectiveId: $request->objective->id),
+        new CommentsExport($request->query('q'), $request->query('tipo'), objectiveId: $request->objective->id, user: $request->user()),
         Carbon::now()->format('Ymd').'-comentarios-objetivo-'.$request->objective->id.'.csv',
       );
     }
 
     public function formDeleteComment(Request $request, CommentModeration $commentModeration, $objectiveId, $commentId)
     {
-      $comment = $commentModeration->search(objectiveId: $request->objective->id)->findOrFail($commentId);
+      $comment = $commentModeration->search(objectiveId: $request->objective->id, user: $request->user())->findOrFail($commentId);
       $commentModeration->delete($comment, $request->user(), $request->user()->hasRole('admin') ? 'Administrador' : 'Miembro del equipo');
 
       return redirect()->back()->with('success', CommentModeration::deletedMessage($comment));
@@ -154,13 +146,13 @@ class ObjectivePanelController extends Controller
 
     public function viewAddCommunities(Request $request, $objectiveId)
     {
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
       return view('objective.manage.communities.add', ['objective' => $request->objective]);
     }
 
     public function formAddCommunities(Request $request, $objectiveId)
     {
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
       $rules = [
           'label' => 'required|string|max:225',
           'icon' => 'required|string|max:100',
@@ -181,7 +173,7 @@ class ObjectivePanelController extends Controller
     }
     public function formRemoveCommunities(Request $request, $objectiveId, $communityId)
     {
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
 
       $community = Community::findorfail($communityId);
       $community->delete();
@@ -190,90 +182,30 @@ class ObjectivePanelController extends Controller
     }
 
     public function viewListTeam(Request $request){
-      $role = in_array($request->query('rol'), ['manager', 'reporter'], true) ? $request->query('rol') : null;
-      $members = $request->objective->members()->orderBy('surname')->orderBy('name');
-      if ($role) {
-        $members->wherePivot('role', $role);
-      }
-      $members = $members->get();
-
-      return view('objective.manage.team.list', [
-        'objective' => $request->objective,
-        'members' => $members,
-        'filters' => ['rol' => $role],
-      ]);
+      $this->authorize('update', $request->objective);
+      return redirect()->route('admin.goal-assignments.objective', ['objectiveId' => $request->objective->id]);
     }
 
     public function viewListSubscribers(Request $request){
+      $this->authorize('update', $request->objective);
       $subscribers = $request->objective->subscribers()->paginate(10);
       return view('objective.manage.subscribers.list', ['objective' => $request->objective, 'subscribers' => $subscribers]);
     }
 
     public function downloadListSubscribers(Request $request, CsvDownload $csvDownload, $objectiveId){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
       return $csvDownload->download(new ObjectiveSubscribersExport($objectiveId), Carbon::now()->format('Ymd').'-subscriptores-objetivo-'.$objectiveId.'.csv');
     }
 
-    public function viewAddTeam(Request $request){
-      $this->hasManagerPrivileges($request);
-      return view('objective.manage.team.add', ['objective' => $request->objective]);
-    }
-
-    public function formAddTeam(Request $request){
-      $this->hasManagerPrivileges($request);
-      $user = User::findorfail($request->input('userId'));
-      // Attach
-      $request->objective->members()->attach($user, ['role' => $request->input('role')]);
-      // Subscribe
-      $alreadySubscribed = $request->objective->subscribers->contains($user->id);
-      if(!$alreadySubscribed){
-        $request->objective->subscribers()->attach($user);
-      }
-      Log::channel('mysql')->info("[{$request->user()->fullname}] ha agregado a [{$user->fullname}] al equipo del objetivo [{$request->objective->title}]", [
-        'objective_id' => $request->objective->id,
-        'objective_title' => $request->objective->title,
-        'member_id' => $user->id,
-        'member_fullname' => $user->fullname,
-        'member_role' => $request->input('role'),
-        'user_id' => $request->user()->id,
-        'user_fullname' => $request->user()->fullname,
-        'user_email' => $request->user()->email
-        ]);
-
-      // Notify
-      $user->notify(new JoinObjectiveTeam($request->objective, $request->input('role')));
-
-      return redirect()->route('objectives.manage.team', ['objectiveId' => $request->objective->id])->with('success','Se ha agregado al nuevo miembro en el equipo y se lo ha notificado exitosamente');
-    }
-    public function formRemoveTeam(Request $request, $objectiveId, $userId){
-      $this->hasManagerPrivileges($request);
-      $user = $request->objective->members()->where('user_id', $userId)->first();
-
-      $request->objective->members()->detach($userId);
-
-      Log::channel('mysql')->info("[{$request->user()->fullname}] ha quitado a [{$user->fullname}] del equipo del objetivo [{$request->objective->title}]", [
-        'objective_id' => $request->objective->id,
-        'objective_title' => $request->objective->title,
-        'member_id' => $user->id,
-        'member_fullname' => $user->fullname,
-        'member_role' => $user->pivot->role,
-        'user_id' => $request->user()->id,
-        'user_fullname' => $request->user()->fullname,
-        'user_email' => $request->user()->email
-        ]);
-
-        // Notify
-      $user->notify(new RemoveObjectiveTeam($request->objective, $request->input('role')));
-
-      return redirect()->route('objectives.manage.team', ['objectiveId' => $request->objective->id])->with('success','Se ha quitado al miembro del equipo');
-    }
     public function viewListGoals(Request $request){
+      $goalAudience = app(GoalAudience::class)->managementQuery($request->user());
       $filters = [
         'q' => trim((string) $request->query('q')) ?: null,
         'estado' => array_key_exists((string) $request->query('estado'), Goal::STATUSES) ? $request->query('estado') : null,
         'tipo' => MeasurementMode::tryFrom((string) $request->query('tipo'))?->value,
       ];
       $goals = $request->objective->goals()
+        ->visibleIn($goalAudience)
         ->with('periods.progressReport')
         ->withCount(['reports' => fn ($reports) => $reports->manageableBy($request->user()), 'milestones'])
         ->when($filters['q'], fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
@@ -284,23 +216,23 @@ class ObjectivePanelController extends Controller
       return view('objective.manage.goals.list', [
         'objective' => $request->objective,
         'goals' => $goals,
-        'hasGoals' => $request->objective->goals()->exists(),
+        'hasGoals' => $request->objective->goals()->visibleIn($goalAudience)->exists(),
         'filters' => $filters,
       ]);
     }
 
      public function downloadListGoals(Request $request, CsvDownload $csvDownload, $objectiveId){
-      $this->hasManagerPrivileges($request);
-      return $csvDownload->download(new ObjectiveGoalsExport($objectiveId), Carbon::now()->format('Ymd').'-metas-objetivo-'.$objectiveId.'.csv');
+      $this->authorize('accessManagement', $request->objective);
+      return $csvDownload->download(new ObjectiveGoalsExport((int) $objectiveId, $request->user()), Carbon::now()->format('Ymd').'-metas-objetivo-'.$objectiveId.'.csv');
     }
 
     public function downloadGoalIndicators(Request $request, CsvDownload $csvDownload, $objectiveId){
-      $this->hasManagerPrivileges($request);
-      return $csvDownload->download(new ObjectiveIndicatorsExport((int) $objectiveId), Carbon::now()->format('Ymd').'-indicadores-objetivo-'.$objectiveId.'.csv');
+      $this->authorize('accessManagement', $request->objective);
+      return $csvDownload->download(new ObjectiveIndicatorsExport((int) $objectiveId, $request->user()), Carbon::now()->format('Ymd').'-indicadores-objetivo-'.$objectiveId.'.csv');
     }
 
     public function viewAddGoal(Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('create', [Goal::class, $request->objective]);
       return view('objective.manage.goals.add',[
         'objective' => $request->objective,
         'indicatorForm' => $this->indicatorConfigurator->formState(null),
@@ -309,11 +241,12 @@ class ObjectivePanelController extends Controller
     }
 
     public function formAddGoal(Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('create', [Goal::class, $request->objective]);
 
       $rules = [
         'title' => 'required|string|max:550',
         'status' => 'required|string|in:ongoing,delayed,inactive',
+        'visibility' => 'required|string|in:public,internal',
         'source' => 'nullable|string|max:550',
         'milestones' => 'array',
         'milestones.*' => 'required|string|max:550',
@@ -325,6 +258,8 @@ class ObjectivePanelController extends Controller
       $goal = new Goal();
       $goal->title = $request->input('title');
       $goal->status = $request->input('status');
+      $goal->visibility = $validated['visibility'];
+      abort_if($goal->visibility === 'internal' && ! $request->user()->hasRole('admin'), 403);
       $goal->source = $request->input('source');
       $goal->objective()->associate($request->objective);
       $this->indicatorConfigurator->apply($goal, $validated);
@@ -350,7 +285,7 @@ class ObjectivePanelController extends Controller
             ]);
 
       $notifySubscribers = $request->boolean('notify');
-      if(!$request->objective->hidden && $notifySubscribers){
+      if(!$request->objective->hidden && $goal->visibility === 'public' && $notifySubscribers){
         Notification::send($request->objective->subscribers, new NewGoal($request->objective, $goal));
       }
 
@@ -358,10 +293,13 @@ class ObjectivePanelController extends Controller
     }
 
     public function viewObjectiveConfiguration (Request $request, $objectiveId){
+      $this->authorize('update', $request->objective);
       return view('objective.manage.configuration', ['objective' => $request->objective]);
     }
 
     public function formObjectiveConfigurationHide (Request $request, $objectiveId){
+      $this->authorize('changeVisibility', $request->objective);
+
       $rules = [
         'hidden' => 'nullable|string|in:true',
       ];
@@ -391,6 +329,7 @@ class ObjectivePanelController extends Controller
       return redirect()->route('objectives.manage.configuration', ['objectiveId' => $request->objective->id])->with('success','Se actualizó el objetivo');
     }
     public function formObjectiveConfigurationMap (Request $request){
+      $this->authorize('update', $request->objective);
       $rules = [
         'map_lat' => 'nullable|numeric',
         'map_long' => 'nullable|numeric',
@@ -407,11 +346,12 @@ class ObjectivePanelController extends Controller
     }
 
     public function viewObjectiveCover (Request $request){
+      $this->authorize('update', $request->objective);
       return view('objective.manage.cover', ['objective' => $request->objective]);
     }
 
     public function formObjectiveCover (Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
 
       $rules = [
           'image' => 'required|image|max:8000'
@@ -475,12 +415,13 @@ class ObjectivePanelController extends Controller
     }
 
     public function viewObjectiveFiles (Request $request){
+      $this->authorize('update', $request->objective);
       $files = $request->objective->files()->paginate(10);
       return view('objective.manage.files', ['objective' => $request->objective, 'files' => $files]);
     }
 
     public function formObjectiveFile (Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('update', $request->objective);
 
       $rules = [
         'file' => 'required|file|max:102400'
@@ -513,11 +454,12 @@ class ObjectivePanelController extends Controller
     }
 
     public function viewObjectiveMap (Request $request){
+      $this->authorize('update', $request->objective);
       return view('objective.manage.map', ['objective' => $request->objective]);
     }
 
     public function formDeleteObjective(Request $request){
-      $this->hasManagerPrivileges($request);
+      $this->authorize('delete', $request->objective);
 
       $rules = [
         'password' =>  ['required', new MatchOldPassword],
@@ -555,8 +497,16 @@ class ObjectivePanelController extends Controller
 
     public function viewObjectiveLogs(Request $request, $objectiveId)
     {
-      $this->hasManagerPrivileges($request);
-      $logs = ActionLog::where('context->objective_id', $objectiveId)->orderBy('record_datetime','DESC')->paginate(25);
+      $this->authorize('update', $request->objective);
+      $logs = ActionLog::where('context->objective_id', $objectiveId)
+        ->when(! $request->user()->hasRole('admin'), function ($query) use ($request): void {
+          $visibleGoalIds = app(GoalAudience::class)->managementQuery($request->user())->select('goals.id');
+          $query->where(fn ($query) => $query
+            ->whereNull('context->goal_id')
+            ->orWhereIn('context->goal_id', $visibleGoalIds));
+        })
+        ->orderBy('record_datetime','DESC')
+        ->paginate(25);
       return view('objective.manage.logs',['objective' => $request->objective, 'logs' => $logs]);
     }
 }

@@ -8,11 +8,11 @@
 
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
     <span class="text-smaller text-muted">{{ $subscribers->total() }} resultado(s)</span>
-    @isManager($objective->id)
+    @can('update', $objective)
     @if($subscribers->total() > 0)
     <a href="{{ route('objectives.manage.subscribers.download', ['objectiveId' => $objective->id]) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-download fa-fw"></i>Descargar CSV</a>
     @endif
-    @endisManager
+    @endcan
   </div>
 
   <div class="list-group shadow-sm mb-3">
@@ -21,9 +21,9 @@
       @include('utils.avatar', ['avatar' => $subscriber->avatar, 'size' => 36, 'thumbnail' => true])
       <div class="flex-grow-1 min-w-0">
         <span class="is-700">{{ $subscriber->surname }}, {{ $subscriber->name }}</span>
-        @isManager($objective->id)
+        @can('update', $objective)
         <span class="d-block text-smaller text-muted text-truncate">{{ $subscriber->email }}</span>
-        @endisManager
+        @endcan
       </div>
       <span class="text-right text-smaller text-nowrap text-muted" title="Fecha de suscripción">@justdate($subscriber->pivot->created_at)<i class="far fa-calendar fa-fw ml-1"></i></span>
     </div>

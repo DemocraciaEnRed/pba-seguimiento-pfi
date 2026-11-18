@@ -44,12 +44,12 @@
 
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
     <span class="text-smaller text-muted">{{ $goals->count() }} resultado(s)</span>
-    @isManager($objective->id)
+    @can('accessManagement', $objective)
     <div class="d-flex flex-wrap gap-2">
       <a href="{{ route('objectives.manage.goals.download', ['objectiveId' => $objective->id]) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-download fa-fw"></i>Descargar CSV</a>
       <a href="{{ route('objectives.manage.goals.indicators.download', ['objectiveId' => $objective->id]) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-download fa-fw"></i>Indicadores por período CSV</a>
     </div>
-    @endisManager
+    @endcan
   </div>
   @endif
 

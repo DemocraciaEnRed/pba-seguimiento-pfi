@@ -1,6 +1,6 @@
 @php
 $objectiveParams = ['objectiveId' => $objective->id];
-$canManage = Auth::user()->hasRole('admin') || Auth::user()->isManagerObjective($objective->id);
+$canManage = Auth::user()->can('update', $objective);
 @endphp
 @hasRole('admin')
 <ul class="list-unstyled mb-0">
@@ -17,12 +17,14 @@ $canManage = Auth::user()->hasRole('admin') || Auth::user()->isManagerObjective(
 <x-side-menu.group label="Participación">
   <x-side-menu.category label="Comentarios" icon="far fa-comments" :href="route('objectives.manage.comments', $objectiveParams)" :active="request()->routeIs('objectives.manage.comments')" />
   <x-side-menu.category label="Comunidades" icon="fas fa-icons" :href="route('objectives.manage.communities', $objectiveParams)" :active="request()->routeIs('objectives.manage.communities', 'objectives.manage.communities.edit')" :create-href="$canManage ? route('objectives.manage.communities.add', $objectiveParams) : null" :create-active="request()->routeIs('objectives.manage.communities.add')" create-label="Nueva comunidad" />
+  @if($canManage)
   <x-side-menu.category label="Suscriptores" icon="fas fa-user-tag" :href="route('objectives.manage.subscribers', $objectiveParams)" :active="request()->routeIs('objectives.manage.subscribers')" />
-</x-side-menu.group>
-<x-side-menu.group label="Equipo">
-  <x-side-menu.category label="Miembros" icon="fas fa-users" :href="route('objectives.manage.team', $objectiveParams)" :active="request()->routeIs('objectives.manage.team')" :create-href="$canManage ? route('objectives.manage.team.add', $objectiveParams) : null" :create-active="request()->routeIs('objectives.manage.team.add')" create-label="Agregar miembro" />
+  @endif
 </x-side-menu.group>
 @if($canManage)
+<x-side-menu.group label="Equipo">
+  <x-side-menu.category label="Equipos por meta" icon="fas fa-users" :href="route('admin.goal-assignments.objective', $objectiveParams)" />
+</x-side-menu.group>
 <x-side-menu.group label="Configuración">
   <x-side-menu.category label="Editar objetivo" icon="fas fa-pen" :href="route('objectives.manage.edit', $objectiveParams)" :active="request()->routeIs('objectives.manage.edit')" />
   <x-side-menu.category label="Imagen de portada" icon="far fa-image" :href="route('objectives.manage.cover', $objectiveParams)" :active="request()->routeIs('objectives.manage.cover')" />

@@ -12,6 +12,7 @@ use App\Goal;
 use App\Testimony;
 use App\Objective;
 use App\Services\SeoMetadata;
+use App\Services\Goals\GoalAudience;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use App\Notifications\NewCommentReportForAuthor;
@@ -40,6 +41,12 @@ class ReportController extends Controller
                         $comment->replies()->findOrFail($replyId);
                     }
                 }
+                $response = $next($request);
+                if (! $report->isVisibleTo(null)) {
+                    $response->headers->set('Cache-Control', 'private, no-store');
+                }
+
+                return $response;
             }
             return $next($request);
         });
@@ -48,19 +55,12 @@ class ReportController extends Controller
         // $this->middleware('fetch_report');
     }
 
-    private function hasManagerPrivileges(Request $request){
-      if(!$request->user()->hasRole('admin') && !$request->user()->isManagerObjective($request->objective->id)){
-        return response()->json(['message' => 'Not authorized'],403);
-      }
-      return;
-    }
-
     public function index(Request $request, string $reportId, SeoMetadata $seoMetadata): View {
         $report = Report::with('photos')->findOrFail($reportId);
         abort_unless($report->isVisibleTo($request->user()), 404);
         $goal = Goal::findorfail($report->goal_id);
         $objective = Objective::with('strategicObjective.category')->findOrFail($goal->objective_id);
-        $request->attributes->set('search_indexing_public', $objective->isVisibleTo(null));
+        $request->attributes->set('search_indexing_public', $report->isVisibleTo(null));
         $testimony = null;
         if($request->user()){
             $testimony = $report->userTestimony($request->user()->id)->first();
@@ -119,12 +119,8 @@ class ReportController extends Controller
         $dateRange = $validated['date_range'] ?? null;
         $sort = $validated['sort'] ?? null;
 
-        $reports = Report::query()->approved()->forListing(explode(',', (string) $request->query('with')));
-        $isVisibleObjectiveFilter = ! is_null($objective) && (bool) Objective::find($objective)?->isVisibleTo($request->user());
-        $isVisibleGoalFilter = ! is_null($goal) && (bool) Goal::with('objective')->find($goal)?->objective?->isVisibleTo($request->user());
-        if(! $isVisibleObjectiveFilter && ! $isVisibleGoalFilter){
-            $reports->fromVisibleObjectives();
-        }
+        $publicGoals = app(GoalAudience::class)->publicQuery();
+        $reports = Report::query()->approved()->visibleIn($publicGoals)->forListing(explode(',', (string) $request->query('with')));
         if(!is_null($sort)){
             match ($sort) {
                 'recent' => $reports->orderBy('date', 'desc'),
@@ -212,11 +208,12 @@ class ReportController extends Controller
         $comment->user()->associate($request->user());
         $report->comments()->save($comment);
 
-        if($report->author->id != $request->user()->id ){
+        if ($report->author->id !== $request->user()->id && $report->isVisibleTo($report->author)) {
             $report->author->notify(new NewCommentReportForAuthor($report, $comment));
         }
 
-        $teamMembersToNotify = $report->goal->objective->members->except([$report->author->id, $request->user()->id]);
+        $teamMembersToNotify = $report->goal->responsibles()->get()->merge($report->goal->reporters()->get())->unique('id');
+        $teamMembersToNotify = $teamMembersToNotify->except([$report->author->id, $request->user()->id]);
         Notification::send($teamMembersToNotify, new NewCommentReportForTeamObjective($report, $comment));
 
         return response()->json(['message' => 'Se ha creado el comentario'], 200);
@@ -268,8 +265,8 @@ class ReportController extends Controller
             return response()->json(['message' => 'El comentario ha sido borrado'], 200);
         }
 
-        $isUserObjectiveMember = $request->user()->isMemberObjective($report->objective->id);
-        if($isUserObjectiveMember  && $isVerified){
+        $isAssignedToGoal = $request->user()->isAssignedToGoal($report->goal_id);
+        if($isAssignedToGoal && $isVerified){
             Log::channel('mysql')->info("[{$request->user()->fullname}] (Miembro del equipo) ha eliminado el comentario de [{$comment->user->fullname}] hecho en el reporte [{$report->title}], de la meta [{$report->goal->title}] del objetivo [{$report->objective->title}]", [
                 'report_id' => $report->id,
                 'report_title' => $report->title,
@@ -338,7 +335,10 @@ class ReportController extends Controller
         $comment->user()->associate($request->user());
         $parentComment->replies()->save($comment);
 
-        $parentComment->user->notify(new NewReplyReport($parentComment->commentable, $comment));
+        $commentable = $parentComment->commentable;
+        if ($commentable instanceof Report && $commentable->isVisibleTo($parentComment->user)) {
+            $parentComment->user->notify(new NewReplyReport($commentable, $comment));
+        }
 
         return response()->json(['message' => 'Se ha creado la respuesta'], 200);
     }
@@ -393,8 +393,8 @@ class ReportController extends Controller
             return response()->json(['message' => 'El comentario ha sido borrado'], 200);
         }
 
-        $isUserObjectiveMember = $request->user()->isMemberObjective($report->objective->id);
-        if($isUserObjectiveMember  && $isVerified){
+        $isAssignedToGoal = $request->user()->isAssignedToGoal($report->goal_id);
+        if($isAssignedToGoal && $isVerified){
             Log::channel('mysql')->info("[{$request->user()->fullname}] (Miembro del equipo) ha eliminado la respuesta de [{$comment->user->fullname}] hecho en un comentario del reporte [{$report->title}], de la meta [{$report->goal->title}] del objetivo [{$report->objective->title}]", [
                 'report_id' => $report->id,
                 'report_title' => $report->title,

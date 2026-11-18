@@ -4,7 +4,7 @@
 
 <section>
   <h3 class="is-700">Mis objetivos generales</h1>
-  <p class="lead">Estos son los objetivos de los cuales formas parte del equipo.</p>
+  <p class="lead">Estos son los objetivos en los que tenés metas asignadas.</p>
   @if(!Auth::user()->hasVerifiedEmail())
   <div class="alert alert-warning">
     <h5 class="is-700"><i class="fas fa-triangle-exclamation"></i>&nbsp;¡Debe verificar su cuenta para poder ingresar a los paneles de administracion de los objetivos!</h5>
@@ -25,9 +25,6 @@
             </h4>
             <p class="text-muted text-smaller my-1">{{Str::limit($objective->content, 200, $end=' [...]')}}</p>
           </div>
-          <div class="text-center">
-            <span class="text-smaller text-info"><i class="fas fa-{{$objective->pivot->role == 'manager' ? 'user-shield' : 'user-edit'}}"></i> {{$objective->pivot->role == 'manager' ? 'Coordina' : 'Reporta'}}</span>
-          </div>
       </div>
     </div>
   @endforeach
@@ -35,7 +32,7 @@
   <div class="card mb-3 shadow-sm">
     <div class="card-body text-center">
       <h6 class="card-title mb-2"><i class="far fa-face-surprise"></i>&nbsp;No forma parte de ningun objetivo</h6>
-      <p class="text-smaller mb-0">¿Quiere participar activamente? Únase a algun objetivo!</p>
+      <p class="text-smaller mb-0">Administración debe asignarte metas para habilitar la gestión.</p>
     </div>
   </div>
   @endif

@@ -20,7 +20,6 @@ class Reply extends JsonResource
         // dd($request->report->objective->id);
         // dd($request->user());
         // dd($this->isAuthor(Auth::user()->id));
-        // dd(Auth::user()->isMemberObjective($request->report->objective->id));}
         $res = [
             'id' => $this->id,
             'content' => $this->content,
@@ -31,9 +30,9 @@ class Reply extends JsonResource
         ];
         if(Auth::user()){
             $res['edit_url'] = $this->when($this->isAuthor(Auth::user()->id),route('apiService.reports.comments.reply.edit', ['reportId' => $request->report->id, 'commentId' => $this->parent_id, 'replyId' => $this->id]));
-            $res['delete_url'] = $this->when(Auth::user()->isMemberObjective($request->report->objective->id) || $this->isAuthor(Auth::user()->id) || Auth::user()->hasRole('admin'),route('apiService.reports.comments.reply.delete', ['reportId' => $request->report->id, 'commentId' => $this->parent_id, 'replyId' => $this->id]));
+            $res['delete_url'] = $this->when(Auth::user()->isAssignedToGoal($request->report->goal_id) || $this->isAuthor(Auth::user()->id) || Auth::user()->hasRole('admin'),route('apiService.reports.comments.reply.delete', ['reportId' => $request->report->id, 'commentId' => $this->parent_id, 'replyId' => $this->id]));
             $res['user_verified'] = Auth::user()->hasVerifiedEmail();
-            $res['author_member_objective'] = Auth::user()->isMemberObjective($request->report->objective->id);
+            $res['author_assigned_goal'] = $this->user->isAssignedToGoal($request->report->goal_id);
         }
 
         return $res;

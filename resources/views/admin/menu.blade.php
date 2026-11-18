@@ -5,6 +5,7 @@
   <x-side-menu.category label="Ejes" icon="fas fa-tags" :href="route('admin.categories')" :active="request()->routeIs('admin.categories', 'admin.categories.edit')" :create-href="route('admin.categories.create')" :create-active="request()->routeIs('admin.categories.create')" create-label="Crear eje" />
   <x-side-menu.category label="Objetivos estratégicos" icon="fas fa-diagram-project" :href="route('admin.strategic-objectives')" :active="request()->routeIs('admin.strategic-objectives')" />
   <x-side-menu.category label="Objetivos generales" icon="fas fa-flag-checkered" :href="route('admin.objectives')" :active="request()->routeIs('admin.objectives')" :create-href="route('admin.objectives.create')" :create-active="request()->routeIs('admin.objectives.create')" create-label="Crear objetivo general" />
+  <x-side-menu.category label="Equipos por meta" icon="fas fa-people-group" :href="route('admin.goal-assignments')" :active="request()->routeIs('admin.goal-assignments*')" />
   <x-side-menu.category label="Organizaciones" icon="far fa-building" :href="route('admin.organizations')" :active="request()->routeIs('admin.organizations', 'admin.organizations.edit')" :create-href="route('admin.organizations.create')" :create-active="request()->routeIs('admin.organizations.create')" create-label="Crear organización" />
   <x-side-menu.category label="Carga masiva" icon="fas fa-file-import" :href="route('admin.import')" :active="request()->routeIs('admin.import*')" />
 </x-side-menu.group>
@@ -27,5 +28,6 @@
 </x-side-menu.group>
 <x-side-menu.group label="Sistema">
   <x-side-menu.category label="Usuarios" icon="fas fa-users" :href="route('admin.users')" :active="request()->routeIs('admin.users*')" />
+  <x-side-menu.category label="Categorías PFI" icon="fas fa-id-badge" :href="route('admin.pfi-categories')" :active="request()->routeIs('admin.pfi-categories', 'admin.pfi-categories.edit')" :create-href="route('admin.pfi-categories.create')" :create-active="request()->routeIs('admin.pfi-categories.create')" create-label="Crear categoría PFI" />
   <x-side-menu.category label="Bitácora de acciones" icon="fas fa-list-check" :href="route('admin.logs')" :active="request()->routeIs('admin.logs')" />
 </x-side-menu.group>

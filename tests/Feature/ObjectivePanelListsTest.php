@@ -9,6 +9,7 @@ use App\Goal;
 use App\Milestone;
 use App\Objective;
 use App\Report;
+use App\Role;
 use App\StrategicObjective;
 use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,6 +26,7 @@ class ObjectivePanelListsTest extends TestCase
     private User $manager;
 
     private User $reporter;
+    private User $admin;
 
     protected function setUp(): void
     {
@@ -46,6 +48,12 @@ class ObjectivePanelListsTest extends TestCase
 
         $this->manager = $this->createUser('Ana', 'Coordinadora', 'manager@example.com');
         $this->reporter = $this->createUser('Beto', 'Reportero', 'reporter@example.com');
+        $this->admin = $this->createUser('Alma', 'Administradora', 'admin@example.com');
+        $role = new Role();
+        $role->name = 'admin';
+        $role->description = 'Administrador';
+        $role->save();
+        $this->admin->roles()->attach($role);
 
         $this->objective = new Objective();
         $this->objective->title = 'Objetivo general';
@@ -78,7 +86,7 @@ class ObjectivePanelListsTest extends TestCase
 
     public function test_goals_list_distinguishes_no_goals_from_no_matches(): void
     {
-        $this->actingAs($this->manager)->get($this->goalsUrl())->assertOk()->assertSee('Crear la primera meta');
+        $this->actingAs($this->admin)->get($this->goalsUrl())->assertOk()->assertSee('Crear la primera meta');
 
         $this->createGoal('Meta de vivienda', 'ongoing');
         $this->actingAs($this->manager)->get($this->goalsUrl(['q' => 'inexistente']))
@@ -86,14 +94,14 @@ class ObjectivePanelListsTest extends TestCase
             ->assertSee('No hay metas que coincidan con los filtros.');
     }
 
-    public function test_team_list_filters_by_role(): void
+    public function test_objective_team_management_redirects_admins_to_goal_assignments(): void
     {
         $url = route('objectives.manage.team', ['objectiveId' => $this->objective->id]);
 
-        $this->actingAs($this->manager)->get($url)->assertOk()->assertSee('Coordinadora, Ana')->assertSee('Reportero, Beto');
-        $this->actingAs($this->manager)->get($url.'?rol=reporter')->assertOk()->assertDontSee('Coordinadora, Ana')->assertSee('Reportero, Beto');
-        $this->actingAs($this->manager)->get($url.'?rol=manager')->assertOk()->assertSee('Coordinadora, Ana')->assertDontSee('Reportero, Beto');
-        $this->actingAs($this->manager)->get($url.'?rol=otro')->assertOk()->assertSee('Reportero, Beto');
+        $this->createGoal('Meta', 'ongoing');
+        $this->actingAs($this->manager)->get($url)->assertForbidden();
+        $this->actingAs($this->reporter)->get($url)->assertForbidden();
+        $this->actingAs($this->admin)->get($url)->assertRedirect(route('admin.goal-assignments.objective', ['objectiveId' => $this->objective->id]));
     }
 
     public function test_goal_reports_list_filters_by_title_and_type(): void
@@ -155,9 +163,11 @@ class ObjectivePanelListsTest extends TestCase
         $community->save();
 
         $objectiveParameters = ['objectiveId' => $this->objective->id];
-        $this->actingAs($this->manager)->get(route('objectives.manage.subscribers', $objectiveParameters))
+        $this->actingAs($this->manager)->get(route('objectives.manage.subscribers', $objectiveParameters))->assertForbidden();
+        $this->actingAs($this->admin)->get(route('objectives.manage.subscribers', $objectiveParameters))
             ->assertOk()->assertSee('1 resultado(s)')->assertSee('reporter@example.com');
-        $this->actingAs($this->manager)->get(route('objectives.manage.files', $objectiveParameters))
+        $this->actingAs($this->manager)->get(route('objectives.manage.files', $objectiveParameters))->assertForbidden();
+        $this->actingAs($this->admin)->get(route('objectives.manage.files', $objectiveParameters))
             ->assertOk()->assertSee('informe.pdf')->assertSee('fa-file-pdf', false);
         $this->actingAs($this->manager)->get(route('objectives.manage.goals.reports.files', $objectiveParameters + ['goalId' => $goal->id, 'reportId' => $report->id]))
             ->assertOk()->assertSee('planilla.xlsx')->assertSee('fa-file-excel', false);
@@ -195,6 +205,8 @@ class ObjectivePanelListsTest extends TestCase
         $goal->status = $status;
         $goal->objective()->associate($this->objective);
         $goal->save();
+        $goal->responsibles()->attach($this->manager);
+        $goal->reporters()->attach($this->reporter);
 
         return $goal;
     }

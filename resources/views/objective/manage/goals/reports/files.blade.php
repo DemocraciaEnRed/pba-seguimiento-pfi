@@ -5,7 +5,7 @@
 <section>
   <h3 class="is-700">Repositorio de archivos</h3>
   <p class="lead">Aquí podrás encontrar y cargar todos los archivos vinculados al reporte</p>
-  @if($report->canManage(auth()->user()))
+  @can('update', $report)
   <div class="card border-light mb-3">
     <div class="card-body p-3">
       <h6 class="is-700 mb-1"><i class="fas fa-upload fa-fw"></i>Nuevo archivo</h6>
@@ -17,8 +17,8 @@
         <button class="btn btn-primary btn-sm" type="submit">Subir archivo</button>
       </form>
     </div>
-    @endif
   </div>
+  @endcan
   @include('objective.manage.partials.file-list', ['files' => $files])
 </section>
 

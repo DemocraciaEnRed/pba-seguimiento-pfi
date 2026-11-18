@@ -153,6 +153,22 @@ class SitemapTest extends TestCase
             ->assertOk()->assertDontSee(route('objectives.index', [$this->hiddenObjective->id]), false);
     }
 
+    public function test_internal_goals_and_reports_never_appear_in_the_public_sitemap(): void
+    {
+        $internalGoal = $this->createGoal($this->objective);
+        $internalGoal->visibility = 'internal';
+        $internalGoal->save();
+        $internalReport = $this->createReport($internalGoal);
+        $this->enableIndexing();
+
+        $urls = $this->locations($this->xml($this->get(route('sitemap'))->assertOk(), 'urlset'), 'url');
+
+        $this->assertNotContains(route('goals.index', [$internalGoal->id]), $urls);
+        $this->assertNotContains(route('reports.index', [$internalReport->id]), $urls);
+        $this->get(route('goals.index', [$internalGoal->id]))->assertNotFound();
+        $this->get(route('reports.index', [$internalReport->id]))->assertNotFound();
+    }
+
     public function test_changing_visibility_updates_the_very_next_response(): void
     {
         $this->enableIndexing();

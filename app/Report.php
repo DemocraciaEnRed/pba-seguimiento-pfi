@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\Reports\ReviewStatus;
+use App\Services\Goals\GoalAudience;
 
 class Report extends Model
 {
@@ -46,18 +47,25 @@ class Report extends Model
         $query->where($this->qualifyColumn('review_status'), ReviewStatus::Approved->value);
     }
 
+    public function scopeVisibleIn(Builder $query, Builder $goalAudience): void
+    {
+        $query->whereIn('reports.goal_id', (clone $goalAudience)->select('goals.id'));
+    }
+
     public function scopeManageableBy(Builder $query, User $user): void
     {
+        $query->visibleIn(app(GoalAudience::class)->managementQuery($user));
+
         if ($user->hasRole('admin')) {
             return;
         }
         $query->where(function (Builder $reports) use ($user): void {
             $reports->approved()
                 ->orWhere(function (Builder $proposals) use ($user): void {
-                    $proposals->where('author_id', $user->id)
-                        ->whereHas('goal.objective.members', fn (Builder $members) => $members->where('users.id', $user->id)->whereIn('objective_user.role', ['reporter', 'manager']));
+                    $proposals->where(fn (Builder $owned) => $owned->where('author_id', $user->id)->orWhere('attendant_id', $user->id))
+                        ->whereHas('goal.reporters', fn (Builder $members) => $members->whereKey($user->id));
                 })
-                ->orWhereHas('goal.objective.members', fn (Builder $members) => $members->where('users.id', $user->id)->where('objective_user.role', 'manager'));
+                ->orWhereHas('goal.responsibles', fn (Builder $members) => $members->whereKey($user->id));
         });
     }
 
@@ -68,23 +76,17 @@ class Report extends Model
 
     public function canManage(User $user): bool
     {
-        if ($user->hasRole('admin')) {
-            return true;
-        }
-        $objectiveId = $this->goal->objective_id;
-        return ! $this->isApproved() && ($user->isManagerObjective($objectiveId)
-            || ($this->author_id === $user->id && $user->isReporterObjective($objectiveId)));
+        return $user->can('update', $this);
     }
 
     public function canViewInManagement(User $user): bool
     {
-        return $this->canManage($user)
-            || ($this->isApproved() && $user->isMemberObjective($this->goal->objective_id));
+        return $user->can('viewInManagement', $this);
     }
 
     public function canDelete(User $user): bool
     {
-        return $user->hasRole('admin') || (! $this->isApproved() && $this->author_id === $user->id && $this->canManage($user));
+        return $user->can('delete', $this);
     }
 
     public function getReviewStatusLabelAttribute(): string
@@ -143,12 +145,19 @@ class Report extends Model
 
     public function scopeFromVisibleObjectives(Builder $query): void
     {
-        $query->whereHas('goal.objective', fn (Builder $objectives) => $objectives->where('hidden', false));
+        $query->visibleIn(app(GoalAudience::class)->publicQuery());
     }
 
     public function isVisibleTo(?User $user): bool
     {
-        return $this->isApproved() && $this->goal->objective->isVisibleTo($user);
+        if (! $this->isApproved()) {
+            return false;
+        }
+
+        $audience = app(GoalAudience::class);
+        $query = $user === null ? $audience->publicQuery() : $audience->managementQuery($user);
+
+        return $query->whereKey($this->goal_id)->exists();
     }
 
     public function objective()
@@ -159,6 +168,11 @@ class Report extends Model
     public function author()
     {
         return $this->belongsTo('App\User', 'author_id');
+    }
+
+    public function attendant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'attendant_id');
     }
 
     public function goal()

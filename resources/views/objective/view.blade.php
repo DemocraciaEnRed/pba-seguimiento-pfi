@@ -19,11 +19,11 @@
     @endforeach
   </ul>
   @endif
-  @isManager($objective->id)
+  @can('update', $objective)
   <x-slot:actions>
     <a href="{{ route('objectives.manage.index', ['objectiveId' => $objective->id]) }}" class="btn btn-white"><i class="fas fa-up-right-from-square fa-fw"></i> Panel objetivo</a>
   </x-slot:actions>
-  @endisManager
+  @endcan
 </x-hero>
 @endsection
 
@@ -51,24 +51,6 @@
 					<div id="collapseOrganizations" class="collapse show">
 						<objective-organizations-carrousel :slides='@json($objective->organizations)'>
 						</objective-organizations-carrousel>
-					</div>
-					@endif
-					@if(!$objective->members->isEmpty())
-					<hr>
-					<div class="clearfix is-clickable" data-toggle="collapse" data-target="#collapseMembers">
-						<h5 class="is-700 h5 text-body my-2 float-left">Miembros del equipo</h5>
-						<h5 class="is-700 h5 text-body my-2 float-right"><i class="fas fa-angle-down fa-lg"></i></h5>
-					</div>
-					<div id="collapseMembers" class="collapse">
-						<div class="my-1 row justify-content-center">
-								@foreach ($objective->members as $member)
-								<div class="col-6 col-sm-4 col-md-3 text-center py-1">
-									<p class="mb-1">@include('utils.avatar',['avatar' => $member->avatar, 'size' => 50, 'thumbnail' => true])</p>
-									<span class="is-700 text-smaller">{{$member->name}} {{$member->surname}}</span>
-									<br><span class="text-smaller text-muted">{{$member->pivot->role == 'reporter' ? 'Reporta' : 'Coordina'}}</span>
-								</div>
-								@endforeach
-							</div>
 					</div>
 					@endif
 					@if(!$objective->files->isEmpty())

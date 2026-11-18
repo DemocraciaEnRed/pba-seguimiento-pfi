@@ -62,6 +62,7 @@ class CsvExportsTest extends TestCase
         $this->objective = new Objective();
         $this->objective->title = '=HYPERLINK("https://example.com","Clic")';
         $this->objective->content = 'Descripción';
+        $this->objective->hidden = false;
         $this->objective->author()->associate($this->admin);
         $this->objective->strategicObjective()->associate($strategicObjective);
         $this->objective->save();
@@ -85,6 +86,7 @@ class CsvExportsTest extends TestCase
             'period_targets' => [1 => 27, 2 => 25],
         ]);
 
+        $this->goal->responsibles()->attach($this->manager);
         $this->report = new Report();
         $this->report->review_status = \App\Services\Reports\ReviewStatus::Approved;
         $this->report->title = 'Avance, primer trimestre';
@@ -116,7 +118,8 @@ class CsvExportsTest extends TestCase
     {
         $response = $this->actingAs($this->manager)
             ->get(route('objectives.manage.goals.download', ['objectiveId' => $this->objective->id]))
-            ->assertDownload("20260815-metas-objetivo-{$this->objective->id}.csv");
+            ->assertDownload("20260815-metas-objetivo-{$this->objective->id}.csv")
+            ->assertHeader('Cache-Control', 'no-store, private');
 
         $records = $this->csvRecords($response);
 
@@ -126,12 +129,15 @@ class CsvExportsTest extends TestCase
         $this->assertSame('15/08/2026 10:00:00', array_combine($records[0], $records[1])['Fecha creado']);
     }
 
-    public function test_manager_downloads_objective_subscribers_as_csv(): void
+    public function test_only_admin_downloads_objective_subscribers_as_csv(): void
     {
         $subscriber = $this->createUser('suscriptora@example.com', 'Lucía', '@Pérez');
         $this->objective->subscribers()->attach($subscriber);
 
-        $response = $this->actingAs($this->manager)
+        $this->actingAs($this->manager)
+            ->get(route('objectives.manage.subscribers.download', ['objectiveId' => $this->objective->id]))
+            ->assertForbidden();
+        $response = $this->actingAs($this->admin)
             ->get(route('objectives.manage.subscribers.download', ['objectiveId' => $this->objective->id]))
             ->assertDownload("20260815-subscriptores-objetivo-{$this->objective->id}.csv");
 

@@ -7,7 +7,7 @@
   <p class="lead">Comentarios y respuestas en los reportes de esta meta.</p>
   @include('partials.comments.list', [
     'filterUrl' => route('objectives.manage.goals.comments', ['objectiveId' => $objective->id, 'goalId' => $goal->id]),
-    'downloadUrl' => Auth::user()->hasRole('admin') || Auth::user()->isManagerObjective($objective->id)
+    'downloadUrl' => Auth::user()->can('view', $goal)
       ? route('objectives.manage.goals.comments.download', ['objectiveId' => $objective->id, 'goalId' => $goal->id] + request()->only(['q', 'tipo']))
       : null,
     'deleteRoute' => 'objectives.manage.goals.comments.delete.form',

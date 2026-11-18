@@ -24,6 +24,24 @@
   <p class="mb-2"><i class="far fa-star fa-fw text-muted"></i>&nbsp;{{ $report->isApproved() ? 'Hito informado' : 'Propone completar el hito' }} <b>#{{ $report->milestone->order }} {{ $report->milestone->title }}</b></p>
   @endif
   <p>Autor: {{ $report->author->fullname }}</p>
+  @if(!$report->isApproved())
+  <p>Atiende el pendiente: {{ $report->attendant?->fullname ?? $report->author->fullname }}</p>
+  @can('manageReporters', $goal)
+  <form method="POST" action="{{ route('objectives.manage.goals.reports.attendant', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="mb-3">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="review_version" value="{{ $report->review_version }}">
+    <label for="attendant_id">Reasignar atención a un Reportero de esta meta</label>
+    <select name="attendant_id" id="attendant_id" class="form-control mb-2" required>
+      <option value="">Elegir Reportero</option>
+      @foreach($attendantCandidates as $candidate)
+      <option value="{{ $candidate->id }}">{{ $candidate->fullname }}</option>
+      @endforeach
+    </select>
+    <button class="btn btn-outline-primary" type="submit" @disabled($attendantCandidates->isEmpty())>Reasignar atención</button>
+  </form>
+  @endcan
+  @endif
   <div class="mb-3">{!! nl2br(e($report->content)) !!}</div>
   @foreach($report->photos as $photo)
   <a href="{{ $photo->path }}" target="_blank" rel="noopener"><img src="{{ $photo->thumbnail_path }}" height="80" class="rounded mb-3 mr-2" alt="Foto del reporte"></a>
@@ -51,7 +69,9 @@
     @csrf
     <input type="hidden" name="review_version" value="{{ $report->review_version }}">
     <input type="hidden" name="context" value="{{ $reviewContext }}">
+    @if(!$objective->hidden && $goal->visibility === 'public')
     <label class="d-block"><input type="checkbox" name="notify" value="true" @checked($report->notify_subscribers)> Notificar a suscriptores al publicar</label>
+    @endif
     <button type="submit" class="btn btn-primary">Aprobar y aplicar</button>
   </form>
   <form method="POST" action="{{ route('reports.review.return', ['reportId' => $report->id]) }}">
@@ -61,7 +81,7 @@
     <textarea id="return_reason" name="return_reason" class="form-control mb-2" maxlength="2000" required>{{ old('return_reason') }}</textarea>
     <button type="submit" class="btn btn-outline-danger">Devolver</button>
   </form>
-  @elseif($report->review_status === \App\Services\Reports\ReviewStatus::Returned && $report->canManage(auth()->user()))
+  @elseif($report->review_status === \App\Services\Reports\ReviewStatus::Returned && auth()->user()->can('update', $report))
   <form method="POST" action="{{ route('reports.review.resubmit', ['reportId' => $report->id]) }}">
     @csrf
     <input type="hidden" name="review_version" value="{{ $report->review_version }}">

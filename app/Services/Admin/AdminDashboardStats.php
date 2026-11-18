@@ -38,7 +38,7 @@ class AdminDashboardStats
                 'objectives_hidden' => Objective::where('hidden', true)->count(),
                 'goals' => Goal::count(),
             ],
-            'traffic_lights' => $this->homeStats->compute()['traffic_lights'],
+            'traffic_lights' => $this->homeStats->computeFor(Goal::query())['traffic_lights'],
             'activity' => [
                 'reports' => $this->inRange(Report::query(), $range)->count(),
                 'comments' => $this->inRange(Comment::query(), $range)->count(),

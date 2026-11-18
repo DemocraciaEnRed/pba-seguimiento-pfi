@@ -151,6 +151,7 @@ class SeoIndexingTest extends TestCase
         }
 
         $this->objective->members()->attach($this->user, ['role' => 'reporter']);
+        $this->goal->reporters()->attach($this->user);
         $this->actingAs($this->user);
         foreach ($this->entityUrls() as $url) {
             $this->assertRobots($this->get($url)->assertOk(), false);

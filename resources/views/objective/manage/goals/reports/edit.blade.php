@@ -151,7 +151,7 @@
     @endif
     <div class="border border-light rounded p-3">
       <label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Enviar notificacion a suscriptores</label>
-      @if(!$objective->hidden)
+      @if(!$objective->hidden && $goal->visibility === 'public')
       <div class="custom-control custom-switch">
         <input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true" @checked(!$report->isApproved() && $report->notify_subscribers)>
         <label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>

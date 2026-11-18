@@ -22,7 +22,6 @@ class Report extends JsonResource
     {
         $res = [
             'id' => $this->id,
-            'author_id' => $this->author_id,
             'goal_id' => $this->goal_id,
             'type' => $this->type,
             'type_label' => $this->type_label,

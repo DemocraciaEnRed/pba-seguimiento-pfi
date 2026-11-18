@@ -140,7 +140,7 @@
           <td class="align-middle text-center">
             @if($period->progressReport)
               <a href="{{ $periodReportUrl($period->progressReport) }}" class="btn btn-outline-primary btn-sm text-nowrap" title="{{ $period->progressReport->title }}"><i class="far fa-file-lines fa-fw"></i> Ver</a>
-            @elseif($reservation && $reservation->canViewInManagement(auth()->user()))
+            @elseif($reservation && auth()->user()?->can('viewInManagement', $reservation))
               <a href="{{ $periodReportUrl($reservation) }}" class="btn btn-outline-secondary btn-sm">Ver propuesta</a>
             @else
               <span class="text-muted">—</span>

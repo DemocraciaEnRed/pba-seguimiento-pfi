@@ -23,7 +23,10 @@ class CsvDownload
         return response()->streamDownload(
             fn () => $this->write($export),
             $filename,
-            ['Content-Type' => 'text/csv; charset=UTF-8'],
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Cache-Control' => 'no-store, private',
+            ],
         );
     }
 

@@ -7,8 +7,8 @@
 
   <div class="d-grid grid-cols-2 grid-cols-md-3 grid-cols-lg-5 gap-3 mb-4">
     @foreach([
-      ['label' => 'Coordina', 'icon' => 'fas fa-flag-checkered', 'value' => $counts['managed'], 'route' => route('admin.users.objectives', ['userId' => $user->id])],
-      ['label' => 'Reporta', 'icon' => 'fas fa-marker', 'value' => $counts['reported'], 'route' => route('admin.users.objectives', ['userId' => $user->id])],
+      ['label' => 'Metas como Responsable', 'icon' => 'fas fa-flag-checkered', 'value' => $counts['managed'], 'route' => route('admin.users.objectives', ['userId' => $user->id])],
+      ['label' => 'Metas como Reportero', 'icon' => 'fas fa-marker', 'value' => $counts['reported'], 'route' => route('admin.users.objectives', ['userId' => $user->id])],
       ['label' => 'Suscripciones', 'icon' => 'fas fa-envelope', 'value' => $counts['subscriptions'], 'route' => route('admin.users.objectives', ['userId' => $user->id])],
       ['label' => 'Comentarios', 'icon' => 'far fa-comments', 'value' => $counts['comments']],
       ['label' => 'Reportes', 'icon' => 'far fa-file-lines', 'value' => $counts['reports']],
@@ -94,6 +94,58 @@
       </p>
     </div>
   </div>
+
+  <hr class="my-4">
+
+  @php
+    $isPfiMember = $user->isPfiMember();
+    $selectedPfiCategories = collect(old('categories', $user->pfiCategories->modelKeys()))->map(fn ($id) => (int) $id)->all();
+  @endphp
+  <section aria-labelledby="pfi-heading">
+    <h5 id="pfi-heading" class="is-700 mb-2"><i class="fas fa-id-badge fa-fw"></i>&nbsp;Equipos PFI</h5>
+    @if($isPfiMember)
+    <p class="text-smaller text-muted mb-3">
+      Integrante PFI desde @datetime($user->pfiMembership->created_at)@if($user->pfiMembership->addedBy), alta realizada por {{ $user->pfiMembership->addedBy->fullname }}@endif.
+      Ser integrante PFI no otorga permisos por sí solo.
+    </p>
+    @else
+    <p class="text-smaller text-muted mb-3">La persona no integra los equipos PFI. Para darla de alta, elegí al menos una categoría. Ser integrante PFI no otorga permisos por sí solo.</p>
+    @endif
+    <form method="POST" action="{{ $isPfiMember ? route('admin.users.pfi.update.form', ['userId' => $user->id]) : route('admin.users.pfi.store.form', ['userId' => $user->id]) }}">
+      @csrf
+      @if($isPfiMember)
+      @method('PUT')
+      @endif
+      <fieldset class="mb-3">
+        <legend class="h6 is-600 mb-2">Categorías PFI <small class="text-danger">*</small></legend>
+        @if($selectablePfiCategories->isEmpty())
+        <p class="text-smaller text-muted mb-0">No hay categorías PFI activas. <a href="{{ route('admin.pfi-categories.create') }}">Creá una categoría</a> para poder dar de alta integrantes.</p>
+        @else
+        <div class="d-grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3 column-gap-3">
+          @foreach($selectablePfiCategories as $pfiCategory)
+          <div class="custom-control custom-checkbox mb-1">
+            <input type="checkbox" class="custom-control-input" id="pfi-category-{{ $pfiCategory->id }}" name="categories[]" value="{{ $pfiCategory->id }}" @checked(in_array($pfiCategory->id, $selectedPfiCategories, true))>
+            <label class="custom-control-label" for="pfi-category-{{ $pfiCategory->id }}">
+              {{ $pfiCategory->name }}
+              @unless($pfiCategory->is_active)
+              <span class="badge badge-secondary align-middle" title="Categoría inactiva: se conserva en quienes ya la tienen, pero no se puede asignar de nuevo si se quita">Inactiva</span>
+              @endunless
+            </label>
+          </div>
+          @endforeach
+        </div>
+        @endif
+        @error('categories')<div class="text-danger text-smaller mt-1">{{ $message }}</div>@enderror
+        @error('categories.*')<div class="text-danger text-smaller mt-1">{{ $message }}</div>@enderror
+      </fieldset>
+      @if($isPfiMember)
+      <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk fa-fw"></i>Guardar categorías</button>
+      <a class="btn btn-outline-danger" href="{{ route('admin.users.pfi.remove', ['userId' => $user->id]) }}">Retirar pertenencia PFI</a>
+      @else
+      <button type="submit" class="btn btn-outline-primary" @disabled($selectablePfiCategories->isEmpty())><i class="fas fa-user-plus fa-fw"></i>Dar de alta como integrante PFI</button>
+      @endif
+    </form>
+  </section>
 
   <hr class="my-4">
 

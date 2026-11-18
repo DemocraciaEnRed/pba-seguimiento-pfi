@@ -5,10 +5,12 @@ namespace App\Http\Resources;
 use Auth;
 use DB;
 use App\Goal;
+use App\Report;
 use Carbon\Carbon;
 use App\Http\Resources\Goal as GoalResource;
 use App\Http\Resources\Category as CategoryResource;
 use App\Http\Resources\Report as ReportResource;
+use App\Services\Goals\GoalAudience;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class Objective extends JsonResource
@@ -21,12 +23,20 @@ class Objective extends JsonResource
      */
     public function toArray($request)
     {
+        $publicGoals = app(GoalAudience::class)->publicQuery();
+        $goals = fn () => Goal::query()
+            ->visibleIn($publicGoals)
+            ->where('objective_id', $this->getKey());
+        $reports = fn () => Report::query()
+            ->approved()
+            ->visibleIn($publicGoals)
+            ->whereIn('goal_id', $goals()->select('goals.id'));
+
         $res = [
             'id' => $this->id,
             'category' => CategoryResource::make($this->category),
             'category_id' => $this->strategicObjective->category_id,
             'strategic_objective_id' => $this->strategic_objective_id,
-            'author_id' => $this->author_id,
             'title' => $this->title,
             'content' => $this->content,
             'tags' => $this->tags,
@@ -45,19 +55,19 @@ class Objective extends JsonResource
           foreach ($withParams as $withParam) {
             switch($withParam){
               case 'objective_goals':
-                $res['goals'] = GoalResource::collection($this->goals);
+                $res['goals'] = GoalResource::collection($goals()->get());
                 break;
               case 'objective_reports':
-                $res['reports'] = GoalResource::collection($this->goals);
+                $res['reports'] = GoalResource::collection($goals()->get());
                 break;
               case 'objective_latest_goals':
-                $res['latest_goals'] = GoalResource::collection($this->goals()->orderBy('updated_at','DESC')->limit(4)->get());
+                $res['latest_goals'] = GoalResource::collection($goals()->orderBy('updated_at','DESC')->limit(4)->get());
                 break;
               case 'objective_latest_reports':
-                $res['latest_reports'] = ReportResource::collection($this->reports()->approved()->orderBy('updated_at','DESC')->limit(4)->get());
+                $res['latest_reports'] = ReportResource::collection($reports()->orderBy('updated_at','DESC')->limit(4)->get());
                 break;
               case 'objective_latest_report':
-                $latestReport = $this->reports()->approved()->orderBy('reports.updated_at', 'DESC')->first();
+                $latestReport = $reports()->orderBy('reports.updated_at', 'DESC')->first();
                 $res['latest_report'] = $latestReport ? [
                     'id' => $latestReport->id,
                     'title' => $latestReport->title,
@@ -68,14 +78,14 @@ class Objective extends JsonResource
                 ] : null;
                 break;
               case 'objective_stats':
-                $res['reports_count'] = $this->reports_count ?? $this->reports()->approved()->count();
-                $res['goals_count'] = $this->goals_count ?? $this->goals()->count();
+                $res['reports_count'] = $this->reports_count ?? $reports()->count();
+                $res['goals_count'] = $this->goals_count ?? $goals()->count();
                 $res['goals_status'] = $this->resource->hasAttribute('goals_reached_count')
                     ? collect(array_keys(Goal::STATUSES))->mapWithKeys(fn (string $status): array => [$status => (int) $this->{"goals_{$status}_count"}])
-                    : $this->goals()->select('status',DB::raw('COUNT(*) AS total'))->groupBy('status')->get()->pluck('total','status');
+                    : $goals()->select('status',DB::raw('COUNT(*) AS total'))->groupBy('status')->get()->pluck('total','status');
                 $lastReportDate = $this->resource->hasAttribute('last_report_date')
                     ? $this->last_report_date
-                    : $this->reports()->approved()->max('reports.date');
+                    : $reports()->max('reports.date');
                 $res['last_report_when'] = $lastReportDate ? Carbon::parse($lastReportDate)->diffForHumans() : null;
                 break;
               case 'objective_strategic_objective':

@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\Goals\GoalAudience;
 
 class Objective extends Model
 {
@@ -96,6 +97,17 @@ class Objective extends Model
             return true;
         }
 
-        return ! is_null($user) && ($user->hasRole('admin') || $user->isMemberObjective($this->id));
+        if (is_null($user)) {
+            return false;
+        }
+
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return Goal::query()
+            ->visibleIn(app(GoalAudience::class)->managementQuery($user))
+            ->where('objective_id', $this->getKey())
+            ->exists();
     }
 }

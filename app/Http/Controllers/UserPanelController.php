@@ -32,7 +32,9 @@ class UserPanelController extends Controller
     }
 
     public function viewListObjectives(Request $request){
-        $objectives = $request->user()->objectives()->paginate(5);
+        $objectives = Objective::query()->whereHas('goals', fn ($goals) => $goals
+            ->whereIn('goals.id', $request->user()->assignedGoals()->select('goals.id')))
+            ->with('strategicObjective.category')->orderBy('title')->paginate(5);
         return view('panel.objectives.list', ['objectives' => $objectives]);
     }
 

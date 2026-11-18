@@ -6,6 +6,7 @@ use App\Event;
 use App\Goal;
 use App\Objective;
 use App\Report;
+use App\Services\Goals\GoalAudience;
 use Illuminate\Database\Eloquent\Builder;
 use LengthException;
 use Spatie\Sitemap\Sitemap;
@@ -59,10 +60,12 @@ class PublicSitemap
     /** @return array<string, Builder> */
     private function queries(): array
     {
+        $publicGoals = app(GoalAudience::class)->publicQuery();
+
         return [
             'objectives' => Objective::query()->where('hidden', false),
-            'goals' => Goal::query()->whereHas('objective', fn (Builder $objectives) => $objectives->where('hidden', false)),
-            'reports' => Report::query()->approved()->fromVisibleObjectives(),
+            'goals' => Goal::query()->visibleIn($publicGoals),
+            'reports' => Report::query()->approved()->visibleIn($publicGoals),
             'events' => Event::query(),
         ];
     }

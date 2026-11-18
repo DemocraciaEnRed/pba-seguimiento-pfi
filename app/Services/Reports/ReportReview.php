@@ -11,6 +11,7 @@ use App\Notifications\ReportReviewNotification;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
@@ -23,15 +24,18 @@ class ReportReview
 
     public function create(Goal $goal, User $actor, Request $request): Report
     {
-        abort_unless($actor->hasRole('admin') || $actor->isReporterObjective($goal->objective_id) || $actor->isManagerObjective($goal->objective_id), 403);
+        Gate::forUser($actor)->authorize('create', [Report::class, $goal]);
         $data = $this->validate($request, $goal);
         try {
             return DB::transaction(function () use ($goal, $actor, $request, $data): Report {
+                User::query()->lockForUpdate()->findOrFail($actor->id);
                 $goal = Goal::whereKey($goal->id)->lockForUpdate()->firstOrFail();
-                abort_unless($actor->hasRole('admin') || $actor->isReporterObjective($goal->objective_id) || $actor->isManagerObjective($goal->objective_id), 403);
+                $actor->forgetAuthorizationContext();
+                Gate::forUser($actor)->authorize('create', [Report::class, $goal]);
                 $report = new Report();
                 $report->goal()->associate($goal);
                 $report->author()->associate($actor);
+                $report->attendant()->associate($actor);
                 $report->submitted_at = now();
                 $this->fillProposal($report, $data);
                 $this->validateProposal($report);
@@ -71,6 +75,7 @@ class ReportReview
     public function mutate(Report $report, User $actor, \Closure $change, string $action = 'edited'): Report
     {
         return DB::transaction(function () use ($report, $actor, $change, $action): Report {
+            User::query()->lockForUpdate()->findOrFail($actor->id);
             $goal = Goal::whereKey($report->goal_id)->lockForUpdate()->firstOrFail();
             $locked = Report::whereKey($report->id)->lockForUpdate()->firstOrFail();
             $locked->setRelation('goal', $goal);
@@ -80,7 +85,8 @@ class ReportReview
             if ($locked->milestone_achieved) {
                 $goal->milestones()->whereKey($locked->milestone_achieved)->lockForUpdate()->firstOrFail();
             }
-            abort_unless($locked->canManage($actor), 403, 'No autorizado');
+            $actor->forgetAuthorizationContext();
+            Gate::forUser($actor)->authorize('update', $locked);
             $change($locked);
             $locked->review_version++;
             $locked->save();
@@ -150,7 +156,7 @@ class ReportReview
     public function delete(Report $report, User $actor): void
     {
         $this->mutate($report, $actor, function (Report $locked) use ($actor): void {
-            abort_unless($locked->canDelete($actor), 403);
+            Gate::forUser($actor)->authorize('delete', $locked);
             $locked->delete();
         }, 'deleted');
     }
@@ -275,7 +281,7 @@ class ReportReview
     private function publicationNotice(Report $report): void
     {
         $goal = $report->goal;
-        if (! $goal->objective->hidden && $report->notify_subscribers) {
+        if (! $goal->objective->hidden && $goal->visibility === 'public' && $report->notify_subscribers) {
             $notice = $report->type === 'progress' && $goal->isSimple() && $goal->indicator_progress >= $goal->indicator_goal
                 ? new CompletedGoal($goal->objective, $goal, $report)
                 : new NewReport($goal->objective, $goal, $report);
@@ -287,7 +293,8 @@ class ReportReview
     {
         $recipients = in_array($action, ['submitted', 'resubmitted'], true)
             ? User::whereHas('roles', fn ($roles) => $roles->where('name', 'admin'))->get()
-            : collect([$report->author]);
+            : collect([$action === 'returned' ? ($report->attendant ?? $report->author) : $report->author])
+                ->filter(fn (User $recipient): bool => $report->goal->isVisibleTo($recipient));
         Notification::send($recipients, (new ReportReviewNotification($report, $action, $actor))->afterCommit());
     }
 

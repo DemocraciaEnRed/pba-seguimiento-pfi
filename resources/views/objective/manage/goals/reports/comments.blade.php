@@ -4,11 +4,11 @@
 
 <section>
   <h3 class="is-700">Comentarios</h3>
-  @isManager($objective->id)
+  @can('viewInManagement', $report)
   <div class="my-3">
     <a href="{{route('objectives.manage.goals.reports.comments.download', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id])}}" class="btn btn-link btn-sm"><i class="fas fa-download fa-fw"></i><i class="fas fa-file-csv fa-fw"></i>Descargar .csv</a>
   </div>
-  @endisManager
+  @endcan
   <report-comments fetch-url="{{ route('apiService.reports.comments',['reportId' => $report->id]) }}"
     comment-url="{{ route('apiService.reports.comments.create',['reportId' => $report->id]) }}"
     :user="{{ Auth::user() ?  Auth::user()->load(['avatar']) : 'null' }}">

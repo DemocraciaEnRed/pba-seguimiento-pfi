@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Goal;
+use App\Objective;
+use App\Policies\GoalPolicy;
+use App\Policies\ObjectivePolicy;
+use App\Policies\ReportPolicy;
+use App\Report;
+use App\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -14,6 +21,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Objective::class => ObjectivePolicy::class,
+        Goal::class => GoalPolicy::class,
+        Report::class => ReportPolicy::class,
     ];
 
     /**
@@ -21,12 +30,12 @@ class AuthServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
 
-        Gate::define('isAdmin', function ($user) {
-            return $user->hasRoles(['admin']);
-        });
+        Gate::define('isAdmin', fn (User $user): bool => $user->hasRole('admin'));
+        Gate::define('searchPfiCandidates', fn (User $user, ?Goal $goal = null): bool => $user->hasRole('admin')
+            || ($goal !== null && $user->can('manageReporters', $goal)));
     }
 }

@@ -65,6 +65,7 @@ class PanelSideMenuTest extends TestCase
         $this->goal->status = 'ongoing';
         $this->goal->objective()->associate($this->objective);
         $this->goal->save();
+        $this->goal->reporters()->attach($this->reporter);
     }
 
     public function test_category_links_its_title_and_shows_the_create_button(): void
@@ -115,14 +116,14 @@ class PanelSideMenuTest extends TestCase
             ->assertDontSee('col-lg-3 mb-3', false);
     }
 
-    public function test_objective_menu_shows_create_buttons_only_to_managers(): void
+    public function test_objective_menu_shows_structural_actions_only_to_admins(): void
     {
         $url = route('objectives.manage.index', ['objectiveId' => $this->objective->id]);
 
         $this->actingAs($this->admin)->get($url)
             ->assertOk()
             ->assertSee('aria-label="Nueva meta"', false)
-            ->assertSee('aria-label="Agregar miembro"', false)
+            ->assertSee(route('admin.goal-assignments.objective', ['objectiveId' => $this->objective->id]))
             ->assertSeeInOrder(['>Seguimiento<', '>Participación<', '>Equipo<', '>Configuración<'], false)
             ->assertSee('Editar objetivo');
 

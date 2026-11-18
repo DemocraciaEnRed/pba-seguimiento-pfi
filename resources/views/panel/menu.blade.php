@@ -11,6 +11,9 @@ $countUnreadNotifications = count(Auth::user()->unreadNotifications);
     <a href="{{ route('panel.notifications') }}" @class(['item-link', 'is-active' => request()->routeIs('panel.notifications')])>Todas</a>
   </x-side-menu.category>
   <x-side-menu.category label="Mis objetivos generales" icon="fas fa-marker" :href="route('panel.objectives')" :active="request()->routeIs('panel.objectives')" />
+  @if(Auth::user()->responsibleGoals()->exists())
+  <x-side-menu.category label="Reporteros de mis metas" icon="fas fa-users-gear" :href="route('panel.goal-assignments.index')" :active="request()->routeIs('panel.goal-assignments*')" />
+  @endif
   <x-side-menu.category label="Mis suscripciones" icon="fas fa-envelope" :href="route('panel.subscriptions')" :active="request()->routeIs('panel.subscriptions')" />
 </x-side-menu.group>
 <x-side-menu.group label="Mi cuenta">

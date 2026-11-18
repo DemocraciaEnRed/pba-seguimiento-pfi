@@ -75,7 +75,7 @@ class ReportsSearchTest extends TestCase
         $this->assertSame([$second->id], $this->fetchIds(['objective' => $this->secondGoal->objective_id]));
     }
 
-    public function test_members_see_reports_of_their_hidden_objective_when_filtering_by_it(): void
+    public function test_public_search_does_not_expose_reports_from_hidden_objectives_to_members(): void
     {
         $hidden = $this->createReport($this->hiddenGoal);
         $this->createReport($this->firstGoal);
@@ -84,7 +84,7 @@ class ReportsSearchTest extends TestCase
         $this->assertSame([], $this->fetchIds(['objective' => $this->hiddenGoal->objective_id]));
 
         $this->actingAs($this->author);
-        $this->assertSame([$hidden->id], $this->fetchIds(['objective' => $this->hiddenGoal->objective_id]));
+        $this->assertSame([], $this->fetchIds(['objective' => $this->hiddenGoal->objective_id]));
         $this->assertNotContains($hidden->id, $this->fetchIds());
     }
 
@@ -106,7 +106,7 @@ class ReportsSearchTest extends TestCase
         $this->assertSame([], $this->fetchIds(['goal' => $this->hiddenGoal->id]));
 
         $this->actingAs($this->author);
-        $this->assertSame([$hidden->id], $this->fetchIds(['goal' => $this->hiddenGoal->id]));
+        $this->assertSame([], $this->fetchIds(['goal' => $this->hiddenGoal->id]));
     }
 
     public function test_filters_by_date_range(): void

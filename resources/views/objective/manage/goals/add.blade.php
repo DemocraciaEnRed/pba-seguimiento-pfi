@@ -21,6 +21,17 @@
       <label><b>Título de la meta</b><span class="text-danger">*</span></label>
       <input type="text" class="form-control" name="title" placeholder="Escriba aquí" value="{{ old('title') }}">
     </div>
+    <div class="form-group">
+      <label><b>Visibilidad</b><span class="text-danger">*</span></label>
+      <select class="custom-select" name="visibility" required>
+        <option value="" selected disabled>Seleccioná una opción</option>
+        <option value="public" @selected(old('visibility') === 'public')>Pública</option>
+        @if(auth()->user()->hasRole('admin'))
+        <option value="internal" @selected(old('visibility') === 'internal')>Interna</option>
+        @endif
+      </select>
+      <small class="form-text text-muted">Las metas internas solo están disponibles para Administración y las personas asignadas.</small>
+    </div>
     <input-goal-indicator :initial='@json($indicatorForm)' :old='@json(old())' :options='@json($indicatorOptions)'></input-goal-indicator>
     <div class="form-group">
       <label><b>Estado inicial de la meta</b><span class="text-danger">*</span></label>

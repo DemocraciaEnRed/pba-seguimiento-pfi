@@ -61,7 +61,9 @@
   <div class="card border-secondary my-2">
     <div class="card-body">
       <h6><b><i class="fas fa-circle-info"></i>&nbsp;La meta no cuenta con hitos</b></h6>
+      @can('update', $goal)
       <span class="text-muted">Puede crearlos haciendo <a href="{{ route('objectives.manage.goals.milestones.add', ['objectiveId' => $objective->id,'goalId' => $goal->id]) }}">click aquí <i class="fas fa-arrow-right"></i></a></span>
+      @endcan
     </div>
   </div>
   @endif
@@ -69,7 +71,9 @@
   <div class="card border-secondary my-2">
     <div class="card-body">
       <h6><b><i class="fas fa-circle-info"></i>&nbsp;La meta no cuenta con reportes</b></h6>
+      @can('create', [\App\Report::class, $goal])
       <span class="text-muted">Puede crearlos haciendo <a href="{{ route('objectives.manage.goals.reports.add', ['objectiveId' => $objective->id,'goalId' => $goal->id]) }}">click aquí <i class="fas fa-arrow-right"></i></a></span>
+      @endcan
     </div>
   </div>
   @endif

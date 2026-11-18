@@ -91,6 +91,7 @@
         <span class="d-block" title="Metas">{{ $objective->goals_count }} {{ $objective->goals_count === 1 ? 'meta' : 'metas' }}<i class="fas fa-bullseye fa-fw ml-1"></i></span>
         <a href="{{ route('admin.reports', ['eje' => $objective->category->id, 'objetivo' => $objective->id]) }}" class="d-block" title="Ver reportes">{{ $objective->reports_count }} {{ $objective->reports_count === 1 ? 'reporte' : 'reportes' }}<i class="far fa-file-lines fa-fw ml-1"></i></a>
         <span class="d-block" title="Miembros del equipo">{{ $objective->members_count }} {{ $objective->members_count === 1 ? 'miembro' : 'miembros' }}<i class="fas fa-users fa-fw ml-1"></i></span>
+        <a href="{{ route('admin.goal-assignments.objective', ['objectiveId' => $objective->id]) }}" class="d-block">Equipos por meta<i class="fas fa-people-group fa-fw ml-1"></i></a>
         <span class="d-block text-muted" title="Último reporte">Último reporte: {{ $objective->last_report_date ? \Carbon\Carbon::parse($objective->last_report_date)->format('d/m/Y') : '-' }}<i class="far fa-clock fa-fw ml-1"></i></span>
       </div>
     </div>

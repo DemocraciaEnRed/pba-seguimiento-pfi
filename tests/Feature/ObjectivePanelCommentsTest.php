@@ -53,6 +53,10 @@ class ObjectivePanelCommentsTest extends TestCase
         $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
         $this->goal = $this->createGoal($this->objective, 'Plantar árboles');
         $this->otherGoal = $this->createGoal($this->objective, 'Sumar ciclovías');
+        foreach ([$this->goal, $this->otherGoal] as $goal) {
+            $goal->responsibles()->attach($this->manager);
+            $goal->reporters()->attach($this->reporter);
+        }
         $otherObjectiveGoal = $this->createGoal($this->createObjective('Otro objetivo'), 'Meta ajena');
 
         $this->goalComment = $this->createComment($this->createReport($this->goal, 'Avance de forestación'), 'Muy buen avance');
@@ -109,17 +113,17 @@ class ObjectivePanelCommentsTest extends TestCase
         $this->assertNotSoftDeleted($this->goalComment);
     }
 
-    public function test_csv_download_is_only_for_managers(): void
+    public function test_assigned_users_can_download_comments_within_their_audience(): void
     {
         $this->actingAs($this->reporter)
             ->get(route('objectives.manage.comments', ['objectiveId' => $this->objective->id]))
-            ->assertDontSee('Descargar CSV');
+            ->assertSee('Descargar CSV');
         $this->actingAs($this->reporter)
             ->get(route('objectives.manage.comments.download', ['objectiveId' => $this->objective->id]))
-            ->assertForbidden();
+            ->assertOk();
         $this->actingAs($this->reporter)
             ->get(route('objectives.manage.goals.comments.download', ['objectiveId' => $this->objective->id, 'goalId' => $this->goal->id]))
-            ->assertForbidden();
+            ->assertOk();
 
         $csv = $this->actingAs($this->manager)
             ->get(route('objectives.manage.goals.comments.download', ['objectiveId' => $this->objective->id, 'goalId' => $this->goal->id]))

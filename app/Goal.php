@@ -9,14 +9,23 @@ use App\Services\Indicators\MeasurementMode;
 use App\Services\Indicators\Nature;
 use App\Services\Indicators\PeriodType;
 use App\Services\Indicators\TargetSemantics;
+use App\Services\Goals\GoalAudience;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Goal extends Model
 {
+    /** @var array<string, string> */
+    public const VISIBILITIES = [
+        'public' => 'Pública',
+        'internal' => 'Interna',
+    ];
+
     /** @var array<string, string> */
     public const STATUSES = [
         'ongoing' => 'En progreso',
@@ -34,6 +43,7 @@ class Goal extends Model
 
     protected $attributes = [
         'measurement_mode' => 'none',
+        'visibility' => 'public',
     ];
 
     protected function casts(): array
@@ -56,6 +66,26 @@ class Goal extends Model
         return $this->belongsTo('App\Objective');
     }
 
+    public function responsibles(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'goal_user', 'goal_id', 'user_id')
+            ->withPivotValue('role', 'responsible')
+            ->withPivot('assigned_by')
+            ->withTimestamps()
+            ->orderBy('surname')
+            ->orderBy('name');
+    }
+
+    public function reporters(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'goal_user', 'goal_id', 'user_id')
+            ->withPivotValue('role', 'reporter')
+            ->withPivot('assigned_by')
+            ->withTimestamps()
+            ->orderBy('surname')
+            ->orderBy('name');
+    }
+
     public function milestones()
     {
         return $this->hasMany('App\Milestone','goal_id')->orderBy('order','ASC');
@@ -69,6 +99,22 @@ class Goal extends Model
     public function periods(): HasMany
     {
         return $this->hasMany(GoalPeriod::class, 'goal_id')->orderBy('number');
+    }
+
+    public function scopeVisibleIn(Builder $query, Builder $audience): void
+    {
+        $query->whereIn(
+            $query->getModel()->qualifyColumn('id'),
+            (clone $audience)->select('goals.id'),
+        );
+    }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        $audience = app(GoalAudience::class);
+        $query = $user === null ? $audience->publicQuery() : $audience->managementQuery($user);
+
+        return $query->whereKey($this->getKey())->exists();
     }
 
     public function isPeriodic(): bool

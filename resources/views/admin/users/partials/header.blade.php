@@ -8,6 +8,9 @@
       @if($user->roles->contains('name', 'admin'))
       <span class="badge badge-primary align-middle">Administrador</span>
       @endif
+      @if($user->isPfiMember())
+      <span class="badge badge-info align-middle" title="Integrante PFI: {{ $user->pfiCategories->pluck('name')->join(', ') }}">Integrante PFI</span>
+      @endif
       @if($user->hasVerifiedEmail())
       <span class="badge badge-success align-middle">Verificado</span>
       @else

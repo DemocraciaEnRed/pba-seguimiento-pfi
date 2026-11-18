@@ -8,10 +8,13 @@ use App\Category;
 use App\Initiative;
 use App\Services\Indicators\HomeStats;
 use App\Services\Indicators\ObjectiveStats;
+use App\Services\Goals\GoalAudience;
 use App\Services\SeoMetadata;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\Objective as ObjectiveResource;
 use App\Http\Resources\Report as ReportResource;
@@ -40,14 +43,29 @@ class ObjectiveController extends Controller
         // $this->middleware('fetch_objective');
     }
 
-    public function index(Request $request, string $objectiveId, SeoMetadata $seoMetadata): View {
-        $objective = Objective::with(['strategicObjective.category', 'organizations.logo', 'goals', 'communities', 'cover', 'members', 'files'])->findOrFail($objectiveId);
-        abort_unless($objective->isVisibleTo($request->user()), 404);
-        $request->attributes->set('search_indexing_public', $objective->isVisibleTo(null));
-        return view('objective.view',[
+    public function index(Request $request, string $objectiveId, SeoMetadata $seoMetadata): View|Response
+    {
+        $objective = Objective::findOrFail($objectiveId);
+        $isPublic = $objective->isVisibleTo(null);
+        $user = $request->user();
+        if ($isPublic) {
+            $goalAudience = app(GoalAudience::class)->publicQuery();
+        } else {
+            abort_if($user === null || ! $objective->isVisibleTo($user), 404);
+            $goalAudience = app(GoalAudience::class)->managementQuery($user);
+        }
+        $objective->load(['strategicObjective.category', 'organizations.logo', 'goals' => fn ($goals) => $goals
+            ->visibleIn($goalAudience)
+            ->orderBy('title'), 'communities', 'cover', 'files']);
+        $request->attributes->set('search_indexing_public', $isPublic);
+        $viewData = [
             'objective' => $objective,
             'metadata' => $seoMetadata->objective($objective),
-        ]);
+        ];
+
+        return $isPublic
+            ? view('objective.view', $viewData)
+            : response()->view('objective.view', $viewData)->header('Cache-Control', 'private, no-store');
     }
 
     public function viewList(Request $request){
@@ -62,6 +80,7 @@ class ObjectiveController extends Controller
 
     public function viewCatalog(HomeStats $homeStats): View
     {
+        $publicGoals = app(GoalAudience::class)->publicQuery();
         $categories = Category::with([
             'strategicObjectives' => function ($query) {
                 $query->orderBy('title');
@@ -69,8 +88,8 @@ class ObjectiveController extends Controller
             'strategicObjectives.objectives' => function ($query) {
                 $query->where('hidden', false)->orderBy('title');
             },
-            'strategicObjectives.objectives.goals' => function ($query) {
-                $query->orderBy('title');
+            'strategicObjectives.objectives.goals' => function ($query) use ($publicGoals) {
+                $query->visibleIn($publicGoals)->orderBy('title');
             },
         ])->orderBy('order')->get();
 
@@ -103,15 +122,19 @@ class ObjectiveController extends Controller
             'order_by' => ['nullable', 'string', 'regex:/^(title|created_at|updated_at),(asc|desc)$/i'],
         ]);
         $title = $request->query('s');
+        $publicGoals = app(GoalAudience::class)->publicQuery();
 
         $objectives = Objective::query()
             ->with('strategicObjective.category')
             ->where('hidden', false)
-            ->withCount(['goals', 'reports' => fn ($reports) => $reports->approved()])
+            ->withCount([
+                'goals' => fn ($goals) => $goals->visibleIn($publicGoals),
+                'reports' => fn ($reports) => $reports->approved()->visibleIn($publicGoals),
+            ])
             ->withCount(collect(array_keys(Goal::STATUSES))->mapWithKeys(fn (string $status): array => [
-                "goals as goals_{$status}_count" => fn ($goals) => $goals->where('status', $status),
+                "goals as goals_{$status}_count" => fn ($goals) => $goals->visibleIn($publicGoals)->where('status', $status),
             ])->all())
-            ->withMax(['reports as last_report_date' => fn ($reports) => $reports->approved()], 'reports.date')
+            ->withMax(['reports as last_report_date' => fn ($reports) => $reports->approved()->visibleIn($publicGoals)], 'reports.date')
             ->when($validated['category'] ?? null, fn ($query, $category) => $query->whereHas('strategicObjective', fn ($strategicObjectives) => $strategicObjectives->where('category_id', $category)))
             ->when($validated['strategic_objective'] ?? null, fn ($query, $strategicObjective) => $query->where('strategic_objective_id', $strategicObjective));
 
@@ -137,27 +160,42 @@ class ObjectiveController extends Controller
         return ObjectiveResource::collection($objectives);
     }
 
-    public function fetchOne(Request $request, $objectiveId)
+    public function fetchOne(Request $request, string $objectiveId): ObjectiveResource
     {
-        $objective = Objective::findorfail($objectiveId);
-        dd($objective);
+        $objective = Objective::query()
+            ->where('hidden', false)
+            ->with('strategicObjective.category')
+            ->findOrFail($objectiveId);
+
+        return new ObjectiveResource($objective);
     }
 
-    public function fetchReports(Request $request, $objectiveId){
-        abort_unless(Objective::findOrFail($objectiveId)->isVisibleTo($request->user()), 404);
+    public function fetchReports(Request $request, string $objectiveId): AnonymousResourceCollection|JsonResponse
+    {
+        $objective = Objective::findOrFail($objectiveId);
+        $user = null;
+        if (! $objective->isVisibleTo(null)) {
+            $user = $request->user();
+            abort_if($user === null || ! $objective->isVisibleTo($user), 404);
+        }
+
         $pageSize = $request->query('size',10);
         $orderBy = $request->query('order_by');
         $detailed = $request->query('detailed');
         $fetchAll = $request->query('all');
         $onlyMappable = $request->query('mappable');
-        $reports = Report::query()->approved()->forListing(explode(',', (string) $request->query('with')));
+        $goalAudience = $user === null
+            ? app(GoalAudience::class)->publicQuery()
+            : app(GoalAudience::class)->managementQuery($user);
+        $reports = $user === null
+            ? Report::query()->approved()
+            : Report::query()->manageableBy($user);
+        $reports->visibleIn($goalAudience)->forListing(explode(',', (string) $request->query('with')));
         if(!is_null($orderBy)){
             $orderByParams = explode(',',$orderBy);
             $reports->orderBy($orderByParams[0],$orderByParams[1]);
         }
-        $reports->whereHas('goal',function ($q) use($request, $objectiveId) {
-            $q->where('objective_id',$objectiveId);
-          });
+        $reports->whereHas('goal', fn ($query) => $query->where('objective_id', $objectiveId));
 
         if($onlyMappable){
             $reports->whereNotNull('map_long')->whereNotNull('map_lat')->whereNotNull('map_center');
@@ -171,29 +209,37 @@ class ObjectiveController extends Controller
             // Get all
             $reports = $reports->paginate($pageSize)->withQueryString();
         }
-        if($detailed){
-            return ReportResource::collection($reports);
-        } else {
-            return SimpleReportResource::collection($reports);
-        }
+        $resource = $detailed
+            ? ReportResource::collection($reports)
+            : SimpleReportResource::collection($reports);
+
+        return $user === null
+            ? $resource
+            : $resource->response()->header('Cache-Control', 'private, no-store');
     }
 
-    public function fetchStats(Request $request, ObjectiveStats $objectiveStats, $objectiveId): JsonResponse
+    public function fetchStats(Request $request, ObjectiveStats $objectiveStats, string $objectiveId): JsonResponse
     {
         $objective = Objective::findOrFail($objectiveId);
-        abort_unless($objective->isVisibleTo($request->user()), 404);
+        $user = null;
+        if (! $objective->isVisibleTo(null)) {
+            $user = $request->user();
+            abort_if($user === null || ! $objective->isVisibleTo($user), 404);
+        }
 
-        return response()->json([
+        $response = response()->json([
             'message' => 'Ok',
-            'data' => $objectiveStats->compute($objective),
+            'data' => $objectiveStats->compute($objective, $user),
         ]);
+
+        return $user === null ? $response : $response->header('Cache-Control', 'private, no-store');
     }
 
      public function formToggleSubscription(Request $request, $objectiveId){
         if(!$request->user()) {
             abort(403, 'No autorizado');
         }
-        $objective = Objective::findorfail($objectiveId);
+        $objective = Objective::query()->where('hidden', false)->findOrFail($objectiveId);
         $isSubscriber = $objective->isSubscriber($request->user()->id);
         if($isSubscriber){
             $objective->subscribers()->detach($request->user()->id);

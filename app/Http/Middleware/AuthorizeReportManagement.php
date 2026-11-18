@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthorizeReportManagement
@@ -16,12 +17,12 @@ class AuthorizeReportManagement
     public function handle(Request $request, Closure $next): Response
     {
         $report = $request->report;
-        abort_unless($report->canViewInManagement($request->user()), 404);
+        abort_unless($request->user()->can('viewInManagement', $report), 404);
         if (! $request->isMethod('GET') || $request->routeIs('*.edit', '*.map')) {
-            abort_unless($report->canManage($request->user()), 403, 'No autorizado');
+            Gate::authorize('update', $report);
         }
         if ($request->routeIs('*.configuration', '*.delete.form')) {
-            abort_unless($report->canDelete($request->user()), 403);
+            Gate::authorize('delete', $report);
         }
         if ($request->routeIs('*.comments', '*.comments.download', '*.testimonies', '*.testimonies.download')) {
             abort_unless($report->isApproved(), 404);

@@ -4,6 +4,7 @@ namespace App\Services\Comments;
 
 use App\Comment;
 use App\Report;
+use App\Services\Goals\GoalAudience;
 use App\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -19,11 +20,16 @@ class CommentModeration
      * Comments and replies on reports, newest first, optionally limited to an objective or a goal
      * and filtered by text (content, author or report title) and type.
      */
-    public function search(?string $search = null, ?string $type = null, ?int $objectiveId = null, ?int $goalId = null): Builder
+    public function search(?string $search = null, ?string $type = null, ?int $objectiveId = null, ?int $goalId = null, ?User $user = null): Builder
     {
         $search = trim((string) $search);
         $isScoped = $objectiveId !== null || $goalId !== null;
+        $goalAudience = $user === null
+            ? app(GoalAudience::class)->publicQuery()
+            : app(GoalAudience::class)->managementQuery($user);
         $reportScope = fn (Builder $query) => $query
+            ->visibleIn($goalAudience)
+            ->when($user === null, fn (Builder $query) => $query->approved(), fn (Builder $query) => $query->manageableBy($user))
             ->when($goalId !== null, fn (Builder $query) => $query->where('goal_id', $goalId))
             ->when($objectiveId !== null, fn (Builder $query) => $query->whereHas('goal', fn (Builder $query) => $query->where('objective_id', $objectiveId)));
 
@@ -56,6 +62,9 @@ class CommentModeration
     public function delete(Comment $comment, User $moderator, string $moderatorRole): void
     {
         $report = $comment->relatedReport();
+        abort_unless($moderator->hasRole('admin')
+            || $comment->user_id === $moderator->id
+            || ($report !== null && $moderator->isAssignedToGoal($report->goal_id)), 403);
 
         DB::transaction(function () use ($comment): void {
             $comment->replies()->get()->each->delete();

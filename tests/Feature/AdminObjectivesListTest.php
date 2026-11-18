@@ -65,7 +65,7 @@ class AdminObjectivesListTest extends TestCase
         $busesGoal = $this->createGoal('Flota eléctrica', $buses, 'ongoing');
         $this->createReport('Avance ciclovías', $delayedGoal, '2026-02-01');
         $this->createReport('Avance flota', $busesGoal, '2026-05-01');
-        $bikeLanes->members()->attach($this->admin, ['role' => 'manager']);
+        $delayedGoal->responsibles()->attach($this->admin);
     }
 
     public function test_list_shows_counts_last_report_and_hidden_badge(): void

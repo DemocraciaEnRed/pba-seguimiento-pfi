@@ -90,13 +90,13 @@ class ReportPageTest extends TestCase
         $this->getJson(route('apiService.reports.comments', ['reportId' => $this->report->id]))->assertNotFound();
     }
 
-    public function test_report_of_a_hidden_objective_is_visible_to_its_members(): void
+    public function test_report_of_a_hidden_objective_is_visible_to_assigned_users(): void
     {
         $this->hideObjective();
-        $member = $this->createUser('member@example.com');
-        $this->objective->members()->attach($member, ['role' => 'reporter']);
+        $assigned = $this->createUser('assigned@example.com');
+        $this->report->goal->reporters()->attach($assigned->id, ['assigned_by' => $this->author->id]);
 
-        $this->actingAs($member)
+        $this->actingAs($assigned)
             ->get(route('reports.index', ['reportId' => $this->report->id]))
             ->assertOk()
             ->assertSee('Inauguramos la obra');

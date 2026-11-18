@@ -8,7 +8,7 @@
   <p class="lead">Todas las personas registradas en la plataforma. Buscá, filtrá y entrá a la ficha de cada usuario para editar sus datos, roles y objetivos.</p>
 
   <form method="GET" action="{{ route('admin.users') }}" class="mb-3">
-    <div class="d-grid grid-cols-1 grid-cols-md-2 grid-cols-lg-6 gap-2 align-items-end">
+    <div class="d-grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-2 align-items-end">
       <div class="col-span-md-2">
         <label for="q" class="text-smaller mb-1">Buscar</label>
         <input type="search" id="q" name="q" value="{{ $filters['q'] }}" class="form-control" placeholder="Nombre, apellido o email">
@@ -35,6 +35,23 @@
           <option value="">Todos</option>
           <option value="{{ UserDirectory::WITH_TEAM }}" @selected($filters['equipo'] === UserDirectory::WITH_TEAM)>Con objetivos</option>
           <option value="{{ UserDirectory::WITHOUT_TEAM }}" @selected($filters['equipo'] === UserDirectory::WITHOUT_TEAM)>Sin objetivos</option>
+        </select>
+      </div>
+      <div>
+        <label for="pfi" class="text-smaller mb-1">Equipos PFI</label>
+        <select id="pfi" name="pfi" class="form-control">
+          <option value="">Todos</option>
+          <option value="{{ UserDirectory::PFI_MEMBER }}" @selected($filters['pfi'] === UserDirectory::PFI_MEMBER)>Integrantes PFI</option>
+          <option value="{{ UserDirectory::PFI_NON_MEMBER }}" @selected($filters['pfi'] === UserDirectory::PFI_NON_MEMBER)>No integrantes</option>
+        </select>
+      </div>
+      <div>
+        <label for="categoria_pfi" class="text-smaller mb-1">Categoría PFI</label>
+        <select id="categoria_pfi" name="categoria_pfi" class="form-control">
+          <option value="">Todas</option>
+          @foreach($pfiCategories as $pfiCategory)
+          <option value="{{ $pfiCategory->id }}" @selected((int) $filters['categoria_pfi'] === $pfiCategory->id)>{{ $pfiCategory->name }}@unless($pfiCategory->is_active) (inactiva)@endunless</option>
+          @endforeach
         </select>
       </div>
       <div>
@@ -68,6 +85,9 @@
           {{ $user->fullname }}
           @if($user->roles->contains('name', 'admin'))
           <span class="badge badge-primary align-middle">Admin</span>
+          @endif
+          @if($user->isPfiMember())
+          <span class="badge badge-info align-middle" title="Integrante PFI: {{ $user->pfiCategories->pluck('name')->join(', ') }}">PFI</span>
           @endif
           @unless($user->hasVerifiedEmail())
           <span class="badge badge-warning align-middle">No verificado</span>

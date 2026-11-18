@@ -13,7 +13,7 @@ class ReportAttachmentController extends Controller
     {
         $report = Report::findOrFail($reportId);
         abort_unless($report->isVisibleTo($request->user())
-            || ($request->user() && $request->user()->hasVerifiedEmail() && $report->canViewInManagement($request->user())), 404);
+            || ($request->user() && $request->user()->hasVerifiedEmail() && $request->user()->can('viewInManagement', $report)), 404);
         $attachment = $kind === 'file'
             ? $report->files()->findOrFail($attachmentId)
             : $report->photos()->findOrFail($attachmentId);
