@@ -14,15 +14,23 @@ class ReportReviewController extends Controller
         $this->middleware(['auth', 'verified']);
     }
 
-    public function approve(Request $request, int $reportId): RedirectResponse
+    public function validateReport(Request $request, int $reportId): RedirectResponse
     {
-        abort_unless($request->user()->hasRole('admin'), 403);
-        return $this->transition($request, $reportId, 'approved');
+        return $this->transition($request, $reportId, 'validated');
+    }
+
+    public function publish(Request $request, int $reportId): RedirectResponse
+    {
+        return $this->transition($request, $reportId, 'published');
+    }
+
+    public function close(Request $request, int $reportId): RedirectResponse
+    {
+        return $this->transition($request, $reportId, 'closed');
     }
 
     public function returnReport(Request $request, int $reportId): RedirectResponse
     {
-        abort_unless($request->user()->hasRole('admin'), 403);
         return $this->transition($request, $reportId, 'returned');
     }
 
@@ -38,7 +46,9 @@ class ReportReviewController extends Controller
         return redirect()->route('objectives.manage.goals.reports.index', [
             'objectiveId' => $report->goal->objective_id, 'goalId' => $report->goal_id, 'reportId' => $report->id,
         ])->with('success', match ($action) {
-            'approved' => 'Reporte aprobado y cambios aplicados.',
+            'validated' => 'Reporte validado; no se publicó ni se aplicaron sus cambios.',
+            'published' => 'Reporte publicado y cambios aplicados.',
+            'closed' => 'Reporte interno cerrado y consolidado para el seguimiento.',
             'returned' => 'Reporte devuelto para corrección.',
             'resubmitted' => 'Reporte reenviado a revisión.',
         });

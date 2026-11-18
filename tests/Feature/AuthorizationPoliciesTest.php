@@ -136,13 +136,24 @@ class AuthorizationPoliciesTest extends TestCase
             foreach ([$this->admin, $this->manager, $this->reporter, $this->otherReporter, $this->outsider] as $user) {
                 $isAdmin = $user->is($this->admin);
                 $isAuthor = $user->is($this->reporter);
-                $canUpdate = $isAdmin || ($status !== ReviewStatus::Approved && ($isAuthor || $user->is($this->manager)));
-                $canView = $canUpdate || ($status === ReviewStatus::Approved && ! $user->is($this->outsider));
-                $canDelete = $isAdmin || ($isAuthor && $status !== ReviewStatus::Approved);
+                $isUnvalidated = ! in_array($status, [ReviewStatus::Approved, ReviewStatus::Validated], true);
+                $canUpdate = $isAdmin || ($isUnvalidated && ($isAuthor || $user->is($this->manager)));
+                $canView = $canUpdate
+                    || ($status === ReviewStatus::Approved && ! $user->is($this->outsider))
+                    || ($status === ReviewStatus::Validated
+                        && ($isAdmin || $user->is($this->manager) || ($isAuthor && $user->isReporterForGoal($report->goal_id))));
+                $canDelete = $isAdmin || ($isAuthor && $isUnvalidated);
+                $canValidate = $status === ReviewStatus::Pending && ($isAdmin || $user->is($this->manager));
+                $canReturn = $status === ReviewStatus::Pending && $user->is($this->manager);
+                $canPublish = $status === ReviewStatus::Validated && $isAdmin;
 
                 $this->assertSame($canView, $user->can('viewInManagement', $report));
                 $this->assertSame($canUpdate, $user->can('update', $report));
                 $this->assertSame($canDelete, $user->can('delete', $report));
+                $this->assertSame($canValidate, $user->can('validate', $report));
+                $this->assertSame($canReturn, $user->can('return', $report));
+                $this->assertSame($canPublish, $user->can('publish', $report));
+                $this->assertFalse($user->can('close', $report));
                 $this->assertSame($canView, $report->canViewInManagement($user));
                 $this->assertSame($canUpdate, $report->canManage($user));
                 $this->assertSame($canDelete, $report->canDelete($user));

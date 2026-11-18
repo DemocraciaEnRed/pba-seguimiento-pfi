@@ -28,6 +28,8 @@ class Report extends Model
         'review_status' => ReviewStatus::class,
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'validated_at' => 'datetime',
+        'closed_at' => 'datetime',
         'proposed_milestone_date' => 'datetime',
         'notify_subscribers' => 'boolean',
         'review_version' => 'integer',
@@ -45,6 +47,16 @@ class Report extends Model
     public function scopeApproved(Builder $query): void
     {
         $query->where($this->qualifyColumn('review_status'), ReviewStatus::Approved->value);
+    }
+
+    public function scopeConsolidated(Builder $query): void
+    {
+        $query->where(fn (Builder $reports) => $reports
+            ->approved()
+            ->orWhere(fn (Builder $internal) => $internal
+                ->where($this->qualifyColumn('review_status'), ReviewStatus::Validated->value)
+                ->whereNotNull($this->qualifyColumn('closed_at'))
+                ->whereHas('goal', fn (Builder $goals) => $goals->where('visibility', 'internal'))));
     }
 
     public function scopeVisibleIn(Builder $query, Builder $goalAudience): void
@@ -74,6 +86,26 @@ class Report extends Model
         return $this->review_status === ReviewStatus::Approved;
     }
 
+    public function isValidated(): bool
+    {
+        return $this->review_status === ReviewStatus::Validated;
+    }
+
+    public function isClosedInternally(): bool
+    {
+        return $this->isValidated() && $this->closed_at !== null;
+    }
+
+    public function isAwaitingAdministration(): bool
+    {
+        return $this->isValidated() && $this->closed_at === null;
+    }
+
+    public function isConsolidated(): bool
+    {
+        return $this->isApproved() || $this->isClosedInternally();
+    }
+
     public function canManage(User $user): bool
     {
         return $user->can('update', $this);
@@ -91,12 +123,26 @@ class Report extends Model
 
     public function getReviewStatusLabelAttribute(): string
     {
+        if ($this->isClosedInternally()) {
+            return 'Cerrado y consolidado';
+        }
+
         return $this->review_status->label();
     }
 
     public function reviewer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function validator(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validated_by');
+    }
+
+    public function closer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'closed_by');
     }
 
     /** @return array<string, mixed>|null */

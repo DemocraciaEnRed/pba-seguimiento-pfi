@@ -569,13 +569,13 @@ class PeriodicGoalReportsTest extends TestCase
         $parameters = ['objectiveId' => $this->objective->id, 'goalId' => $goal->id];
         $panelUrl = route('objectives.manage.goals.reports.index', $parameters + ['reportId' => $report->id]);
         $this->actingAs($other)->get(route('objectives.manage.goals.index', $parameters))->assertOk()
-            ->assertDontSee('sin medición aprobada')->assertDontSee($panelUrl, false);
+            ->assertDontSee('sin medición consolidada')->assertDontSee($panelUrl, false);
         $this->get(route('objectives.manage.goals.reports.add', $parameters))->assertOk()
             ->assertViewHas('periods', fn (array $periods): bool => $periods[0]['reserved']
                 && ! $periods[0]['reportable'] && $periods[0]['edit_url'] === null
                 && $periods[0]['state_label'] === 'Período reservado');
         $this->actingAs($this->reporter)->get(route('objectives.manage.goals.index', $parameters))->assertOk()
-            ->assertSee('sin medición aprobada')->assertSee($panelUrl, false);
+            ->assertSee('sin medición consolidada')->assertSee($panelUrl, false);
     }
 
     public function test_multiyear_periods_offer_the_same_year_filter_in_portal_and_management(): void

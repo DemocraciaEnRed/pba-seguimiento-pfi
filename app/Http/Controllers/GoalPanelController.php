@@ -330,7 +330,9 @@ class GoalPanelController extends Controller
       $report = $review->create($request->goal, $request->user(), $request);
       return redirect()->route('objectives.manage.goals.reports.index', [
         'objectiveId' => $request->objective->id, 'goalId' => $request->goal->id, 'reportId' => $report->id,
-      ])->with('success', $report->isApproved() ? 'El reporte fue publicado.' : 'El reporte fue enviado a revisión.');
+      ])->with('success', $report->isApproved()
+        ? 'El reporte fue publicado.'
+        : ($report->isValidated() ? 'El reporte interno quedó validado y pendiente de cierre.' : 'El reporte fue enviado a revisión.'));
     }
 
     public function viewGoalConfiguration(Request $request){

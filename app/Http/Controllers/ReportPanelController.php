@@ -30,7 +30,7 @@ class ReportPanelController extends Controller
             'objective' => $request->objective, 'goal' => $request->report->goal, 'report' => $request->report,
             'reviewContext' => $this->review->context($request->report),
             'files' => $request->report->files()->paginate(10, ['*'], 'files_page'),
-            'attendantCandidates' => ! $request->report->isApproved() && $request->user()->can('manageReporters', $request->goal)
+            'attendantCandidates' => ! $request->report->isValidated() && ! $request->report->isApproved() && $request->user()->can('manageReporters', $request->goal)
                 ? $request->goal->reporters()->whereHas('pfiMembership')->get()
                 : collect(),
         ]);
@@ -132,7 +132,7 @@ class ReportPanelController extends Controller
                     throw new \RuntimeException('No se pudieron eliminar las imágenes del reporte.');
                 }
             });
-        }, 'photo-deleted');
+        }, 'photo-deleted', ['photos']);
         return back()->with('success', 'Se eliminó la foto.');
     }
 

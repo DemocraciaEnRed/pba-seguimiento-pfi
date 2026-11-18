@@ -143,11 +143,11 @@ Se conservan las decisiones del PDF sobre autoaprobación explícita, autorizaci
 | Situación del reporte | Reportero | Responsable de esa meta | Administración |
 | --- | --- | --- | --- |
 | Aún no validado, incluidos los devueltos por un Responsable | Puede editar los propios y los pendientes expresamente reasignados. | Puede corregir los de sus metas. | Puede editar. |
-| Validado y enviado a Administración, todavía sin publicar | No puede editar. | No puede editar, aunque sea su autor o quien lo validó. | **Único rol que puede editar.** |
-| Validado, perteneciente a una meta interna | No puede editar. | No puede editar. | **Único rol que puede editar.** |
+| Validado y enviado a Administración, todavía sin resolver | No puede editar. | No puede editar, aunque sea su autor o quien lo validó. | **Único rol que puede editar.** |
+| Reporte interno cerrado y consolidado | No puede editar ni eliminar. | No puede editar ni eliminar. | No puede editar ni eliminar. |
 | Publicado | No puede modificar directamente lo publicado. | No puede modificar directamente lo publicado. | Toda modificación de lo publicado requiere su validación. |
 
-La restricción posterior a la validación se aplica a **todos** los Responsables de la meta, no solo a quien validó. Mantener un reporte para uso interno no devuelve la edición a los demás roles.
+La restricción posterior a la validación se aplica a **todos** los Responsables de la meta, no solo a quien validó. Mantener un reporte para uso interno no devuelve la edición a los demás roles. El cierre interno es terminal para proteger el resultado consolidado.
 
 ```mermaid
 flowchart TD
@@ -157,16 +157,16 @@ flowchart TD
     R -->|Valida| V["Enviado a Administración<br/>Solo Administración puede editar"]
     V --> A{"Decisión de Administración"}
     A -->|Meta pública y publicación autorizada| P["Reporte público"]
-    A -->|Meta interna| I["Sin publicación externa<br/>Seguimiento interno"]
+    A -->|Meta interna: cerrar y consolidar| I["Cerrado para seguimiento interno<br/>Sin publicación externa"]
 ```
 
-El diagrama es conceptual, no una definición de estados técnicos. La visibilidad pertenece a la meta y limita la de sus reportes; no es una etapa de revisión. Administración conserva su intervención general y toda modificación debe dejar trazabilidad. Falta precisar qué acción cierra el circuito de un reporte interno y libera su cupo de pendiente; el diagrama no la presupone.
+El diagrama es conceptual, no una definición de estados técnicos. La visibilidad pertenece a la meta y limita la de sus reportes; no es una etapa de revisión. Administración conserva su intervención general y toda modificación debe dejar trazabilidad. Para una meta interna, Administración cierra explícitamente el reporte validado; desde ese cierre se aplican sus cambios y se consolida para el seguimiento, sin publicación externa.
 
 **Autoaprobación:** un Responsable puede validar lo que cargó, pero la carga no valida automáticamente ni autoriza a publicar.
 
 **Correcciones de contenido publicado:** el Responsable y quien reporta pueden preparar una propuesta. La versión pública no se reemplaza sin validación de Administración, incluso si el cambio es un error de tipeo. El circuito de la propuesta no concede edición directa sobre el reporte validado o publicado.
 
-No se ha acordado un mecanismo de devolución desde Administración que reabra la edición a otros roles. La regla vigente es el bloqueo desde la validación; cualquier excepción requerirá una definición expresa.
+Administración no devuelve reportes: si necesita corregir uno validado, lo edita directamente. No existe un mecanismo que reabra la edición a Responsables o Reporteros. Un reporte interno cerrado no se puede editar ni eliminar.
 
 ## 5. Visibilidad, indicadores y otras decisiones funcionales
 
@@ -193,14 +193,14 @@ Ejemplo acordado: **40 metas en total, 20 públicas y 20 internas**.
 
 - Totales, porcentajes, gráficos e indicadores se calculan con el mismo conjunto autorizado y los filtros aplicados. No se ocultan fichas mientras se conserva un denominador o una agregación sobre las 40 metas.
 - La misma regla alcanza las agregaciones por objetivo, eje y área: el ámbito público solo incorpora información pública.
-- La visibilidad de una meta no determina por sí sola qué reportes son datos consolidados para los indicadores: se mantienen las reglas de validación y autorización. Si el circuito interno requiere precisar ese momento, corresponde al pendiente de cierre del reporte, no a una ampliación de visibilidad.
+- La visibilidad de una meta no determina por sí sola qué reportes son datos consolidados para los indicadores. Los públicos se consolidan al publicarse; los internos, solo cuando Administración los cierra explícitamente después de validar. Los internos cerrados cuentan en gestión, nunca en agregados públicos.
 - Un dashboard personal no representa necesariamente el total del plan. Su alcance debe estar identificado para no presentar un subconjunto como el total general.
 
 ### Reportes pendientes de distintos tipos
 
 - Pueden coexistir, en una misma meta y período, un reporte de avance y otro de hito pendientes de validación.
-- La limitación de pendientes debe distinguir tipos: no se bloquea toda la meta por la existencia de cualquier reporte pendiente.
-- Todavía falta precisar los tipos contemplados, la relación con los períodos y cuándo se libera el cupo en el circuito con Administración.
+- Se conserva la regla existente: un solo reporte de Avance por período; el Avance reserva ese período aunque esté devuelto o validado, hasta que el reporte se elimine.
+- No se añade un cupo global de pendientes. Los Hitos pueden coexistir con el Avance del período.
 
 ### Áreas y presentación pública
 
@@ -249,7 +249,7 @@ Quedan estas precisiones que afectan comportamientos concretos y no deben resolv
 - Si Administración cambia una meta de interna a pública, ¿qué ocurre con los reportes históricos? El cambio de visibilidad de la meta no debe interpretarse como autorización automática de publicar todo su contenido.
 - Si una meta pasa de pública a interna, ¿cómo se comunica el cambio y qué ocurre con sus publicaciones anteriores? El acceso futuro debe respetar la nueva visibilidad, sin prometer recuperar copias ya descargadas.
 
-**Cerrado:** una meta interna y sus datos no se publican ni contribuyen a agregados públicos; solo Administración y personas asignadas pueden consultarla. **Pendiente:** transición y cierre del trabajo, no el modelo de audiencia.
+**Cerrado:** Administración realiza una acción explícita de **Cerrar y consolidar** sobre un reporte interno validado. Desde ese momento sus cambios se aplican y el resultado cuenta para los indicadores de gestión, pero no se publica ni contribuye a agregados públicos. El cierre es terminal: el reporte no se puede editar ni eliminar. La visibilidad de una meta y sus datos sigue limitada a Administración y las personas asignadas.
 
 ### 6.3. Cupo de reportes pendientes
 
@@ -257,7 +257,7 @@ Quedan estas precisiones que afectan comportamientos concretos y no deben resolv
 - ¿El cupo se libera con la validación del Responsable o con una decisión de Administración?
 - ¿Cómo cuentan borradores, devueltos, propuestas de corrección y reportes que quedan para uso interno?
 
-**Cerrado:** avance e hito pueden coexistir en la misma meta y período. **Pendiente:** el resto de la regla, sin dejar una meta bloqueada indefinidamente por no publicar un reporte interno.
+**Cerrado:** no se añade cupo global. Se conserva un Avance por período y su reserva persiste mientras exista el reporte, incluso devuelto o validado; eliminarlo libera el período. Un Hito puede coexistir con ese Avance.
 
 ## 7. Subpreguntas no bloqueantes para comenzar con la base
 
@@ -265,7 +265,7 @@ No reabren las facultades ya definidas. Deben resolverse antes de habilitar los 
 
 | Tema | Subpreguntas pendientes | Regla que se mantiene |
 | --- | --- | --- |
-| Devolución desde Administración | ¿Se necesita un circuito formal para pedir una nueva revisión? ¿Cómo se registra y comunica? Si Administración cambia contenido validado, ¿se requiere otra revisión del Responsable? | No se habilita edición a Reporteros ni Responsables sobre un reporte ya validado por el solo hecho de pedir cambios. |
+| Devolución desde Administración | ¿Se necesita un circuito formal para pedir una nueva revisión? ¿Cómo se registra y comunica? Si Administración cambia contenido validado, ¿se requiere otra revisión del Responsable? | **Resuelto:** Administración no devuelve; edita directamente. No se reabre la edición a Responsables o Reporteros. |
 | Propuestas de corrección de lo publicado | ¿Cómo se presentan, revisan y comunican las propuestas del Responsable y quien reporta? | No alteran la versión pública sin validación de Administración. |
 | Áreas históricas | ¿Los reportes conservan las áreas de su publicación o muestran las actuales? ¿Qué sucede con un área dada de baja? | Administración confirma los vínculos; se conserva la autoría personal interna. |
 | Sugerencias de áreas | ¿Se comunican fuera de la plataforma o necesitan un circuito propio? | El Responsable sugiere; Administración decide. |

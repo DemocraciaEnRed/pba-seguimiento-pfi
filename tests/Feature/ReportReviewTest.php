@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Category;
+use App\ActionLog;
 use App\Goal;
 use App\Milestone;
 use App\Objective;
@@ -78,7 +79,7 @@ class ReportReviewTest extends TestCase
         Notification::fake();
     }
 
-    public function test_pending_report_has_no_effect_and_approval_applies_exactly_once(): void
+    public function test_responsible_validation_has_no_effect_and_administration_publication_applies_once(): void
     {
         $report = $this->submit(['status' => 'reached', 'progress' => 20.5]);
         $this->assertSame(ReviewStatus::Pending, $report->review_status);
@@ -86,24 +87,34 @@ class ReportReviewTest extends TestCase
         $this->assertSame('ongoing', $this->goal->fresh()->status);
         Notification::assertSentTo($this->admin, ReportReviewNotification::class);
         Notification::assertNotSentTo($this->reporter, NewReport::class);
-        $this->approve($report)->assertSessionHasNoErrors();
+        $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+        $this->assertSame(ReviewStatus::Validated, $report->fresh()->review_status);
+        $this->assertSame($this->manager->id, $report->fresh()->validated_by);
+        $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
+        $this->assertSame('ongoing', $this->goal->fresh()->status);
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
         $this->assertSame(60.5, $this->goal->fresh()->indicator_progress);
         $this->assertSame('reached', $this->goal->fresh()->status);
         $this->assertSame(40.0, $report->fresh()->previous_progress);
         $this->assertSame($this->admin->id, $report->fresh()->reviewed_by);
-        $this->approve($report->fresh())->assertSessionHasErrors('review');
+        $this->publish($report->fresh())->assertForbidden();
         $this->assertSame(60.5, $this->goal->fresh()->indicator_progress);
     }
 
-    public function test_admin_publishes_directly_and_non_admin_cannot_approve(): void
+    public function test_admin_publishes_public_submissions_directly_and_cannot_return_a_report(): void
     {
         $report = $this->submit([], $this->admin);
         $this->assertTrue($report->isApproved());
         $this->assertSame(45.0, $this->goal->fresh()->indicator_progress);
         $pending = $this->submit();
         foreach ([$this->reporter, $this->manager] as $actor) {
-            $this->actingAs($actor)->post(route('reports.review.approve', $pending->id), $this->reviewData($pending))->assertForbidden();
+            $this->actingAs($actor)->post(route('reports.review.publish', $pending->id), $this->reviewData($pending))->assertForbidden();
         }
+        $this->actingAs($this->admin)->post(route('reports.review.return', $pending->id), [
+            'review_version' => $pending->review_version, 'return_reason' => 'Falta evidencia',
+        ])->assertForbidden();
+        $this->validateReport($pending, $this->manager)->assertSessionHasNoErrors();
+        $this->publish($pending->fresh())->assertSessionHasNoErrors();
     }
 
     public function test_author_and_manager_can_edit_but_other_reporters_cannot(): void
@@ -116,7 +127,8 @@ class ReportReviewTest extends TestCase
         }
         $this->assertSame($this->reporter->id, $report->fresh()->author_id);
         $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
-        $this->approve($report->fresh())->assertSessionHasNoErrors();
+        $this->validateReport($report->fresh(), $this->manager)->assertSessionHasNoErrors();
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
         $this->actingAs($this->reporter)->put($this->panelUrl($report, '.edit.form'), $this->payload())->assertForbidden();
         $this->actingAs($this->manager)->get($this->panelUrl($report, '.edit'))->assertForbidden();
     }
@@ -124,12 +136,13 @@ class ReportReviewTest extends TestCase
     public function test_return_requires_reason_and_only_explicit_resubmit_returns_it_to_pending(): void
     {
         $report = $this->submit();
-        $this->actingAs($this->admin)->post(route('reports.review.return', $report->id), ['review_version' => 1])->assertSessionHasErrors('return_reason');
-        $this->actingAs($this->admin)->post(route('reports.review.return', $report->id), ['review_version' => 1, 'return_reason' => 'Adjuntar evidencia'])->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->post(route('reports.review.return', $report->id), ['review_version' => 1, 'return_reason' => 'Adjuntar evidencia'])->assertForbidden();
+        $this->actingAs($this->manager)->post(route('reports.review.return', $report->id), ['review_version' => 1])->assertSessionHasErrors('return_reason');
+        $this->actingAs($this->manager)->post(route('reports.review.return', $report->id), ['review_version' => 1, 'return_reason' => 'Adjuntar evidencia'])->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Returned, $report->fresh()->review_status);
         $this->actingAs($this->reporter)->put($this->panelUrl($report, '.edit.form'), $this->payload(['review_version' => $report->fresh()->review_version]))->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Returned, $report->fresh()->review_status);
-        $this->approve($report->fresh())->assertSessionHasErrors('review');
+        $this->publish($report->fresh())->assertForbidden();
         $this->actingAs($this->manager)->post(route('reports.review.resubmit', $report->id), ['review_version' => $report->fresh()->review_version])->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Pending, $report->fresh()->review_status);
         $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
@@ -140,12 +153,13 @@ class ReportReviewTest extends TestCase
         $report = $this->submit();
         $data = $this->reviewData($report);
         $this->actingAs($this->manager)->put($this->panelUrl($report, '.edit.form'), $this->payload(['review_version' => 1]))->assertSessionHasNoErrors();
-        $this->actingAs($this->admin)->post(route('reports.review.approve', $report->id), $data)->assertSessionHasErrors('review');
+        $this->actingAs($this->manager)->post(route('reports.review.validate', $report->id), $data)->assertSessionHasErrors('review');
+        $this->validateReport($report->fresh(), $this->manager)->assertSessionHasNoErrors();
         $data = $this->reviewData($report->fresh());
         $this->goal->indicator_progress = 50;
         $this->goal->save();
-        $this->actingAs($this->admin)->post(route('reports.review.approve', $report->id), $data)->assertSessionHasErrors('review');
-        $this->approve($report->fresh())->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->post(route('reports.review.publish', $report->id), $data)->assertSessionHasErrors('review');
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
         $this->assertSame(55.0, $this->goal->fresh()->indicator_progress);
     }
 
@@ -189,8 +203,126 @@ class ReportReviewTest extends TestCase
         $this->actingAs($this->reporter)->delete($this->panelUrl($report, '.delete.form'), ['password' => 'password'])->assertSessionHasNoErrors();
         $this->assertNull($period->fresh()->reservedReport);
         $replacement = $this->submit(['goal_period_id' => $period->id, 'measured_value' => 0]);
-        $this->approve($replacement)->assertSessionHasNoErrors();
+        $this->validateReport($replacement, $this->manager)->assertSessionHasNoErrors();
+        $this->publish($replacement->fresh())->assertSessionHasNoErrors();
         $this->assertSame(0.0, $period->fresh()->progressReport->measured_value);
+    }
+
+    public function test_periodic_report_reservation_survives_return_and_validation_until_publication(): void
+    {
+        $this->travelTo('2026-08-15');
+        app(GoalIndicatorConfigurator::class)->apply($this->goal, [
+            'measurement_mode' => 'periodic', 'indicator' => 'Resultado', 'indicator_unit' => 'unidades',
+            'indicator_direction' => 'higher_is_better', 'indicator_nature' => 'extensive',
+            'period_type' => 'quarterly', 'period_start' => '2026-01', 'period_count' => 2,
+            'period_targets' => [1 => 10, 2 => 10],
+        ]);
+        $period = $this->goal->periods()->firstOrFail();
+        $report = $this->submit(['goal_period_id' => $period->id, 'measured_value' => 7]);
+
+        $this->actingAs($this->manager)->post(route('reports.review.return', $report->id), [
+            'review_version' => $report->review_version, 'return_reason' => 'Aclarar resultado',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame($report->id, $period->fresh()->reservedReport->id);
+
+        $this->actingAs($this->manager)->post(route('reports.review.resubmit', $report->id), [
+            'review_version' => $report->fresh()->review_version,
+        ])->assertSessionHasNoErrors();
+        $this->validateReport($report->fresh(), $this->manager)->assertSessionHasNoErrors();
+        $this->assertSame($report->id, $period->fresh()->reservedReport->id);
+        $this->assertNull($period->fresh()->progressReport);
+
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
+        $this->assertSame($report->id, $period->fresh()->progressReport->id);
+
+        $milestone = new Milestone();
+        $milestone->title = 'Hito compatible';
+        $milestone->order = 1;
+        $milestone->goal()->associate($this->goal);
+        $milestone->save();
+        $milestoneReport = $this->submit(['type' => 'milestone', 'milestone' => $milestone->id]);
+        $this->validateReport($milestoneReport, $this->manager)->assertSessionHasNoErrors();
+        $this->publish($milestoneReport->fresh())->assertSessionHasNoErrors();
+        $this->assertSame($report->id, $period->fresh()->progressReport->id);
+        $this->assertNotNull($milestone->fresh()->completed);
+    }
+
+    public function test_internal_report_is_validated_then_explicitly_closed_without_publication(): void
+    {
+        $this->goal->visibility = 'internal';
+        $this->goal->save();
+        $report = $this->submit(['progress' => 5]);
+
+        $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+        $this->assertSame(ReviewStatus::Validated, $report->fresh()->review_status);
+        $this->assertNull($report->fresh()->closed_at);
+        $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
+        $this->assertNotFoundWhileInternal($report);
+
+        $this->actingAs($this->reporter)->post(route('reports.review.close', $report->id), $this->reviewData($report->fresh()))
+            ->assertForbidden();
+        $this->actingAs($this->admin)->post(route('reports.review.publish', $report->id), $this->reviewData($report->fresh()))
+            ->assertForbidden();
+        $this->actingAs($this->admin)->post(route('reports.review.close', $report->id), $this->reviewData($report->fresh()))
+            ->assertSessionHasNoErrors();
+
+        $report->refresh();
+        $this->assertSame(ReviewStatus::Validated, $report->review_status);
+        $this->assertSame($this->admin->id, $report->closed_by);
+        $this->assertNotNull($report->closed_at);
+        $this->assertTrue($report->isConsolidated());
+        $this->assertSame(45.0, $this->goal->fresh()->indicator_progress);
+        $this->actingAs($this->admin)->get($this->panelUrl($report))->assertOk()->assertSee('Cerrado y consolidado');
+        $this->actingAs($this->admin)->get($this->panelUrl($report, '.edit'))->assertForbidden();
+        $this->actingAs($this->admin)->delete($this->panelUrl($report, '.delete.form'), ['password' => 'password'])->assertForbidden();
+        $this->assertSame(1, (new \App\Services\Indicators\ObjectiveStats())->compute($this->objective, $this->admin)['reports_total']);
+
+        $adminCreated = $this->submit(['progress' => 3], $this->admin);
+        $this->assertSame(ReviewStatus::Validated, $adminCreated->review_status);
+        $this->assertNull($adminCreated->closed_at);
+        $this->assertSame(45.0, $this->goal->fresh()->indicator_progress);
+        $this->assertNotFoundWhileInternal($adminCreated);
+        Notification::assertNotSentTo($this->admin, NewReport::class);
+    }
+
+    public function test_internal_periodic_measurement_counts_only_after_administration_closes_it(): void
+    {
+        $this->travelTo('2026-08-15');
+        $this->goal->visibility = 'internal';
+        $this->goal->save();
+        app(GoalIndicatorConfigurator::class)->apply($this->goal, [
+            'measurement_mode' => 'periodic', 'indicator' => 'Resultado', 'indicator_unit' => 'unidades',
+            'indicator_direction' => 'higher_is_better', 'indicator_nature' => 'extensive',
+            'period_type' => 'quarterly', 'period_start' => '2026-01', 'period_count' => 2,
+            'period_targets' => [1 => 10, 2 => 10],
+        ]);
+        $period = $this->goal->periods()->firstOrFail();
+        $report = $this->submit(['goal_period_id' => $period->id, 'measured_value' => 7]);
+        $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+        $this->assertNull($period->fresh()->progressReport);
+
+        $this->actingAs($this->admin)->post(route('reports.review.close', $report->id), $this->reviewData($report->fresh()))
+            ->assertSessionHasNoErrors();
+        $this->assertSame($report->id, $period->fresh()->progressReport->id);
+        $this->assertSame(1, (new \App\Services\Indicators\ObjectiveStats())->compute($this->objective, $this->admin)['reports_total']);
+        $this->assertSame(0, (new \App\Services\Indicators\ObjectiveStats())->compute($this->objective)['reports_total']);
+    }
+
+    public function test_edit_audit_records_actor_and_changed_field_names_without_copying_values(): void
+    {
+        $report = $this->submit();
+        $lastLogId = ActionLog::max('id') ?? 0;
+        $this->actingAs($this->reporter)->put($this->panelUrl($report, '.edit.form'), $this->payload([
+            'title' => 'Título actualizado', 'content' => 'Texto actualizado', 'review_version' => 1,
+        ]))->assertSessionHasNoErrors();
+
+        $log = ActionLog::where('id', '>', $lastLogId)->latest('id')->firstOrFail();
+        $context = json_decode($log->context, true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame($this->reporter->id, $context['user_id']);
+        $this->assertContains('title', $context['changed_fields']);
+        $this->assertContains('content', $context['changed_fields']);
+        $this->assertArrayNotHasKey('content', $context);
+        $this->assertStringNotContainsString('Texto actualizado', $log->context);
     }
 
     public function test_milestone_date_is_proposed_until_approval_and_completed_hito_conflicts(): void
@@ -202,7 +334,8 @@ class ReportReviewTest extends TestCase
         $milestone->save();
         $report = $this->submit(['type' => 'milestone', 'milestone' => $milestone->id, 'milestone_date' => '2026-07-10']);
         $this->assertNull($milestone->fresh()->completed);
-        $this->approve($report)->assertSessionHasNoErrors();
+        $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
         $this->assertSame('2026-07-10', $milestone->fresh()->completed->format('Y-m-d'));
     }
 
@@ -221,7 +354,8 @@ class ReportReviewTest extends TestCase
             $this->actingAs($this->other)->get($url)->assertNotFound();
             $this->actingAs($this->reporter)->get($url)->assertOk()->assertHeader('Cache-Control', 'no-store, private');
         }
-        $this->approve($report)->assertSessionHasNoErrors();
+        $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
         $this->actingAs($this->other)->get($file->path)->assertOk();
         $this->objective->hidden = true;
         $this->objective->save();
@@ -244,8 +378,13 @@ class ReportReviewTest extends TestCase
     {
         $pending = $this->submit(['title' => 'Reporte por revisar']);
         $this->submit(['title' => 'Reporte publicado'], $this->admin);
+        $validated = $this->submit(['title' => 'Reporte validado']);
+        $this->validateReport($validated, $this->manager)->assertSessionHasNoErrors();
         $this->actingAs($this->admin)->get(route('admin.reports', ['revision' => 'pending']))
             ->assertOk()->assertSee($pending->title)->assertDontSee('Reporte publicado')->assertSee('Pendientes de revisión: 1');
+        $this->actingAs($this->admin)->get(route('admin.reports', ['revision' => 'validated']))
+            ->assertOk()->assertSee($validated->title)->assertDontSee($pending->title)
+            ->assertSee('Validados pendientes de Administración: 1');
         $csv = $this->actingAs($this->admin)->get(route('admin.reports.download', ['revision' => 'pending']));
         $csv->assertOk();
         $this->assertStringContainsString('Revisión', $csv->streamedContent());
@@ -275,7 +414,7 @@ class ReportReviewTest extends TestCase
             'map_center' => json_encode([-58, -36]), 'map_geometries' => json_encode($geometry),
         ])->assertSessionHasNoErrors();
         $this->assertSame($geometry, $report->fresh()->map_geometries);
-        $this->actingAs($this->admin)->post(route('reports.review.approve', $report->id), $oldReview)->assertSessionHasErrors('review');
+        $this->actingAs($this->manager)->post(route('reports.review.validate', $report->id), $oldReview)->assertSessionHasErrors('review');
         $this->actingAs($this->reporter)->post($this->panelUrl($report, '.files.form'), [
             'review_version' => $report->fresh()->review_version, 'file' => UploadedFile::fake()->create('anexo.txt', 1),
         ])->assertSessionHasNoErrors();
@@ -283,7 +422,8 @@ class ReportReviewTest extends TestCase
         $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
         $this->actingAs($this->admin)->get($this->panelUrl($report))->assertOk()->assertSee('anexo.txt');
         $this->actingAs($this->reporter)->get($this->panelUrl($report, '.map'))->assertOk()->assertSee('FeatureCollection');
-        $this->approve($report->fresh())->assertSessionHasNoErrors();
+        $this->validateReport($report->fresh(), $this->manager)->assertSessionHasNoErrors();
+        $this->publish($report->fresh())->assertSessionHasNoErrors();
         $this->get(route('reports.index', $report->id))->assertOk()->assertSee('FeatureCollection');
         $report->map_geometries = json_encode($geometry);
         $report->save();
@@ -307,7 +447,7 @@ class ReportReviewTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    public function test_failure_during_approval_rolls_back_goal_and_report_without_notifications(): void
+    public function test_failure_during_publication_rolls_back_goal_and_report_without_publication_notifications(): void
     {
         $report = $this->submit();
         Notification::fake();
@@ -318,9 +458,11 @@ class ReportReviewTest extends TestCase
             }
         });
         try {
-            $this->approve($report)->assertStatus(500);
+            $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+            Notification::fake();
+            $this->publish($report->fresh())->assertStatus(500);
             $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
-            $this->assertSame(ReviewStatus::Pending, $report->fresh()->review_status);
+            $this->assertSame(ReviewStatus::Validated, $report->fresh()->review_status);
             Notification::assertNothingSent();
         } finally {
             $fail = false;
@@ -333,14 +475,16 @@ class ReportReviewTest extends TestCase
         $this->objective->subscribers()->attach($subscriber);
         $report = $this->submit(['type' => 'post', 'notify' => 'true']);
         Notification::assertNotSentTo($subscriber, NewReport::class);
-        $this->actingAs($this->admin)->post(route('reports.review.approve', $report->id), $this->reviewData($report) + ['notify' => 'true'])->assertSessionHasNoErrors();
+        $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->post(route('reports.review.publish', $report->id), $this->reviewData($report->fresh()) + ['notify' => 'true'])->assertSessionHasNoErrors();
         Notification::assertSentTo($subscriber, NewReport::class, fn ($notice) => $notice->afterCommit === true);
         Notification::assertSentTo($this->reporter, ReportReviewNotification::class);
         $this->objective->hidden = true;
         $this->objective->save();
         Notification::fake();
         $hidden = $this->submit(['type' => 'post', 'notify' => 'true']);
-        $this->actingAs($this->admin)->post(route('reports.review.approve', $hidden->id), $this->reviewData($hidden) + ['notify' => 'true'])->assertSessionHasNoErrors();
+        $this->validateReport($hidden, $this->manager)->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->post(route('reports.review.publish', $hidden->id), $this->reviewData($hidden->fresh()) + ['notify' => 'true'])->assertSessionHasNoErrors();
         Notification::assertNotSentTo($subscriber, NewReport::class);
 
         $this->goal->visibility = 'internal';
@@ -389,8 +533,19 @@ class ReportReviewTest extends TestCase
         return ['review_version' => $report->review_version, 'context' => app(ReportReview::class)->context($report)];
     }
 
-    private function approve(Report $report): \Illuminate\Testing\TestResponse
+    private function validateReport(Report $report, User $actor): \Illuminate\Testing\TestResponse
     {
-        return $this->actingAs($this->admin)->post(route('reports.review.approve', $report->id), $this->reviewData($report));
+        return $this->actingAs($actor)->post(route('reports.review.validate', $report->id), $this->reviewData($report));
+    }
+
+    private function publish(Report $report): \Illuminate\Testing\TestResponse
+    {
+        return $this->actingAs($this->admin)->post(route('reports.review.publish', $report->id), $this->reviewData($report));
+    }
+
+    private function assertNotFoundWhileInternal(Report $report): void
+    {
+        $this->actingAs($this->admin)->get(route('reports.index', $report->id))->assertNotFound();
+        $this->getJson(route('apiService.reports'))->assertDontSee($report->title);
     }
 }

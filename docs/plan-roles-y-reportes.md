@@ -26,14 +26,17 @@ Cada punto lleva una etiqueta:
 - **Baja y continuidad (D2 resuelta):** al quitar un Responsable, advertir si conviene asignar otro para mantener la cobertura; no exigir reemplazo si ya hay otros Responsables y no introducir unanimidad para validar. Al retirar un Reportero con pendientes no validados, exigir que Administración o quien tenga facultad sobre esa meta elija quién los continúa. Puede seleccionar otro Reportero asignado o incorporar uno nuevo del universo PFI. Se conserva la autoría histórica.
 - **Alcance de esa continuidad:** rige tanto al retirar la pertenencia PFI como al quitar la asignación de Reportero a una meta. La operación no se confirma hasta resolver los destinos necesarios; no hay transferencias automáticas. Los reportes ya validados permanecen bajo Administración.
 - **Continuidad al retirar Responsables, confirmada en fase 4:** si la persona pierde su última facultad para atender pendientes a su cargo, también debe elegir los destinos antes de confirmar. No se exige nombrar otro Responsable. Si conserva otro rol que permite atenderlos, no hace falta transferirlos.
+- **D3, cierre interno:** después de validar, Administración realiza una acción explícita de cierre. Desde ese momento se aplican los cambios y el reporte se consolida para el seguimiento interno; no se publica. El reporte cerrado no se puede editar ni eliminar.
+- **D5, cupos:** no se agrega un cupo global. Se conserva un Avance por período; el período permanece reservado mientras exista el reporte, incluso devuelto o validado. Un Hito puede coexistir con el Avance.
+- **Devolución desde Administración:** no se habilita. Administración corrige directamente; la devolución corresponde a Responsables sobre propuestas pendientes.
 - **Manual sincronizado por fase:** actualizar los capítulos afectados de `docs/manual-usuario`, su índice, historial e instrucciones de capturas al cerrar cada fase, antes de iniciar la siguiente. La fase 9 conserva una revisión integral final, no la primera actualización. Documentar lo implementado y distinguirlo de lo aún no desplegado.
 
 **Estado de ejecución**
 - Plan aprobado; implementación iniciada en `feature/roles-y-reportes`.
 - **Fase 0, pasos 1 a 4 implementados:** policies registradas y utilizadas por controladores, middleware, servicio de revisión y vistas; gate administrativo reparado; precarga por petición; visibilidad del objetivo reservada a Administración.
-- En aquel primer incremento, los permisos generales seguían basados en `objective_user`. Las fases 2 y 3 prepararon asignaciones y visibilidad, y la fase 4 realizó el corte a `goal_user`. El circuito conserva `pending|returned|approved` hasta la fase 5.
+- En aquel primer incremento, los permisos generales seguían basados en `objective_user`. Las fases 2 y 3 prepararon asignaciones y visibilidad, y la fase 4 realizó el corte a `goal_user`. El circuito inicial conservaba `pending|returned|approved`; la fase 5 agrega `validated` y mantiene `approved` como valor técnico de los reportes publicados.
 - El contrato de audiencia del paso 5 quedó diseñado abajo. Su implementación y las pruebas ejecutables 20/23/40 se incorporaron con el esquema de las fases 2 y 3.
-- **D1 y D2 resueltas después del primer incremento.** La fase 1 puede incorporar catálogo, altas y clasificación PFI. La baja de personas se habilita con la reasignación efectiva de la fase 4, no antes; D3 a D8 siguen pendientes.
+- **D1 y D2 resueltas después del primer incremento.** La fase 1 puede incorporar catálogo, altas y clasificación PFI. La baja de personas se habilita con la reasignación efectiva de la fase 4, no antes. D3 y D5 quedaron resueltas para la fase 5; D4 y D6 a D8 siguen pendientes.
 - **Fase 1, pasos 6 a 9 implementados:** catálogo de categorías PFI (`pfi_categories`), pertenencia (`pfi_memberships`) y clasificación (`pfi_category_user`). Administración da de alta y reclasifica desde la ficha del usuario, filtra por pertenencia y categoría y exporta ambas columnas en el CSV. Cada operación queda en `action_logs`. Ser PFI no da acceso a nada.
 - **Decisiones de implementación de la fase 1, confirmadas por el usuario:**
   - El catálogo arranca con las cuatro categorías de ejemplo, cargadas por una migración de datos idempotente. Administración puede editarlas o desactivarlas.
@@ -45,8 +48,9 @@ Cada punto lleva una etiqueta:
 - **Fase 3, pasos 14 a 17 implementados:** las metas existentes se migran como públicas; las nuevas requieren una elección explícita y las importadas son internas. `GoalAudience` delimita consultas públicas, de gestión y de trabajo para metas y reportes, incluidos accesos por ID, agregados, exportaciones y avisos. Los recursos públicos no exponen nombres de personas. El paso 18 sigue bloqueado por D4: no se habilitan cambios de visibilidad en metas con historial. La migración se añadió, pero no se aplicó fuera de las bases de prueba.
 - **Fase 4, pasos 19 a 23 implementados:** policies, paneles, directorios, acciones y moderación usan asignaciones por meta. Administración conserva la estructura; una meta pública del mismo objetivo no habilita acciones fuera de las asignaciones. `objective_user` queda únicamente como referencia histórica administrativa, sin permisos ni mutadores. La etiqueta «Equipo» depende de la asignación del autor del comentario o respuesta, no de quien lo lee.
 - **Continuidad de fase 4:** `attendant_id` separa la atención de la autoría. La baja PFI, los retiros por meta y la reasignación individual validan destinos vigentes, permisos y estado dentro de la transacción. Las bajas exigen resolver todos los pendientes afectados, incluidos los que aparecieron desde la confirmación. Se bloquean primero las personas participantes y destinos por ID, luego las metas y los reportes; la carga y modificación de reportes respetan ese orden. Las devoluciones se notifican a quien atiende actualmente.
-- **Despliegue de fase 4 pendiente de coordinación:** preparar manualmente las asignaciones antes del corte; no se convierten los equipos anteriores. Aplicar las nuevas migraciones incrementales con backup: una agrega `attendant_id` y otra inicializa la atención de `pending|returned` con su autor sin sobreescribir reasignaciones. Revisar antes de habilitar el acceso los pendientes cuyos autores no tengan una asignación vigente ni facultades administrativas, y resolver su continuidad. Estas migraciones no se aplicaron a la base de la aplicación. La fase 5 y D4 continúan pendientes.
-- **Manual actualizado antes de fase 5:** v0.4.4, capítulos 01 a 09, índice, historial e instrucciones de capturas sincronizados con las fases 1 a 4. La validación separada del Responsable, las áreas por meta, los avisos nuevos y la Mesa de trabajo no se describen como disponibles.
+- **Despliegue de fase 4 pendiente de coordinación:** preparar manualmente las asignaciones antes del corte; no se convierten los equipos anteriores. Aplicar las nuevas migraciones incrementales con backup: una agrega `attendant_id` y otra inicializa la atención de `pending|returned` con su autor sin sobreescribir reasignaciones. Revisar antes de habilitar el acceso los pendientes cuyos autores no tengan una asignación vigente ni facultades administrativas, y resolver su continuidad. Estas migraciones no se aplicaron a la base de la aplicación.
+- **Fase 5, pasos 24 a 30 implementados en el código y con pruebas focalizadas aprobadas:** se documentan abajo; sus migraciones aún no se aplicaron a la base de la aplicación.
+- **Manual actualizado al cerrar la fase 5:** v0.4.5, con los capítulos afectados, índice, historial e instrucciones de capturas. Las áreas por meta y la Mesa de trabajo todavía no se describen como disponibles.
 - El análisis siguiente conserva la línea de base anterior al primer incremento; no describe como pendientes los cambios ya registrados arriba.
 
 ### 1. Análisis de brechas
@@ -256,22 +260,23 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 24. Cambios en el modelo de datos:
     - `ReviewStatus` suma `validated`.
     - `approved` se mantiene como valor técnico de "Publicado", así no hay que reescribir datos.
-    - Columnas nuevas: `validated_by` y `validated_at`. `attendant_id` se incorpora en la fase 4 para habilitar la continuidad antes del nuevo circuito.
+    - Columnas nuevas: `validated_by`, `validated_at`, `closed_by` y `closed_at`. `attendant_id` se incorpora en la fase 4 para habilitar la continuidad antes del nuevo circuito.
 25. Transiciones **[Acordado §1, §4]**:
     - **Envío:** el reporte queda `pending`.
-    - **Revisión:** cualquier Responsable de la meta, o Administración, puede devolver con motivo (`returned`) o validar (`validated`). La autovalidación es una acción explícita y separada de la carga.
-    - **Desde `validated`:** Administración edita o publica. Publicar solo es posible si la meta es pública, y ejecuta `apply()`. Validar no publica ni aplica cambios.
-    - **Carga de Administración:** publica directamente en metas públicas, con una acción explícita (tu decisión). Además puede intervenir en cualquier etapa.
-    - **Meta interna:** el reporte se queda en `validated`. La acción que lo cierra y lo consolida está **bloqueada por D3**.
-    - **No hay devolución desde Administración** que reabra la edición [Pendiente §7].
+    - **Revisión:** cualquier Responsable de la meta puede devolver con motivo (`returned`) o validar (`validated`). Administración también puede validar; la autovalidación es una acción explícita y separada de la carga.
+    - **Desde `validated`:** Administración edita; publica una meta pública o cierra una interna. Publicar y cerrar ejecutan `apply()`; validar no publica ni aplica cambios.
+    - **Carga de Administración:** publica directamente en metas públicas. En metas internas, la carga queda validada y Administración debe cerrarla.
+    - **Meta interna:** al cerrar, queda consolidada para indicadores internos y no se puede editar ni eliminar.
+    - **Devolución administrativa:** no existe; Administración corrige directamente.
 26. Permisos de edición, que incluyen archivos, fotos y mapa:
     - **Antes de validar:** el autor, quien atiende el pendiente, los Responsables de la meta y Administración.
     - **Desde `validated`, incluida una meta interna:** **solo Administración**, también si el autor es Responsable.
     - **Publicado:** solo Administración. Su propia edición cuenta como su validación.
+    - **Interno cerrado:** no se permite editar ni eliminar; protege el resultado consolidado.
 27. Registrar quién cambió qué campos en cada edición, incluida la del autor y la de Administración después de validar. **[Propuesta]**: el formato del detalle está por acordar (§9).
-28. Integrar la reasignación de atención de la fase 4 con el estado `validated`: solo sobre reportes no validados y hacia Reporteros asignados a la meta. `author_id` no cambia; una devolución administrativa no habilita por sí sola la reasignación ni la edición.
-29. Se mantiene la unicidad de avance por período, con un test de coexistencia de avance e hito. Cualquier otro límite está **bloqueado por D5**.
-30. Si dos Responsables resuelven a la vez, `mutate()` usa bloqueo y versión, y el segundo ve "ya resuelto".
+28. Integrar la reasignación de atención de la fase 4 con el estado `validated`: solo sobre reportes `pending|returned` y hacia Reporteros asignados a la meta. `author_id` no cambia; los validados no se reasignan.
+29. Se mantiene el único Avance por período: su reserva persiste mientras exista, incluso devuelto o validado; el Hito puede coexistir. No se agrega un cupo global **[D5 resuelta]**.
+30. Si dos Responsables resuelven a la vez, `mutate()` usa bloqueo y versión, y el segundo ve "ya resuelto". La validación simultánea tampoco aplica cambios ni genera dos resoluciones.
 
 **Fase 6: áreas por meta** (*depende de la fase 3; puede ir en paralelo con la fase 5*)
 31. Definir el catálogo de áreas (D6). La propuesta es reutilizar `organizations` y llamarlas "Áreas" en la interfaz.
@@ -325,6 +330,9 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 - Fase 4: regresión de autorización, asignaciones, continuidad, directorios, paneles, comentarios, exportaciones, indicadores y revisión: **156 pruebas y 1367 aserciones aprobadas**. Incluye la revocación del legado, límites entre metas públicas, etiquetas «Equipo», privacidad de reservas de otros Reporteros y bajas atómicas con autoría intacta.
 - Las pruebas de concurrencia real reprodujeron y permitieron corregir dos fallos: reasignar hacia una persona que sale simultáneamente y un bloqueo cruzado entre carga y baja PFI. Verifican que siempre quede una persona habilitada atendiendo cada pendiente.
 - Suite completa de fase 4, ejecutada con confirmación del usuario: **471 pruebas y 6722 aserciones aprobadas**. Sintaxis PHP y `git diff --check` correctos. `npm run build` completó; conserva avisos de imágenes estáticas no resueltas durante el empaquetado.
+- Fase 5 y regresión adyacente: `ReportReviewTest`, `AuthorizationPoliciesTest`, `ReportContinuityTest`, `PeriodicGoalReportsTest`, `GoalConfidentialityTest`, `HomeStatsTest`, `ObjectivePageTest`, `ReportPageTest`, `CsvExportsTest` y `HomeReportsGridTest`: **108 pruebas y 1069 aserciones aprobadas**. La prueba de concurrencia, ejecutada por separado, pasó **6 pruebas y 87 aserciones**, incluidas dos validaciones simultáneas sin doble resolución ni aplicación de cambios.
+- Fase 5: sintaxis PHP y `git diff --check` correctos; `npm run build` completó con los avisos ya conocidos de imágenes estáticas no resueltas. Los artefactos generados por el build se limpiaron. Las migraciones se probaron en la base de pruebas; no se aplicaron a la base de la aplicación.
+- Suite completa de fase 5, ejecutada con confirmación del usuario: **476 pruebas y 6927 aserciones aprobadas**.
 - Los comandos de pruebas se ejecutaron con `APP_ENV=testing DB_DATABASE=participes_testing`. No se ejecutaron migraciones ni escrituras sobre la base de la aplicación.
 - Las pruebas de integración usan PHPUnit y MySQL (`participes_testing`), con `RefreshDatabase` o el aislamiento existente de `DatabaseMigrations` para concurrencia. Se conservan las pruebas unitarias de cálculo.
 - Cada fase corre `php artisan test --compact` con sus tests, más la regresión de revisión y de superficies públicas: `ReportReview*`, `PeriodicGoalReportsTest`, `SitemapTest`, `HomeStatsTest`, `*SearchTest`, `CsvExportsTest`, `ObjectivePageTest` y `ReportPageTest`.
@@ -339,17 +347,15 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 
 | # | Decisión | Fuente | Bloquea |
 | --- | --- | --- | --- |
-| D3 | ¿Qué acción de Administración cierra un reporte interno y desde cuándo se considera consolidado? | §6.2 | Fase 5, paso 25 (meta interna), e indicadores internos |
 | D4 | Al pasar de interna a pública o al revés, ¿qué pasa con los reportes históricos y cómo se comunica el cambio? | §6.2 | Fase 3, paso 18 |
-| D5 | Cupo de pendientes: tipos, períodos, cuándo se libera y cómo cuentan los devueltos, las propuestas y los internos | §6.3 | Fase 5, paso 29 |
 | D6 | ¿Se reutiliza `organizations` como catálogo de áreas o se crea una tabla nueva? ¿Qué pasa con `objective_organization`? | Técnica | Fase 6 |
 | D7 | ¿Los reportes muestran el área que tenían al publicarse o la actual? ¿Qué pasa con un área dada de baja? | §7 | Fase 6, paso 34 |
 | D8 | Secciones y filtros de la Mesa de trabajo | §8, propuestas | Diseño de la fase 8 |
 
-D1 y D2 se resolvieron en la conversación posterior a la implementación inicial; sus definiciones están en **Tus decisiones incorporadas**. La dependencia técnica de la baja con la continuidad en fase 4 no es una decisión de producto pendiente.
+D1 a D3 y D5 se resolvieron en las conversaciones posteriores a la implementación inicial; sus definiciones están en **Tus decisiones incorporadas**. La dependencia técnica de la baja con la continuidad en fase 4 no es una decisión de producto pendiente.
 
 **No bloqueantes**
-- **Devolución desde Administración** (§7): no se implementa. Administración edita directamente.
+- **Devolución desde Administración** (§7): resuelto; no se habilita. Administración edita directamente.
 - **Propuestas de corrección de lo publicado** (§7).
 - **Sugerencias de áreas y filtro por áreas** (§7).
 - **Avisos operativos** (§7): qué admins reciben tareas, recordatorios, resúmenes y deduplicación.
@@ -362,7 +368,7 @@ D1 y D2 se resolvieron en la conversación posterior a la implementación inicia
 **Supuestos que tomé por defecto (decime si alguno no va)**
 - Una meta es públicamente visible si es pública **y** su objetivo no está oculto. `objectives.hidden` se mantiene y solo lo cambia Administración.
 - En gestión, quien no es admin ve las metas públicas efectivas más las suyas, y el contexto del objetivo o eje de sus metas aunque esté oculto.
-- Administración puede intervenir en cualquier etapa: devolver, validar o publicar un pendiente.
+- Administración puede validar una propuesta pendiente, editar reportes no cerrados y resolver reportes validados según la visibilidad de la meta; no puede devolver.
 - Los `pending` existentes pasan a esperar a un Responsable. Si la meta no tiene Responsables, los atiende Administración.
 - Las comunidades, la portada y los archivos del objetivo pasan a ser solo de Administración.
 - No se agregan dependencias. Los permisos se resuelven con policies y gates.

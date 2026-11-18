@@ -38,7 +38,7 @@
         <div class="card-body p-3 p-lg-4">
           <div class="alert alert-info">
             <strong>{{ $report->review_status_label }}</strong>
-            @if(!$report->isApproved()) — Esta propuesta no modifica todavía la meta ni es visible en el portal. @endif
+            @if(!$report->isConsolidated()) — Esta propuesta no modifica todavía la meta ni es visible en el portal. @elseif($report->isClosedInternally()) — El resultado está consolidado para el seguimiento interno y no es visible en el portal. @endif
             @if($report->return_reason)<p class="mb-0 mt-1">Última devolución: {{ $report->return_reason }}</p>@endif
           </div>
           @if($errors->any())

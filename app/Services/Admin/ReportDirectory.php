@@ -56,7 +56,7 @@ class ReportDirectory
 
         return [
             'q' => $this->text($filters['q'] ?? null),
-            'revision' => in_array($filters['revision'] ?? null, ['pending', 'approved', 'returned'], true) ? $filters['revision'] : null,
+            'revision' => in_array($filters['revision'] ?? null, ['pending', 'approved', 'returned', 'validated', 'closed'], true) ? $filters['revision'] : null,
             'eje' => $categoryId,
             'objetivo' => $objectiveId,
             'meta' => $goalId,
@@ -82,7 +82,13 @@ class ReportDirectory
             ->with(['goal.objective.strategicObjective.category', 'author'])
             ->withCount(['comments', 'positiveTestimonies'])
             ->whereHas('goal.objective')
-            ->when($filters['revision'], fn (Builder $query, string $state) => $query->where('review_status', $state))
+            ->when($filters['revision'] === 'closed', fn (Builder $query) => $query
+                ->where('review_status', 'validated')
+                ->whereNotNull('closed_at'))
+            ->when($filters['revision'] === 'validated', fn (Builder $query) => $query
+                ->where('review_status', 'validated')
+                ->whereNull('closed_at'))
+            ->when($filters['revision'] && ! in_array($filters['revision'], ['validated', 'closed'], true), fn (Builder $query) => $query->where('review_status', $filters['revision']))
             ->when($filters['q'], fn (Builder $query, string $search) => $query->where('title', 'like', '%'.$search.'%'))
             ->when($filters['meta'], fn (Builder $query, int $goalId) => $query->where('goal_id', $goalId))
             ->when($filters['objetivo'], fn (Builder $query, int $objectiveId) => $query->whereHas('goal', fn (Builder $goals) => $goals->where('objective_id', $objectiveId)))

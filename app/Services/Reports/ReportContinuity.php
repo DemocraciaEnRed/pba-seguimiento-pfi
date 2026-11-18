@@ -90,6 +90,7 @@ class ReportContinuity
             'report_id' => $report->id, 'goal_id' => $report->goal_id, 'author_id' => $report->author_id,
             'previous_attendant_id' => $previousAttendantId, 'attendant_id' => $attendantId,
             'user_id' => $actor->id, 'action' => 'attendant-reassigned', 'review_version' => $report->review_version,
+            'changed_fields' => ['attendant_id'],
         ]);
     }
 }

@@ -130,8 +130,8 @@
           </td>
           <td class="align-middle">
             <span class="badge badge-{{ $stateColors[$result->state->value] }}">{{ $result->state->label() }}</span>
-            @if($reservation && !$reservation->isApproved())
-              <small class="d-block text-muted">{{ $reservation->review_status_label }} — sin medición aprobada</small>
+            @if($reservation && !$reservation->isConsolidated())
+              <small class="d-block text-muted">{{ $reservation->review_status_label }} — sin medición consolidada</small>
             @endif
             @if($period->isSkipped())
               <small class="d-block text-muted" title="Omitido por {{ $period->skippedBy?->fullname }}">{{ $period->skip_reason }}</small>

@@ -158,7 +158,7 @@
       </div>
       @else
       <div class="alert alert-warning">
-        <i class="fas fa-triangle-exclamation"></i>&nbsp;El objetivo se encuentra <i class="fas fa-eye-slash"></i> oculto, no se enviarán notificaciones a los usuarios.
+        <i class="fas fa-triangle-exclamation"></i>&nbsp;El objetivo está oculto o la meta es interna; no se enviarán notificaciones a los usuarios.
       </div>
       @endif
       <small class="form-text text-muted">{{ $report->isApproved() ? 'Se notificará a los suscriptores que el reporte fue editado.' : 'Esta preferencia se tendrá en cuenta al aprobar y publicar. Guardar la propuesta no envía avisos a suscriptores.' }}</small>

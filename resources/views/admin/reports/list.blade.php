@@ -7,6 +7,7 @@
   <h3 class="is-700">Reportes</h3>
   <p class="lead">Todos los reportes cargados en la plataforma, incluidos los de objetivos ocultos.</p>
   <a href="{{ route('admin.reports', ['revision' => 'pending']) }}" class="btn btn-outline-primary mb-3">Pendientes de revisión: {{ $pendingCount }}</a>
+  <a href="{{ route('admin.reports', ['revision' => 'validated']) }}" class="btn btn-outline-primary mb-3">Validados pendientes de Administración: {{ $validatedCount }}</a>
 
   <form method="GET" action="{{ route('admin.reports') }}" class="mb-3">
     <div class="d-grid grid-cols-1 grid-cols-md-2 grid-cols-lg-3 gap-2 align-items-end">
@@ -17,6 +18,7 @@
           @foreach(\App\Services\Reports\ReviewStatus::cases() as $state)
           <option value="{{ $state->value }}" @selected($filters['revision'] === $state->value)>{{ $state->label() }}</option>
           @endforeach
+          <option value="closed" @selected($filters['revision'] === 'closed')>Cerrado y consolidado</option>
         </select>
       </div>
       <div>

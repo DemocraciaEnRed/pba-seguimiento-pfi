@@ -49,7 +49,7 @@ class ObjectiveStats
         $lightCounts = $goals->pluck('light')->filter()->countBy(fn (TrafficLight $light): string => $light->value);
         $measured = $lightCounts->sum();
         $reports = Report::query()
-            ->approved()
+            ->consolidated()
             ->visibleIn($goalAudience)
             ->whereHas('goal', fn ($query) => $query->where('objective_id', $objective->getKey()));
         $lastReportDate = (clone $reports)->max('reports.date');

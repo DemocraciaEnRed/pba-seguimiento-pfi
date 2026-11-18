@@ -37,17 +37,35 @@ class ReportReview
                 $report->author()->associate($actor);
                 $report->attendant()->associate($actor);
                 $report->submitted_at = now();
+                if ($actor->hasRole('admin') && $goal->visibility === 'internal') {
+                    $report->review_status = ReviewStatus::Validated;
+                    $report->validated_by = $actor->id;
+                    $report->validated_at = now();
+                }
                 $this->fillProposal($report, $data);
+                $changedFields = array_keys($report->getDirty());
+                if ($request->hasFile('photos')) {
+                    $changedFields[] = 'photos';
+                }
+                if ($request->hasFile('files')) {
+                    $changedFields[] = 'files';
+                }
                 $this->validateProposal($report);
                 $report->save();
                 $this->attachments->store($report, $request->file('photos', []), $request->file('files', []));
                 DB::afterCommit(fn () => $this->attachments->committed());
                 if ($actor->hasRole('admin')) {
-                    $this->apply($report, $actor);
-                    $this->publicationNotice($report);
-                    $this->log($report, $actor, 'published');
+                    if ($goal->visibility === 'public') {
+                        $this->apply($report, $actor, ReviewStatus::Approved);
+                        $changedFields = array_values(array_unique([...$changedFields, ...array_keys($report->getDirty())]));
+                        $report->save();
+                        $this->publicationNotice($report);
+                        $this->log($report, $actor, 'published', $changedFields);
+                    } else {
+                        $this->log($report, $actor, 'validated', $changedFields);
+                    }
                 } else {
-                    $this->log($report, $actor, 'submitted');
+                    $this->log($report, $actor, 'submitted', $changedFields);
                     $this->reviewNotice($report, 'submitted', $actor);
                 }
                 return $report;
@@ -72,9 +90,9 @@ class ReportReview
     }
 
     /** @param \Closure(Report): void $change */
-    public function mutate(Report $report, User $actor, \Closure $change, string $action = 'edited'): Report
+    public function mutate(Report $report, User $actor, \Closure $change, string $action = 'edited', array $changedFields = []): Report
     {
-        return DB::transaction(function () use ($report, $actor, $change, $action): Report {
+        return DB::transaction(function () use ($report, $actor, $change, $action, $changedFields): Report {
             User::query()->lockForUpdate()->findOrFail($actor->id);
             $goal = Goal::whereKey($report->goal_id)->lockForUpdate()->firstOrFail();
             $locked = Report::whereKey($report->id)->lockForUpdate()->firstOrFail();
@@ -88,9 +106,10 @@ class ReportReview
             $actor->forgetAuthorizationContext();
             Gate::forUser($actor)->authorize('update', $locked);
             $change($locked);
+            $changedFields = array_values(array_unique([...$changedFields, ...array_keys($locked->getDirty())]));
             $locked->review_version++;
             $locked->save();
-            $this->log($locked, $actor, $action);
+            $this->log($locked, $actor, $action, $changedFields);
             return $locked;
         });
     }
@@ -107,7 +126,10 @@ class ReportReview
                 $this->checkVersion($locked, $request->integer('review_version'));
                 $this->attachments->store($locked, $request->hasFile('photo') ? [$request->file('photo')] : [], $request->hasFile('file') ? [$request->file('file')] : []);
                 DB::afterCommit(fn () => $this->attachments->committed());
-            }, 'attachments-added');
+            }, 'attachments-added', array_values(array_filter([
+                $request->hasFile('photo') ? 'photos' : null,
+                $request->hasFile('file') ? 'files' : null,
+            ])));
         } catch (Throwable $exception) {
             $this->attachments->cleanup();
             throw $exception;
@@ -118,35 +140,45 @@ class ReportReview
     {
         $request->validate([
             'review_version' => 'required|integer|min:1',
-            'context' => Rule::requiredIf($action === 'approved'),
+            'context' => [Rule::requiredIf(in_array($action, ['validated', 'published', 'closed'], true)), 'nullable', 'string'],
             'return_reason' => [Rule::requiredIf($action === 'returned'), 'nullable', 'string', 'max:2000'],
             'notify' => 'nullable|in:true',
         ]);
         return $this->mutate($report, $actor, function (Report $locked) use ($actor, $request, $action): void {
             $this->checkVersion($locked, $request->integer('review_version'));
-            $expected = $action === 'resubmitted' ? ReviewStatus::Returned : ReviewStatus::Pending;
-            if ($locked->review_status !== $expected) {
-                throw ValidationException::withMessages(['review' => 'El estado del reporte cambió. Recargá la página antes de continuar.']);
-            }
             if ($action === 'resubmitted') {
+                if ($locked->review_status !== ReviewStatus::Returned) {
+                    throw ValidationException::withMessages(['review' => 'El estado del reporte cambió. Recargá la página antes de continuar.']);
+                }
                 $this->validateProposal($locked);
                 $locked->review_status = ReviewStatus::Pending;
                 $locked->submitted_at = now();
+            } elseif ($action === 'returned') {
+                Gate::forUser($actor)->authorize('return', $locked);
+                $locked->review_status = ReviewStatus::Returned;
+                $locked->reviewed_by = $actor->id;
+                $locked->reviewed_at = now();
+                $locked->return_reason = $request->input('return_reason');
+            } elseif ($action === 'validated') {
+                Gate::forUser($actor)->authorize('validate', $locked);
+                $this->assertReviewContext($locked, $request);
+                $locked->review_status = ReviewStatus::Validated;
+                $locked->validated_by = $actor->id;
+                $locked->validated_at = now();
+            } elseif ($action === 'published') {
+                Gate::forUser($actor)->authorize('publish', $locked);
+                $this->assertReviewContext($locked, $request);
+                $locked->notify_subscribers = $request->boolean('notify');
+                $this->apply($locked, $actor, ReviewStatus::Approved);
+                $this->publicationNotice($locked);
+            } elseif ($action === 'closed') {
+                Gate::forUser($actor)->authorize('close', $locked);
+                $this->assertReviewContext($locked, $request);
+                $this->apply($locked, $actor, ReviewStatus::Validated);
+                $locked->closed_by = $actor->id;
+                $locked->closed_at = now();
             } else {
-                abort_unless($actor->hasRole('admin'), 403);
-                if ($action === 'approved') {
-                    if (! hash_equals($this->context($locked), (string) $request->input('context'))) {
-                        throw ValidationException::withMessages(['review' => 'La meta o el hito cambió. Recargá y revisá el impacto antes de aprobar.']);
-                    }
-                    $locked->notify_subscribers = $request->boolean('notify');
-                    $this->apply($locked, $actor);
-                    $this->publicationNotice($locked);
-                } else {
-                    $locked->review_status = ReviewStatus::Returned;
-                    $locked->reviewed_by = $actor->id;
-                    $locked->reviewed_at = now();
-                    $locked->return_reason = $request->input('return_reason');
-                }
+                throw new \InvalidArgumentException("Acción de revisión desconocida: {$action}");
             }
             $locked->save();
             $this->reviewNotice($locked, $action, $actor);
@@ -254,8 +286,11 @@ class ReportReview
         }
     }
 
-    private function apply(Report $report, User $actor): void
+    private function apply(Report $report, User $actor, ReviewStatus $status): void
     {
+        if ($report->isConsolidated()) {
+            throw ValidationException::withMessages(['review' => 'El reporte ya fue consolidado.']);
+        }
         $this->validateProposal($report);
         $goal = $report->goal;
         if ($report->status !== null) {
@@ -272,10 +307,18 @@ class ReportReview
             $milestone->save();
         }
         $goal->save();
-        $report->review_status = ReviewStatus::Approved;
-        $report->reviewed_by = $actor->id;
-        $report->reviewed_at = now();
-        $report->save();
+        $report->review_status = $status;
+        if ($status === ReviewStatus::Approved) {
+            $report->reviewed_by = $actor->id;
+            $report->reviewed_at = now();
+        }
+    }
+
+    private function assertReviewContext(Report $report, Request $request): void
+    {
+        if (! hash_equals($this->context($report), (string) $request->input('context'))) {
+            throw ValidationException::withMessages(['review' => 'La meta o el hito cambió. Recargá y revisá el impacto antes de continuar.']);
+        }
     }
 
     private function publicationNotice(Report $report): void
@@ -298,13 +341,15 @@ class ReportReview
         Notification::send($recipients, (new ReportReviewNotification($report, $action, $actor))->afterCommit());
     }
 
-    private function log(Report $report, User $actor, string $action): void
+    /** @param list<string> $changedFields */
+    private function log(Report $report, User $actor, string $action, array $changedFields = []): void
     {
         Log::channel('mysql')->info("Reporte [{$report->title}]: {$action} por [{$actor->fullname}]", [
             'report_id' => $report->id, 'goal_id' => $report->goal_id,
             'objective_id' => $report->goal->objective_id, 'author_id' => $report->author_id,
             'user_id' => $actor->id, 'action' => $action, 'review_status' => $report->review_status->value,
             'review_version' => $report->review_version, 'return_reason' => $report->return_reason,
+            'changed_fields' => $changedFields,
         ]);
     }
 }

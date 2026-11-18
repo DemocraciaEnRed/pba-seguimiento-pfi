@@ -24,8 +24,11 @@ class ReportReviewNotification extends Notification implements ShouldQueue
         $message = match ($action) {
             'submitted' => 'Hay un nuevo reporte pendiente de revisión.',
             'resubmitted' => 'Un reporte corregido fue reenviado a revisión.',
-            'approved' => 'Tu reporte fue aprobado y sus cambios fueron aplicados.',
+            'validated' => 'Tu reporte fue validado y enviado a Administración. Todavía no fue publicado ni aplicado.',
+            'published' => 'Tu reporte fue publicado y sus cambios fueron aplicados.',
+            'closed' => 'Tu reporte interno fue cerrado y consolidado para el seguimiento.',
             'returned' => 'Tu reporte fue devuelto para corrección: '.$report->return_reason,
+            default => throw new \InvalidArgumentException("Acción de notificación de revisión desconocida: {$action}"),
         };
         $this->data = [
             'type' => 'report-review', 'title' => $report->title, 'message' => $message,

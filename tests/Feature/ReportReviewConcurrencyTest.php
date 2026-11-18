@@ -48,13 +48,15 @@ class ReportReviewConcurrencyTest extends TestCase
         Notification::fake();
     }
 
-    public function test_two_simultaneous_approvals_apply_a_report_once(): void
+    public function test_two_simultaneous_publications_apply_a_report_once(): void
     {
         $report = $this->proposal();
+        $this->validate($report->id, $this->approvalData($report));
+        $report->refresh();
         $data = $this->approvalData($report);
         $results = $this->race([
-            fn () => $this->approve($report->id, $data),
-            fn () => $this->approve($report->id, $data),
+            fn () => $this->publish($report->id, $data),
+            fn () => $this->publish($report->id, $data),
         ]);
         sort($results);
         $this->assertSame(['conflict', 'ok'], $results);
@@ -62,30 +64,57 @@ class ReportReviewConcurrencyTest extends TestCase
         $this->assertTrue($report->fresh()->isApproved());
     }
 
+    public function test_two_simultaneous_validations_resolve_once_without_applying_the_report(): void
+    {
+        $report = $this->proposal();
+        DB::table('goal_user')->insert(['goal_id' => 1, 'user_id' => 2, 'role' => 'responsible']);
+        $data = $this->approvalData($report);
+        $results = $this->race([
+            fn () => $this->validate($report->id, $data),
+            fn () => app(ReportReview::class)->transition(
+                Report::findOrFail($report->id),
+                User::findOrFail(2),
+                new Request($data),
+                'validated',
+            ),
+        ]);
+        sort($results);
+        $this->assertSame(['conflict', 'ok'], $results);
+        $report->refresh();
+        $this->assertTrue($report->isValidated());
+        $this->assertContains($report->validated_by, [1, 2]);
+        $this->assertSame(40.0, Goal::findOrFail(1)->indicator_progress);
+        $this->assertSame(0, Report::approved()->count());
+    }
+
     public function test_distinct_increments_require_reviewing_the_changed_context_then_preserve_both(): void
     {
         $first = $this->proposal();
         $second = $this->proposal();
+        $this->validate($first->id, $this->approvalData($first));
+        $this->validate($second->id, $this->approvalData($second));
+        $first->refresh();
+        $second->refresh();
         $firstData = $this->approvalData($first);
         $secondData = $this->approvalData($second);
         $results = $this->race([
-            fn () => $this->approve($first->id, $firstData),
-            fn () => $this->approve($second->id, $secondData),
+            fn () => $this->publish($first->id, $firstData),
+            fn () => $this->publish($second->id, $secondData),
         ]);
         sort($results);
         $this->assertSame(['conflict', 'ok'], $results);
-        $pending = Report::where('review_status', 'pending')->sole();
-        $this->approve($pending->id, $this->approvalData($pending));
+        $pending = Report::where('review_status', 'validated')->sole();
+        $this->publish($pending->id, $this->approvalData($pending));
         $this->assertSame(50.0, Goal::findOrFail(1)->indicator_progress);
         $this->assertSame(2, Report::approved()->count());
     }
 
-    public function test_editing_while_approving_never_applies_an_unreviewed_version(): void
+    public function test_editing_while_validating_never_validates_an_unreviewed_version(): void
     {
         $report = $this->proposal();
         $data = $this->approvalData($report);
         $results = $this->race([
-            fn () => $this->approve($report->id, $data),
+            fn () => $this->validate($report->id, $data),
             fn () => app(ReportReview::class)->update(Report::findOrFail($report->id), User::findOrFail(2), new Request([
                 'review_version' => 1, 'title' => 'Cambio simultáneo', 'content' => 'Contenido', 'date' => '2026-08-01', 'progress' => 20,
             ])),
@@ -93,8 +122,8 @@ class ReportReviewConcurrencyTest extends TestCase
         sort($results);
         $this->assertSame(['conflict', 'ok'], $results);
         $fresh = $report->fresh();
-        $this->assertSame($fresh->isApproved() ? 5.0 : 20.0, $fresh->progress);
-        $this->assertSame($fresh->isApproved() ? 45.0 : 40.0, Goal::findOrFail(1)->indicator_progress);
+        $this->assertSame($fresh->isValidated() ? 5.0 : 20.0, $fresh->progress);
+        $this->assertSame(40.0, Goal::findOrFail(1)->indicator_progress);
     }
 
     private function proposal(): Report
@@ -160,9 +189,15 @@ class ReportReviewConcurrencyTest extends TestCase
     }
 
     /** @param array{review_version: int, context: string} $data */
-    private function approve(int $id, array $data): void
+    private function validate(int $id, array $data): void
     {
-        app(ReportReview::class)->transition(Report::findOrFail($id), User::findOrFail(1), new Request($data), 'approved');
+        app(ReportReview::class)->transition(Report::findOrFail($id), User::findOrFail(1), new Request($data), 'validated');
+    }
+
+    /** @param array{review_version: int, context: string} $data */
+    private function publish(int $id, array $data): void
+    {
+        app(ReportReview::class)->transition(Report::findOrFail($id), User::findOrFail(1), new Request($data), 'published');
     }
 
     /** @param list<\Closure(): mixed> $operations

@@ -21,10 +21,10 @@
   <p class="mb-2"><i class="far fa-calendar fa-fw text-muted"></i>&nbsp;Informa el período <b>{{ $report->period->label() }}</b> <small class="text-muted">({{ $report->period->rangeLabel() }})</small></p>
   @endif
   @if($report->milestone)
-  <p class="mb-2"><i class="far fa-star fa-fw text-muted"></i>&nbsp;{{ $report->isApproved() ? 'Hito informado' : 'Propone completar el hito' }} <b>#{{ $report->milestone->order }} {{ $report->milestone->title }}</b></p>
+  <p class="mb-2"><i class="far fa-star fa-fw text-muted"></i>&nbsp;{{ $report->isConsolidated() ? 'Hito informado' : 'Propone completar el hito' }} <b>#{{ $report->milestone->order }} {{ $report->milestone->title }}</b></p>
   @endif
   <p>Autor: {{ $report->author->fullname }}</p>
-  @if(!$report->isApproved())
+  @if(!$report->isApproved() && !$report->isValidated())
   <p>Atiende el pendiente: {{ $report->attendant?->fullname ?? $report->author->fullname }}</p>
   @can('manageReporters', $goal)
   <form method="POST" action="{{ route('objectives.manage.goals.reports.attendant', ['objectiveId' => $objective->id, 'goalId' => $goal->id, 'reportId' => $report->id]) }}" class="mb-3">
@@ -52,8 +52,8 @@
   @if(app_setting('app_map_enabled') && $report->map_geometries)
   @include('report.map')
   @endif
-  @if(!$report->isApproved())
-  <h4>Cambios propuestos</h4>
+  @if(!$report->isConsolidated())
+  <h4>{{ $report->isValidated() ? 'Cambios validados pendientes de resolución' : 'Cambios propuestos' }}</h4>
   @if($report->status)
   <p>Estado actual: {{ $goal->status_label }} → Estado propuesto: {{ $report->status_label }}</p>
   @endif
@@ -64,16 +64,15 @@
   @elseif($report->type === 'milestone')
   <p>Fecha propuesta de cumplimiento: {{ $report->proposed_milestone_date?->format('d/m/Y') }}</p>
   @endif
-  @if($report->review_status === \App\Services\Reports\ReviewStatus::Pending && auth()->user()->hasRole('admin'))
-  <form method="POST" action="{{ route('reports.review.approve', ['reportId' => $report->id]) }}" class="mb-3">
+  @if($report->review_status === \App\Services\Reports\ReviewStatus::Pending && auth()->user()->can('validate', $report))
+  <form method="POST" action="{{ route('reports.review.validate', ['reportId' => $report->id]) }}" class="mb-3">
     @csrf
     <input type="hidden" name="review_version" value="{{ $report->review_version }}">
     <input type="hidden" name="context" value="{{ $reviewContext }}">
-    @if(!$objective->hidden && $goal->visibility === 'public')
-    <label class="d-block"><input type="checkbox" name="notify" value="true" @checked($report->notify_subscribers)> Notificar a suscriptores al publicar</label>
-    @endif
-    <button type="submit" class="btn btn-primary">Aprobar y aplicar</button>
+    <button type="submit" class="btn btn-primary">Validar y enviar a Administración</button>
   </form>
+  @endif
+  @can('return', $report)
   <form method="POST" action="{{ route('reports.review.return', ['reportId' => $report->id]) }}">
     @csrf
     <input type="hidden" name="review_version" value="{{ $report->review_version }}">
@@ -81,7 +80,29 @@
     <textarea id="return_reason" name="return_reason" class="form-control mb-2" maxlength="2000" required>{{ old('return_reason') }}</textarea>
     <button type="submit" class="btn btn-outline-danger">Devolver</button>
   </form>
-  @elseif($report->review_status === \App\Services\Reports\ReviewStatus::Returned && auth()->user()->can('update', $report))
+  @endcan
+  @if($report->isAwaitingAdministration() && auth()->user()->hasRole('admin'))
+    @if($goal->visibility === 'public')
+    <form method="POST" action="{{ route('reports.review.publish', ['reportId' => $report->id]) }}" class="mb-3">
+      @csrf
+      <input type="hidden" name="review_version" value="{{ $report->review_version }}">
+      <input type="hidden" name="context" value="{{ $reviewContext }}">
+      @if(!$objective->hidden)
+      <label class="d-block"><input type="checkbox" name="notify" value="true" @checked($report->notify_subscribers)> Notificar a suscriptores al publicar</label>
+      @endif
+      <button type="submit" class="btn btn-primary">Publicar y aplicar</button>
+    </form>
+    @else
+    <p>La meta es interna: este reporte no se publica ni envía avisos a suscriptores.</p>
+    <form method="POST" action="{{ route('reports.review.close', ['reportId' => $report->id]) }}">
+      @csrf
+      <input type="hidden" name="review_version" value="{{ $report->review_version }}">
+      <input type="hidden" name="context" value="{{ $reviewContext }}">
+      <button type="submit" class="btn btn-primary">Cerrar y consolidar para seguimiento interno</button>
+    </form>
+    @endif
+  @endif
+  @if($report->review_status === \App\Services\Reports\ReviewStatus::Returned && auth()->user()->can('update', $report))
   <form method="POST" action="{{ route('reports.review.resubmit', ['reportId' => $report->id]) }}">
     @csrf
     <input type="hidden" name="review_version" value="{{ $report->review_version }}">

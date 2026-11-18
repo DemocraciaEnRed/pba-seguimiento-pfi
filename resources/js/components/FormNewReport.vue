@@ -167,21 +167,21 @@
 				<div class="card">
 					<div class="card-body">
 						<label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Notificar a suscriptores al publicar</label>
-						<div class="custom-control custom-switch" v-if="!objective.hidden">
+						<div class="custom-control custom-switch" v-if="!objective.hidden && goal.visibility === 'public'">
 							<input type="checkbox" class="custom-control-input" name="notify" id="notify" value="true">
 							<label class="custom-control-label is-clickable" for="notify">Notificar a los suscriptores</label>
 						</div>
 						<div class="alert alert-warning" v-else>
 							<i class="fas fa-triangle-exclamation"></i>&nbsp;El objetivo se encuentra <i class="fas fa-eye-slash"></i> oculto, no se enviarán notificaciones a los usuarios.
 						</div>
-						<small class="form-text text-muted">Los avisos se envían al publicar, nunca mientras el reporte espera revisión. El administrador confirma esta opción al aprobar.</small>
+						<small class="form-text text-muted">Los avisos se envían al publicar, nunca mientras el reporte espera revisión. Administración confirma esta opción al publicar.</small>
 					</div>
 					</div>
 				</div>
 			<br>
 			<div class="form-group">
 				<input type="hidden" name="_token" :value="crsfToken" />
-				<button type="submit" class="btn btn-primary" :disabled="type == 'progress' && isPeriodic && !selectedPeriod"><i class="fas fa-plus"></i> {{ directPublish ? 'Publicar' : 'Enviar a revisión' }}</button>
+				<button type="submit" class="btn btn-primary" :disabled="type == 'progress' && isPeriodic && !selectedPeriod"><i class="fas fa-plus"></i> {{ directPublish ? 'Publicar' : (isAdmin ? 'Guardar y validar para cierre' : 'Enviar a revisión') }}</button>
 			</div>
 		</section>
   </form>
@@ -197,6 +197,7 @@ export default {
   props: {
 		formUrl: String,
 		directPublish: Boolean,
+		isAdmin: Boolean,
 		crsfToken: String,
 		goal: Object,
 		objective: Object,

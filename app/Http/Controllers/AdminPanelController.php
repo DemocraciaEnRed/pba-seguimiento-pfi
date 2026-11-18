@@ -86,6 +86,7 @@ class AdminPanelController extends Controller
 
         return view('admin.reports.list', [
             'pendingCount' => Report::where('review_status', 'pending')->whereHas('goal.objective')->count(),
+            'validatedCount' => Report::where('review_status', 'validated')->whereNull('closed_at')->whereHas('goal.objective')->count(),
             'reports' => $reportDirectory->search($filters)->paginate(20)->withQueryString(),
             'filters' => $filters,
             ...$reportDirectory->hierarchyOptions($filters),
