@@ -42,14 +42,14 @@
 				<div class="card-body">
 					<h5 class="is-700 mb-3">Sobre el objetivo</h5>
 					<p>{!! nl2br(e($objective->content)) !!}</p>
-					@if(!$objective->organizations->isEmpty())
+					@if($organizations->isNotEmpty())
 					<hr>
 					<div class="clearfix is-clickable" data-toggle="collapse" data-target="#collapseOrganizations">
 						<h5 class="is-700 h5 text-body my-2 float-left">Organizaciones</h5>
 						<h5 class="is-700 h5 text-body my-2 float-right"><i class="fas fa-angle-down fa-lg"></i></h5>
 					</div>
 					<div id="collapseOrganizations" class="collapse show">
-						<objective-organizations-carrousel :slides='@json($objective->organizations)'>
+						<objective-organizations-carrousel :slides='@json($organizations)'>
 						</objective-organizations-carrousel>
 					</div>
 					@endif

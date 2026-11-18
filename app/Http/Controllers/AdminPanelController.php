@@ -329,7 +329,8 @@ class AdminPanelController extends Controller
     public function viewListOrganizations(Request $request){
       $organizations = Organization::query()
           ->with('logo')
-          ->withCount('objectives')
+          ->withCount(['responsibleGoals', 'participantGoals'])
+          ->orderByDesc('is_active')
           ->orderBy('name')
           ->paginate(15);
       return view('admin.organizations.list',['organizations' => $organizations]);
@@ -397,7 +398,8 @@ class AdminPanelController extends Controller
         $rules = [
             'name' => 'required|string|max:225',
             'description' => 'required|string|max:550',
-            'logo' => 'image|nullable|max:1999'
+            'logo' => 'image|nullable|max:1999',
+            'is_active' => 'nullable|boolean',
         ];
         $request->validate($rules);
 
@@ -405,6 +407,7 @@ class AdminPanelController extends Controller
         $organization = Organization::findOrFail($organizationId);
         $organization->name = $request->input('name');
         $organization->description = $request->input('description');
+        $organization->is_active = $request->boolean('is_active');
         $organization->save();
 
         if($request->hasFile('logo')){
@@ -450,19 +453,6 @@ class AdminPanelController extends Controller
             $organization->logo()->save($imageFile);
         }
         return redirect()->route('admin.organizations')->with('success','La organizacion ha sido editada correctamente');
-    }
-    public function viewDeleteOrganization(Request $request, $organizationId){
-        $organization = Organization::findOrFail($organizationId);
-        return view('admin.organizations.delete',['organization' => $organization]);
-    }
-    public function formDeleteOrganization(Request $request, $organizationId){
-        $rules = [
-            'password' =>  ['required', new MatchOldPassword],
-        ];
-        $request->validate($rules);
-        $organization = Organization::findOrFail($organizationId);
-        $organization->delete();
-        return redirect()->route('admin.organizations')->with('success','La organizacion ha sido eliminada correctamente');
     }
     // ====================================
     // Admin FAQS
@@ -696,8 +686,7 @@ class AdminPanelController extends Controller
 
     public function viewCreateObjective(Request $request){
         $ejes = Category::with('strategicObjectives')->orderBy('order')->get();
-        $organizations = Organization::all();
-        return view('admin.objectives.create',['ejes' => $ejes, 'organizations' => $organizations]);
+        return view('admin.objectives.create',['ejes' => $ejes]);
     }
     public function formCreateObjective(Request $request){
 
@@ -707,8 +696,6 @@ class AdminPanelController extends Controller
             'strategic_objective' => 'required|numeric|exists:strategic_objectives,id',
             'tags' => 'array' ,
             'tags.*' => 'required|string|max:100' ,
-            'organizations' => 'array' ,
-            'organizations.*' => 'required|numeric' ,
         ];
         $request->validate($rules);
 
@@ -720,7 +707,6 @@ class AdminPanelController extends Controller
         $objective->author()->associate($request->user());
         $objective->hidden = true;
         $objective->save();
-        $objective->organizations()->attach($request->input('organizations'));
 
         Log::channel('mysql')->info("[{$request->user()->fullname}] ha creado el objetivo [{$objective->title}]", [
             'objective_id' => $objective->id,

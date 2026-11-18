@@ -45,6 +45,14 @@
       <dd class="mb-0">{{ $goal->indicator_direction->label() }}</dd>
     </div>
     @endif
+    <div>
+      <dt class="text-smaller text-muted">Organización responsable</dt>
+      <dd class="mb-0">{{ $goal->responsibleOrganization?->name ?? 'Sin organización responsable' }}</dd>
+    </div>
+    <div>
+      <dt class="text-smaller text-muted">Organizaciones participantes</dt>
+      <dd class="mb-0">{{ $goal->participantOrganizations->pluck('name')->join(', ') ?: 'Sin organizaciones participantes' }}</dd>
+    </div>
   </dl>
   @if($goal->isPeriodic())
   <h5 class="is-700">Seguimiento por períodos</h5>

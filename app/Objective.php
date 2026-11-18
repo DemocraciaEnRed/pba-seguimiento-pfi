@@ -34,15 +34,6 @@ class Objective extends Model
         return $this->belongsTo('App\User', 'author_id');
     }
 
-    public function organizations()
-    {
-        return $this->belongsToMany('App\Organization','objective_organization','objective_id','organization_id');
-    }
-    public function hasOrganization($organizationId)
-    {
-        return $this->organizations()->where('organization_id', $organizationId)->exists();
-    }
-
     public function goals()
     {
         return $this->hasMany('App\Goal','objective_id');

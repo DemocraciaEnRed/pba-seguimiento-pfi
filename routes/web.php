@@ -173,8 +173,6 @@ Route::group([
     Route::post('/organizaciones/nuevo', [AdminPanelController::class, 'formCreateOrganization'])->name('organizations.create.form');
     Route::get('/organizaciones/{organizationId}/editar', [AdminPanelController::class, 'viewEditOrganization'])->name('organizations.edit');
     Route::put('/organizaciones/{organizationId}/editar', [AdminPanelController::class, 'formEditOrganization'])->name('organizations.edit.form');
-    Route::get('/organizaciones/{organizationId}/eliminar', [AdminPanelController::class, 'viewDeleteOrganization'])->name('organizations.delete');
-    Route::delete('/organizaciones/{organizationId}/eliminar', [AdminPanelController::class, 'formDeleteOrganization'])->name('organizations.delete.form');
     // Usuarios
     Route::get('/usuarios', [AdminPanelController::class, 'viewListUsers'])->name('users');
     Route::get('/usuarios/descargar', [AdminPanelController::class, 'downloadUsers'])->name('users.download');

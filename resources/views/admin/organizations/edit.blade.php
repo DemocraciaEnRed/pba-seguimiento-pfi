@@ -4,7 +4,7 @@
 
 <section>
 <h3 class="is-700">Editar organización</h3>
- <p class="lead">Para editar los datos de la organización, agrupación conformada por ciudadanos independientes o bien algún sector encargado de un objetivo, completa los siguientes campos:</p>
+ <p class="lead">Para editar los datos de la organización, completá los siguientes campos. Una organización no se elimina: se desactiva.</p>
   @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
@@ -31,6 +31,13 @@
       <label><b>Logo</b> <small class="text-info">Opcional</small></label>
       <input-file name="logo" accept="image/*"></input-file>
       <small class="text-muted">Se recomienda que no exceda 2MB y que sea PNG con fondo transparente.</small>
+    </div>
+    <div class="form-group">
+      <div class="custom-control custom-switch">
+        <input type="checkbox" class="custom-control-input" id="organization-active" name="is_active" value="1" @checked($errors->any() ? old('is_active') : $organization->is_active)>
+        <label class="custom-control-label" for="organization-active"><b>Activa</b></label>
+      </div>
+      <small class="text-muted">Las organizaciones inactivas no se ofrecen para nuevas asociaciones. Las metas que ya la tienen la conservan y los reportes publicados mantienen su nombre.</small>
     </div>
     <button type="submit" class="btn btn-primary">Editar</button>
   </form>

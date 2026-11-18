@@ -8,11 +8,31 @@ use App\Objective;
 use App\Report;
 use App\Services\Indicators\GoalIndicatorConfigurator;
 use App\Services\Indicators\MeasurementMode;
+use App\Services\Reports\ReviewStatus;
 use Carbon\Carbon;
 use Faker\Generator;
 
 trait SeedsDemoGoals
 {
+    /**
+     * Associates a responsible and two participant organizations with each goal and records them in its published reports.
+     *
+     * @param  list<int>  $organizations
+     */
+    private function seedDemoGoalOrganizations(Objective $objective, array $organizations, Generator $faker): void
+    {
+        foreach ($objective->goals()->get() as $goal) {
+            $participants = $faker->randomElements($organizations, 3);
+            $responsible = array_shift($participants);
+            $goal->responsible_organization_id = $responsible;
+            $goal->save();
+            $goal->participantOrganizations()->sync($participants);
+            $goal->reports()
+                ->where('review_status', ReviewStatus::Approved)
+                ->update(['organizations_snapshot' => json_encode($goal->organizationsSnapshot())]);
+        }
+    }
+
     /**
      * @param  list<int>  $team
      */

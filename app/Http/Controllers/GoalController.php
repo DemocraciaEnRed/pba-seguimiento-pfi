@@ -47,6 +47,7 @@ class GoalController extends Controller
             $reportsFetchUrl = route('apiService.goals.management-reports', ['goalId' => $goalId]);
         }
 
+        $goal->load(['responsibleOrganization', 'participantOrganizations']);
         $objective = Objective::with([
             'strategicObjective.category',
             'goals' => fn ($goals) => $goals->visibleIn($goalAudience)->orderBy('title'),

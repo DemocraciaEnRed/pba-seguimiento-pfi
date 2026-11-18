@@ -73,7 +73,6 @@ class DemoSeeder extends Seeder
             $objective->hidden = false;
             $objective->tags = $faker->randomElements(['tag1','tag2','tag3','tag4','tag5','tag6'],3);
             $objective->save();
-            $objective->organizations()->attach($faker->randomElements($organizations,3));
 
             $community = new Community();
             $community->label = '¡Unite al Telegram!';
@@ -90,6 +89,7 @@ class DemoSeeder extends Seeder
             $objective->subscribers()->attach($faker->randomElements($users,4));
 
             $this->seedDemoGoals($objective, $theTeam, $faker, $i);
+            $this->seedDemoGoalOrganizations($objective, $organizations, $faker);
         }
     }
 }

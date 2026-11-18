@@ -42,6 +42,7 @@
       <input type="text" class="form-control" name="source" placeholder="Escriba aquí" value="{{$goal->source}}">
       <small class="form-text text-muted">Es importante que la fuente de datos sean accesibles y oficiales para hacer transparente la medición</small>
     </div>
+    @include('objective.manage.goals._organizations', ['goal' => $goal])
     <div class="border border-light rounded p-3">
       <label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Enviar notificacion a suscriptores</label>
       @if(!$objective->hidden)

@@ -11,7 +11,7 @@ use App\ActionLog;
 use App\Category;
 use App\StrategicObjective;
 use App\Community;
-use App\Organization;
+use App\Services\Goals\GoalOrganizations;
 use App\Role;
 use App\File;
 use App\ImageFile;
@@ -55,8 +55,7 @@ class ObjectivePanelController extends Controller
     public function viewEditObjective(Request $request){
       $this->authorize('update', $request->objective);
       $ejes = Category::with('strategicObjectives')->orderBy('order')->get();
-      $organizations = Organization::all();
-      return view('objective.manage.edit',['objective' => $request->objective, 'ejes' => $ejes, 'organizations' => $organizations]);
+      return view('objective.manage.edit',['objective' => $request->objective, 'ejes' => $ejes]);
     }
 
     public function formEditObjective(Request $request){
@@ -67,8 +66,6 @@ class ObjectivePanelController extends Controller
           'strategic_objective' => 'required|numeric|exists:strategic_objectives,id',
           'tags' => 'array' ,
           'tags.*' => 'required|string|max:100' ,
-          'organizations' => 'array' ,
-          'organizations.*' => 'required|numeric' ,
           'notify' => 'nullable|string|in:true',
       ];
       $request->validate($rules);
@@ -80,7 +77,6 @@ class ObjectivePanelController extends Controller
       $objective->strategicObjective()->associate(StrategicObjective::findOrFail($request->input('strategic_objective')));
       $objective->author()->associate($request->user());
       $objective->save();
-      $objective->organizations()->sync($request->input('organizations'));
 
       Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado el objetivo [{$objective->title}]", [
         'objective_id' => $objective->id,
@@ -231,16 +227,17 @@ class ObjectivePanelController extends Controller
       return $csvDownload->download(new ObjectiveIndicatorsExport((int) $objectiveId, $request->user()), Carbon::now()->format('Ymd').'-indicadores-objetivo-'.$objectiveId.'.csv');
     }
 
-    public function viewAddGoal(Request $request){
+    public function viewAddGoal(Request $request, GoalOrganizations $goalOrganizations){
       $this->authorize('create', [Goal::class, $request->objective]);
       return view('objective.manage.goals.add',[
         'objective' => $request->objective,
+        'organizationOptions' => $goalOrganizations->options(),
         'indicatorForm' => $this->indicatorConfigurator->formState(null),
         'indicatorOptions' => $this->indicatorConfigurator->formOptions(),
       ]);
     }
 
-    public function formAddGoal(Request $request){
+    public function formAddGoal(Request $request, GoalOrganizations $goalOrganizations){
       $this->authorize('create', [Goal::class, $request->objective]);
 
       $rules = [
@@ -253,7 +250,10 @@ class ObjectivePanelController extends Controller
         'notify' => 'nullable|string|in:true',
       ];
 
-      $validated = $request->validate(array_merge($rules, $this->indicatorConfigurator->rules($request->all())));
+      $validated = $request->validate(
+        array_merge($rules, $this->indicatorConfigurator->rules($request->all()), $goalOrganizations->rules($goalOrganizations->options(), $request->all())),
+        $goalOrganizations->messages(),
+      );
 
       $goal = new Goal();
       $goal->title = $request->input('title');
@@ -263,6 +263,7 @@ class ObjectivePanelController extends Controller
       $goal->source = $request->input('source');
       $goal->objective()->associate($request->objective);
       $this->indicatorConfigurator->apply($goal, $validated);
+      $goalOrganizations->sync($goal, $validated);
 
       if($request->input('milestones')){
         foreach($request->input('milestones') as $key => $inputMilestone){

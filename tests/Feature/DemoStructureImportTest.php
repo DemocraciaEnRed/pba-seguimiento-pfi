@@ -36,11 +36,11 @@ class DemoStructureImportTest extends TestCase
             'Metas' => ['create' => 15, 'update' => 0, 'unchanged' => 0],
         ], $plan->summary());
 
-        $this->actingAs($admin)->post(route('admin.import.confirm'))->assertRedirect(route('admin.import'));
+        $this->actingAs($admin)->post(route('admin.import.confirm'), ['visibility' => 'public'])->assertRedirect(route('admin.import'));
 
         $this->assertSame(39, StrategicObjective::count());
         $this->assertSame(184, Objective::count());
-        $this->assertSame(15, Goal::count());
+        $this->assertSame(15, Goal::where('visibility', 'public')->count());
         $this->assertSame(3, Objective::where('hidden', true)->count());
         $this->assertSame(
             [1 => 45.0, 2 => 45.0, 3 => 40.0, 4 => 40.0, 5 => 35.0, 6 => 30.0],

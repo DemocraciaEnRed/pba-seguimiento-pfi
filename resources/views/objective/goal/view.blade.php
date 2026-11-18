@@ -10,6 +10,10 @@
   <hr class="bg-white">
   <span class="badge badge-white text-black px-2 py-1 mt-2 mb-2 is-size-6"><i class="far fa-circle-dot fa-fw text-{{$goal->status}}"></i> Meta {{$goal->status_label}}</span>
   <h1 class="hero__title">{{ $goal->title }}</h1>
+  @include('partials.hero-organizations', [
+    'responsibleName' => $goal->responsibleOrganization?->name,
+    'participantNames' => $goal->participantOrganizations->pluck('name')->all(),
+  ])
   @can('accessManagement', $objective)
   <x-slot:actions>
     @can('create', [\App\Report::class, $goal])

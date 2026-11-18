@@ -3,8 +3,8 @@
 @section('adminContent')
 
 <section>
-  <h3 class="is-700">Crear organizacion</h3>
-  <p class="lead">Para crear una organización, una agrupación conformada por ciudadanos independientes o bien algún sector encargado de un objetivo, completa los siguientes campos:</p>
+  <h3 class="is-700">Crear organización</h3>
+  <p class="lead">Para crear un área, organismo, institución u otra entidad que se asociará a las metas, completá los siguientes campos:</p>
   @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">

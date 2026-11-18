@@ -9,7 +9,6 @@ use Str;
 use Log;
 use Carbon\Carbon;
 use App\Category;
-use App\Organization;
 use App\Role;
 use App\File;
 use App\ImageFile;
@@ -27,6 +26,7 @@ use App\Notifications\NewGoal;
 use App\Notifications\EditGoal;
 use App\Notifications\DeleteGoal;
 use App\Rules\MatchOldPassword;
+use App\Services\Goals\GoalOrganizations;
 use App\Services\Indicators\GoalIndicatorConfigurator;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -94,7 +94,7 @@ class GoalPanelController extends Controller
       ]);
       return view('objective.manage.goals.view',[
         'objective' => $request->objective,
-        'goal' => $request->goal->loadMissing(['milestones', 'reports']),
+        'goal' => $request->goal->loadMissing(['milestones', 'reports', 'responsibleOrganization', 'participantOrganizations']),
         'commentsCount' => $commentModeration->search(goalId: $request->goal->id, user: $request->user())->count(),
         'latestComments' => $commentModeration->search(goalId: $request->goal->id, user: $request->user())->take(3)->get(),
       ]);
@@ -129,17 +129,18 @@ class GoalPanelController extends Controller
       return redirect()->back()->with('success', CommentModeration::deletedMessage($comment));
     }
 
-    public function viewEditGoal(Request $request, $objectiveId, $goalId){
+    public function viewEditGoal(Request $request, GoalOrganizations $goalOrganizations, $objectiveId, $goalId){
       $this->authorize('update', $request->goal);
       return view('objective.manage.goals.edit',[
         'objective' => $request->objective,
-        'goal' => $request->goal,
+        'goal' => $request->goal->load('participantOrganizations'),
+        'organizationOptions' => $goalOrganizations->options($request->goal),
         'indicatorForm' => $this->indicatorConfigurator->formState($request->goal),
         'indicatorOptions' => $this->indicatorConfigurator->formOptions(),
       ]);
     }
 
-    public function formEditGoal(Request $request, $objectiveId, $goalId){
+    public function formEditGoal(Request $request, GoalOrganizations $goalOrganizations, $objectiveId, $goalId){
       $this->authorize('update', $request->goal);
 
       $rules = [
@@ -151,11 +152,15 @@ class GoalPanelController extends Controller
       ];
 
       $goal = $request->goal;
-      $validated = $request->validate(array_merge($rules, $this->indicatorConfigurator->rules($request->all(), $goal)));
+      $validated = $request->validate(
+        array_merge($rules, $this->indicatorConfigurator->rules($request->all(), $goal), $goalOrganizations->rules($goalOrganizations->options($goal), $request->all())),
+        $goalOrganizations->messages(),
+      );
       $goal->title = $request->input('title');
       $goal->status = $request->input('status');
       $goal->source = $request->input('source');
       $this->indicatorConfigurator->apply($goal, $validated);
+      $goalOrganizations->sync($goal, $validated);
       $request->objective->touch();
 
       Log::channel('mysql')->info("[{$request->user()->fullname}] ha editado la meta [{$goal->title}] del objetivo [{$request->objective->title}]", [

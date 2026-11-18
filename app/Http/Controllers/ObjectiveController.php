@@ -6,6 +6,7 @@ use App\Goal;
 use App\Report;
 use App\Category;
 use App\Initiative;
+use App\Organization;
 use App\Services\Indicators\HomeStats;
 use App\Services\Indicators\ObjectiveStats;
 use App\Services\Goals\GoalAudience;
@@ -54,12 +55,18 @@ class ObjectiveController extends Controller
             abort_if($user === null || ! $objective->isVisibleTo($user), 404);
             $goalAudience = app(GoalAudience::class)->managementQuery($user);
         }
-        $objective->load(['strategicObjective.category', 'organizations.logo', 'goals' => fn ($goals) => $goals
+        $objective->load(['strategicObjective.category', 'goals' => fn ($goals) => $goals
             ->visibleIn($goalAudience)
             ->orderBy('title'), 'communities', 'cover', 'files']);
+        $organizations = Organization::query()
+            ->associatedWithGoals((clone $goalAudience)->where('goals.objective_id', $objective->id))
+            ->with('logo')
+            ->orderBy('name')
+            ->get(['id', 'name', 'description']);
         $request->attributes->set('search_indexing_public', $isPublic);
         $viewData = [
             'objective' => $objective,
+            'organizations' => $organizations,
             'metadata' => $seoMetadata->objective($objective),
         ];
 

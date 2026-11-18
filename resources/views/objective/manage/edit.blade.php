@@ -39,17 +39,6 @@
       <label>Tags</label>
       <input-tags name="tags" :tags='@json($objective->tags)'></input-tags>
     </div>
-    <div class="form-group">
-      <label>Organizaciones relacionadas con el objetivo</label>
-      <div>
-        @foreach($organizations as $organization)
-          <div class="custom-control custom-checkbox form-check-inline">
-            <input class="custom-control-input" type="checkbox" name="organizations[]" id="org{{$organization->id}}" {{$objective->hasOrganization($organization->id) ? 'checked' : null}} :value="{{$organization->id}}">
-            <label class="custom-control-label" for="org{{$organization->id}}">{{$organization->name}}</label>
-          </div>
-        @endforeach
-      </div>
-    </div>
     <div class="border border-light rounded p-3">
       <label class="is-700 "><i class="fas fa-paper-plane"></i>&nbsp;Enviar notificacion a suscriptores</label>
       @if(!$objective->hidden)

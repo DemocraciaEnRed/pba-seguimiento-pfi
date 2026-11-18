@@ -311,6 +311,7 @@ class ReportReview
         if ($status === ReviewStatus::Approved) {
             $report->reviewed_by = $actor->id;
             $report->reviewed_at = now();
+            $report->organizations_snapshot = $goal->organizationsSnapshot();
         }
     }
 

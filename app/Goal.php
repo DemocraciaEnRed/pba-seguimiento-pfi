@@ -14,6 +14,7 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -84,6 +85,37 @@ class Goal extends Model
             ->withTimestamps()
             ->orderBy('surname')
             ->orderBy('name');
+    }
+
+    public function responsibleOrganization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'responsible_organization_id');
+    }
+
+    public function participantOrganizations(): BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class, 'goal_organization')
+            ->withTimestamps()
+            ->orderBy('name');
+    }
+
+    /**
+     * Organizations as they must be preserved in a report when it is published.
+     *
+     * @return array{responsible: array{id: int, name: string}|null, participants: list<array{id: int, name: string}>}
+     */
+    public function organizationsSnapshot(): array
+    {
+        $responsible = $this->responsibleOrganization()->first(['id', 'name']);
+
+        return [
+            'responsible' => $responsible ? ['id' => $responsible->id, 'name' => $responsible->name] : null,
+            'participants' => $this->participantOrganizations()
+                ->get(['organizations.id', 'organizations.name'])
+                ->map(fn (Organization $organization): array => ['id' => $organization->id, 'name' => $organization->name])
+                ->values()
+                ->all(),
+        ];
     }
 
     public function milestones()

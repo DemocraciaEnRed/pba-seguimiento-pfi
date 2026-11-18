@@ -32,6 +32,10 @@
     <li class="list-inline-item mr-4 mb-2"><i class="far fa-calendar fa-fw"></i> Fecha del reporte: @justdate($report->date)</li>
     <li class="list-inline-item mb-2"><i class="far fa-clock fa-fw"></i> Publicado el @datetime($report->created_at)</li>
   </ul>
+  @include('partials.hero-organizations', [
+    'responsibleName' => $report->organizations_snapshot['responsible']['name'] ?? null,
+    'participantNames' => array_column($report->organizations_snapshot['participants'] ?? [], 'name'),
+  ])
   @if(!empty($report->tags))
   <ul class="list-inline mb-0">
     @foreach ($report->tags as $tag)

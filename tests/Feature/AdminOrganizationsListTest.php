@@ -45,7 +45,7 @@ class AdminOrganizationsListTest extends TestCase
             ->assertOk()
             ->assertSee('2 resultado(s)')
             ->assertSee('list-group', false)
-            ->assertSeeInOrder(['Alfa Fundación', '0 objetivos', 'Zeta Asociación'])
+            ->assertSeeInOrder(['Alfa Fundación', '0 como responsable · 0 como participante', 'Zeta Asociación'])
             ->assertSee(asset('img/default-background.png'), false);
     }
 

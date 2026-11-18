@@ -57,6 +57,8 @@ Cada punto lleva una etiqueta:
 - **Fase 5, pasos 24 a 30 implementados en el código y con pruebas focalizadas aprobadas:** se documentan abajo; sus migraciones aún no se aplicaron a la base de la aplicación.
 - **Manual actualizado al cerrar la fase 5:** v0.4.5, con los capítulos afectados, índice, historial e instrucciones de capturas. Las áreas por meta y la Mesa de trabajo todavía no se describen como disponibles.
 - **Fase 3, paso 18 implementado tras D4:** la edición de metas rechaza cualquier cambio de visibilidad y la importación exige elegir Pública o Interna para las metas nuevas, sin alterar las existentes. `StructureImportTest` y `GoalConfidentialityTest` pasaron: **18 pruebas y 159 aserciones**. Manual v0.4.6.
+- **Fase 6, pasos 31 a 35 implementados:** Administración asigna en el alta y la edición de cada meta una organización responsable y varias participantes; desactiva organizaciones en lugar de eliminarlas. La ficha pública de la meta, sus reportes publicados y la página del objetivo muestran las organizaciones; el objetivo las reúne desde sus metas dentro de la audiencia. Al publicar, cada reporte guarda una copia. La migración no se aplicó a la base de la aplicación. Manual v0.4.7.
+- **Cambio de diseño en la fase 6:** la responsable se guarda en `goals.responsible_organization_id` y `goal_organization` registra solo las participantes. MySQL no admite claves foráneas con `CASCADE` sobre las columnas base de una columna generada, de modo que una tabla con `kind` no podía garantizar una única responsable por meta. Así, el esquema garantiza una sola responsable y la aplicación impide que también figure como participante.
 - El análisis siguiente conserva la línea de base anterior al primer incremento; no describe como pendientes los cambios ya registrados arriba.
 
 ### 1. Análisis de brechas
@@ -285,16 +287,17 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 30. Si dos Responsables resuelven a la vez, `mutate()` usa bloqueo y versión, y el segundo ve "ya resuelto". La validación simultánea tampoco aplica cambios ni genera dos resoluciones.
 
 **Fase 6: organizaciones por meta** (*depende de la fase 3; puede ir en paralelo con la fase 5*)
-31. Reutilizar `organizations` con el nombre **Organizaciones**, sin tipo, y agregar su desactivación **[D6 resuelta]**.
-32. Crear la tabla `goal_organization(goal_id, organization_id, kind responsible|participant)`:
-    - índice único por meta y organización;
-    - como máximo una organización `responsible` por meta.
+31. Reutilizar `organizations` con el nombre **Organizaciones**, sin tipo, y agregar su desactivación (`is_active`) **[D6 resuelta]**. La eliminación se retira del ABM; una organización con historial no se borra. **Hecho.**
+32. Guardar la organización responsable en `goals.responsible_organization_id` (anulable, con `restrictOnDelete`) y las participantes en `goal_organization(goal_id, organization_id)`, con índice único por meta y organización. **Hecho**, con el cambio de diseño indicado en el estado de ejecución.
+    - El esquema garantiza a lo sumo una responsable por meta; la validación impide que la responsable figure también como participante.
+    - Solo se ofrecen organizaciones activas, además de las que la meta ya tenía.
 
     Las metas existentes quedan sin organización hasta que Administración la cargue. Mientras tanto, el portal no muestra nada.
-33. Las organizaciones de objetivos y ejes son la unión, sin duplicados, de las de sus metas dentro del conjunto de la audiencia **[Acordado §5]**. `objective_organization` deja de usarse y se elimina en la fase 9.
+33. Las organizaciones de objetivos y ejes son la unión, sin duplicados, de las de sus metas dentro del conjunto de la audiencia **[Acordado §5]**. `objective_organization` deja de usarse y se elimina en la fase 9. **Hecho** para la página del objetivo, que ya no lee `objective_organization`. Las páginas de eje no mostraban organizaciones; el alcance `Organization::associatedWithGoals()` permite sumarlas cuando se defina su presentación.
 34. En el portal, mostrar la organización responsable como dato principal y las participantes con menor jerarquía, en la meta y en sus reportes publicados.
     - Cada reporte guarda una copia de las organizaciones de la meta al publicarse; los reportes publicados antes de esa copia no muestran organizaciones **[D7 resuelta]**.
     - Una organización desactivada no se ofrece para nuevas asociaciones y conserva su nombre en el historial.
+    - **Hecho.** La copia se guarda al publicar por la transición de Administración y en la carga directa de Administración. El cierre de un reporte interno no la guarda.
 35. El filtro por organizaciones y las sugerencias del Responsable quedan fuera hasta que se definan [Pendiente §7].
 
 **Fase 7: avisos por meta** (*depende de la fase 5*)
@@ -339,6 +342,9 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 - Fase 5 y regresión adyacente: `ReportReviewTest`, `AuthorizationPoliciesTest`, `ReportContinuityTest`, `PeriodicGoalReportsTest`, `GoalConfidentialityTest`, `HomeStatsTest`, `ObjectivePageTest`, `ReportPageTest`, `CsvExportsTest` y `HomeReportsGridTest`: **108 pruebas y 1069 aserciones aprobadas**. La prueba de concurrencia, ejecutada por separado, pasó **6 pruebas y 87 aserciones**, incluidas dos validaciones simultáneas sin doble resolución ni aplicación de cambios.
 - Fase 5: sintaxis PHP y `git diff --check` correctos; `npm run build` completó con los avisos ya conocidos de imágenes estáticas no resueltas. Los artefactos generados por el build se limpiaron. Las migraciones se probaron en la base de pruebas; no se aplicaron a la base de la aplicación.
 - Suite completa de fase 5, ejecutada con confirmación del usuario: **476 pruebas y 6927 aserciones aprobadas**.
+- Fase 6: `GoalOrganizationsTest` cubre la asignación y el intercambio de responsable y participantes, el rechazo de una responsable también participante, la desactivación que excluye nuevas asociaciones y conserva las existentes, la presentación pública de la meta, la unión del objetivo limitada a metas públicas sin leer `objective_organization`, la copia al publicar (también ante renombres y desactivaciones posteriores), los reportes anteriores sin copia y el cierre interno sin copia, y que un error de validación no vuelva a marcar «Activa»: **5 pruebas y 58 aserciones**.
+- Regresión de la fase 6 en Administración, autorización, seeders, importación, metas, objetivos, reportes, paneles, portal y jerarquías: **329 pruebas aprobadas**. Detectó que `DemoStructureImportTest` no enviaba la visibilidad exigida desde el paso 18; se corrigió la prueba. La migración se aplicó, revirtió y volvió a aplicar en la base de pruebas. Sintaxis PHP y `git diff --check` correctos.
+- Suite completa de fase 6, ejecutada con confirmación del usuario: **482 pruebas y 7019 aserciones aprobadas**.
 - Los comandos de pruebas se ejecutaron con `APP_ENV=testing DB_DATABASE=participes_testing`. No se ejecutaron migraciones ni escrituras sobre la base de la aplicación.
 - Las pruebas de integración usan PHPUnit y MySQL (`participes_testing`), con `RefreshDatabase` o el aislamiento existente de `DatabaseMigrations` para concurrencia. Se conservan las pruebas unitarias de cálculo.
 - Cada fase corre `php artisan test --compact` con sus tests, más la regresión de revisión y de superficies públicas: `ReportReview*`, `PeriodicGoalReportsTest`, `SitemapTest`, `HomeStatsTest`, `*SearchTest`, `CsvExportsTest`, `ObjectivePageTest` y `ReportPageTest`.

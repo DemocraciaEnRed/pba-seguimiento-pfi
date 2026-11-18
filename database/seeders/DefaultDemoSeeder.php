@@ -127,7 +127,6 @@ class DefaultDemoSeeder extends Seeder
             $objective->strategicObjective()->associate(StrategicObjective::findOrFail($faker->randomElement($strategicObjectivesByCategory[$category->id])));
             $objective->author()->associate($admin);
             $objective->save();
-            $objective->organizations()->attach($faker->randomElements($organizations,3));
 
             $community = new Community();
             $community->label = '¡Unite al Telegram!';
@@ -144,6 +143,7 @@ class DefaultDemoSeeder extends Seeder
             $objective->subscribers()->attach($faker->randomElements($users,4));
 
             $this->seedDemoGoals($objective, $theTeam, $faker, $i);
+            $this->seedDemoGoalOrganizations($objective, $organizations, $faker);
         }
     }
 }

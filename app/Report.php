@@ -40,6 +40,7 @@ class Report extends Model
         'previous_progress' => 'float',
         'progress' => 'float',
         'measured_value' => 'float',
+        'organizations_snapshot' => 'array',
     ];
 
     protected $attributes = ['review_status' => 'pending', 'review_version' => 1, 'notify_subscribers' => false];
