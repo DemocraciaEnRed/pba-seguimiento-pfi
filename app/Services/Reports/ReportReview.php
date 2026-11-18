@@ -60,6 +60,7 @@ class ReportReview
                         $changedFields = array_values(array_unique([...$changedFields, ...array_keys($report->getDirty())]));
                         $report->save();
                         $this->publicationNotice($report);
+                        $this->reviewNotice($report, 'published', $actor);
                         $this->log($report, $actor, 'published', $changedFields);
                     } else {
                         $this->log($report, $actor, 'validated', $changedFields);
@@ -335,11 +336,32 @@ class ReportReview
 
     private function reviewNotice(Report $report, string $action, User $actor): void
     {
-        $recipients = in_array($action, ['submitted', 'resubmitted'], true)
-            ? User::whereHas('roles', fn ($roles) => $roles->where('name', 'admin'))->get()
-            : collect([$action === 'returned' ? ($report->attendant ?? $report->author) : $report->author])
-                ->filter(fn (User $recipient): bool => $report->goal->isVisibleTo($recipient));
-        Notification::send($recipients, (new ReportReviewNotification($report, $action, $actor))->afterCommit());
+        $goal = $report->goal;
+        $administrators = fn () => User::whereHas('roles', fn ($roles) => $roles->where('name', 'admin'))->get();
+        $responsibles = in_array($action, ['submitted', 'resubmitted', 'published'], true)
+            ? $goal->responsibles()->get()
+            : collect();
+
+        $recipients = match ($action) {
+            'submitted', 'resubmitted' => $responsibles->isNotEmpty()
+                ? $responsibles
+                : $administrators(),
+            'returned' => collect([$report->attendant ?? $report->author]),
+            'validated' => collect([$report->author])->concat($administrators()),
+            'published' => collect([$report->author])->concat($responsibles),
+            'closed' => collect([$report->author]),
+            default => collect(),
+        };
+
+        $recipients = $recipients
+            ->filter(fn (User $recipient): bool => $goal->isVisibleTo($recipient))
+            ->unique('id')
+            ->reject(fn (User $recipient): bool => $recipient->getKey() === $actor->getKey())
+            ->values();
+
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, (new ReportReviewNotification($report, $action, $actor))->afterCommit());
+        }
     }
 
     /** @param list<string> $changedFields */

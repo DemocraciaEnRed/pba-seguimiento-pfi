@@ -3,12 +3,14 @@
 namespace App\Services\Goals;
 
 use App\Goal;
+use App\Notifications\GoalAssignmentNotification;
 use App\Objective;
 use App\Services\Reports\ReportContinuity;
 use App\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class GoalAssignments
@@ -48,13 +50,14 @@ class GoalAssignments
         Gate::forUser($actor)->authorize('isAdmin');
         $this->ensurePfiMember($member);
 
-        $assignedGoalIds = DB::transaction(function () use ($objective, $member, $actor): array {
+        $assignedGoals = DB::transaction(function () use ($objective, $member, $actor): array {
             User::query()->whereKey([$member->id, $actor->id])->orderBy('id')->lockForUpdate()->get();
             $actor->forgetAuthorizationContext();
             Gate::forUser($actor)->authorize('isAdmin');
             $this->ensurePfiMember($member);
-            $goals = $objective->goals()->orderBy('id')->lockForUpdate()->get(['goals.id']);
-            $assignedGoalIds = [];
+            $goals = $objective->goals()->orderBy('id')->lockForUpdate()
+                ->get(['goals.id', 'goals.title', 'goals.objective_id', 'goals.visibility']);
+            $assignedGoals = [];
 
             foreach ($goals as $goal) {
                 if ($goal->reporters()->whereKey($member->getKey())->exists()) {
@@ -62,29 +65,33 @@ class GoalAssignments
                 }
 
                 $goal->reporters()->attach($member->getKey(), ['assigned_by' => $actor->getKey()]);
-                $assignedGoalIds[] = $goal->getKey();
+                $assignedGoals[] = $goal;
             }
 
-            return $assignedGoalIds;
+            return $assignedGoals;
         });
         $member->forgetAuthorizationContext();
         $actor->forgetAuthorizationContext();
 
-        if ($assignedGoalIds !== []) {
+        if ($assignedGoals !== []) {
             $this->log(
                 $actor,
                 $member,
-                "ha asignado a [{$member->fullname}] como Reportero en {$this->countLabel(count($assignedGoalIds))} del objetivo [{$objective->title}]",
+                "ha asignado a [{$member->fullname}] como Reportero en {$this->countLabel(count($assignedGoals))} del objetivo [{$objective->title}]",
                 [
                     'objective_id' => $objective->getKey(),
                     'objective_title' => $objective->title,
-                    'goal_ids' => $assignedGoalIds,
+                    'goal_ids' => array_map(static fn (Goal $goal): int => $goal->getKey(), $assignedGoals),
                     'role' => 'reporter',
                 ],
             );
         }
 
-        return count($assignedGoalIds);
+        foreach ($assignedGoals as $goal) {
+            $this->notifyAssignment($goal, $member, $actor, ['reporter'], 'assigned');
+        }
+
+        return count($assignedGoals);
     }
 
     private function assign(Goal $goal, User $member, User $actor, string $role): bool
@@ -119,6 +126,7 @@ class GoalAssignments
                 'objective_id' => $goal->objective_id,
                 'role' => $role,
             ]);
+            $this->notifyAssignment($goal, $member, $actor, [$role], 'assigned');
         }
 
         return $assigned;
@@ -158,6 +166,7 @@ class GoalAssignments
                 'objective_id' => $goal->objective_id,
                 'role' => $role,
             ]);
+            $this->notifyAssignment($goal, $member, $actor, [$role], 'removed');
         }
 
         return $removed;
@@ -170,6 +179,19 @@ class GoalAssignments
                 'user_id' => 'Solo se puede asignar a integrantes PFI.',
             ]);
         }
+    }
+
+    /** @param list<string> $roles */
+    private function notifyAssignment(Goal $goal, User $member, User $actor, array $roles, string $action): void
+    {
+        if ($member->getKey() === $actor->getKey()) {
+            return;
+        }
+
+        Notification::send(
+            $member,
+            (new GoalAssignmentNotification($goal, $roles, $action, $actor))->afterCommit(),
+        );
     }
 
     private function countLabel(int $count): string

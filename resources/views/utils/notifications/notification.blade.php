@@ -1,4 +1,9 @@
 @switch($notification->data['type'])
+  @case('goal-assignment')
+    <p class="mb-1">{{ $notification->data['message'] }}</p>
+    <p class="small mb-1">{{ $notification->data['objective_title'] }}</p>
+    <a href="{{ $notification->data['url'] }}">{{ $notification->data['title'] }}</a>
+    @break
   @case('report-review')
     <p class="mb-1">{{ $notification->data['message'] }}</p>
     <a href="{{ $notification->data['url'] }}">{{ $notification->data['title'] }}</a>

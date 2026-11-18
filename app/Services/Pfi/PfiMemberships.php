@@ -4,6 +4,7 @@ namespace App\Services\Pfi;
 
 use App\PfiCategory;
 use App\Goal;
+use App\Notifications\GoalAssignmentNotification;
 use App\Services\Reports\ReportContinuity;
 use App\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -82,8 +84,9 @@ class PfiMemberships
     public function remove(User $member, User $actor, array $destinations): bool
     {
         Gate::forUser($actor)->authorize('isAdmin');
+        $assignmentNotices = [];
 
-        $removed = DB::transaction(function () use ($member, $actor, $destinations): bool {
+        $removed = DB::transaction(function () use ($member, $actor, $destinations, &$assignmentNotices): bool {
             User::query()->whereKey([$member->id, $actor->id, ...array_values($destinations)])
                 ->orderBy('id')->lockForUpdate()->get();
             $actor->forgetAuthorizationContext();
@@ -94,9 +97,23 @@ class PfiMemberships
             }
 
             $continuity = app(ReportContinuity::class);
-            $goalIds = $member->assignedGoals()->pluck('goals.id')
+            $roleAssignments = DB::table('goal_user')
+                ->where('user_id', $member->id)
+                ->orderBy('goal_id')
+                ->orderBy('role')
+                ->get(['goal_id', 'role'])
+                ->groupBy('goal_id');
+            $goalIds = $roleAssignments->keys()
                 ->merge($continuity->pendingForRemoval($member)->pluck('goal_id'))->unique();
-            Goal::query()->whereKey($goalIds)->orderBy('id')->lockForUpdate()->get();
+            $goals = Goal::query()->with('objective')->whereKey($goalIds)->orderBy('id')->lockForUpdate()->get();
+            $assignmentNotices = $goals
+                ->filter(fn (Goal $goal): bool => $roleAssignments->has($goal->getKey()))
+                ->map(fn (Goal $goal): array => [
+                    $goal,
+                    $roleAssignments->get($goal->getKey())->pluck('role')->all(),
+                ])
+                ->values()
+                ->all();
             $continuity->transferForRemoval($member, $actor, $destinations);
             $member->assignedGoals()->detach();
             $member->pfiCategories()->detach();
@@ -109,6 +126,15 @@ class PfiMemberships
         $member->forgetAuthorizationContext();
         $actor->forgetAuthorizationContext();
         $member->unsetRelation('pfiMembership')->unsetRelation('pfiCategories');
+
+        if ($removed && $member->getKey() !== $actor->getKey()) {
+            foreach ($assignmentNotices as [$goal, $roles]) {
+                Notification::send(
+                    $member,
+                    (new GoalAssignmentNotification($goal, $roles, 'removed', $actor))->afterCommit(),
+                );
+            }
+        }
 
         return $removed;
     }

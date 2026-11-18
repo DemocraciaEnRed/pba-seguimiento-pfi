@@ -58,6 +58,7 @@ Cada punto lleva una etiqueta:
 - **Manual actualizado al cerrar la fase 5:** v0.4.5, con los capítulos afectados, índice, historial e instrucciones de capturas. Las áreas por meta y la Mesa de trabajo todavía no se describen como disponibles.
 - **Fase 3, paso 18 implementado tras D4:** la edición de metas rechaza cualquier cambio de visibilidad y la importación exige elegir Pública o Interna para las metas nuevas, sin alterar las existentes. `StructureImportTest` y `GoalConfidentialityTest` pasaron: **18 pruebas y 159 aserciones**. Manual v0.4.6.
 - **Fase 6, pasos 31 a 35 implementados:** Administración asigna en el alta y la edición de cada meta una organización responsable y varias participantes; desactiva organizaciones en lugar de eliminarlas. La ficha pública de la meta, sus reportes publicados y la página del objetivo muestran las organizaciones; el objetivo las reúne desde sus metas dentro de la audiencia. Al publicar, cada reporte guarda una copia. La migración no se aplicó a la base de la aplicación. Manual v0.4.7.
+- **Fase 7, pasos 36 a 38 implementados:** los avisos de asignaciones y de revisión se dirigen a las personas afectadas por meta; al enviar o reenviar un reporte sin Responsable, avisan a todos los administradores. No se avisa por la mera ausencia de Responsable; las alertas de cobertura quedan para fase 8. La validación avisa a Administración y al autor. La publicación notifica a autor y Responsables con enlace público; el cierre interno conserva el aviso privado al autor. Los avisos operativos excluyen a quien actuó, sin cambiar los avisos a suscriptores; no hay recordatorios y los avisos previos de revisión permanecen como historial. Manual v0.4.8.
 - **Cambio de diseño en la fase 6:** la responsable se guarda en `goals.responsible_organization_id` y `goal_organization` registra solo las participantes. MySQL no admite claves foráneas con `CASCADE` sobre las columnas base de una columna generada, de modo que una tabla con `kind` no podía garantizar una única responsable por meta. Así, el esquema garantiza una sola responsable y la aplicación impide que también figure como participante.
 - El análisis siguiente conserva la línea de base anterior al primer incremento; no describe como pendientes los cambios ya registrados arriba.
 
@@ -301,15 +302,11 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
 35. El filtro por organizaciones y las sugerencias del Responsable quedan fuera hasta que se definan [Pendiente §7].
 
 **Fase 7: avisos por meta** (*depende de la fase 5*)
-36. Implementar los eventos de la tabla del §5, que son una base a ajustar:
-    - **Asignación o retiro:** a la persona afectada.
-    - **Envío o reenvío:** a los Responsables de la meta. Si la meta no tiene Responsables, a Administración.
-    - **Devolución:** al autor o a quien atiende el pendiente.
-    - **Validación:** aviso al autor y tarea para Administración.
-    - **Publicación:** al autor y a los Responsables, con el enlace público.
-    - **Revisión resuelta por otro Responsable:** se actualiza el pendiente, sin enviar correo.
-37. Los avisos de metas internas no llevan enlaces públicos. Los enlaces de gestión vuelven a verificar el permiso al abrirse.
-38. Mientras §7 esté sin definir, las tareas de Administración van a todos los admins, como hoy. No hay recordatorios ni resúmenes.
+36. **Hecho.** Los cambios efectivos de asignación o retiro como Responsable o Reportero avisan a la persona afectada; las operaciones repetidas sin cambios no duplican avisos. La baja PFI agrupa los roles retirados por meta.
+37. **Hecho.** Enviar o reenviar avisa a los Responsables de la meta, con fallback a todos los administradores si no tiene ninguno; no se avisa por la mera ausencia de Responsable sin un reporte enviado o reenviado. Devolver avisa a quien atiende el pendiente o, en su defecto, a su autor. Validar avisa al autor y a todos los administradores. Publicar una meta pública avisa al autor y a sus Responsables con enlace público. Cerrar una meta interna avisa al autor con enlace privado. Se conservan los avisos ya enviados a otros Responsables; al abrirlos se ve el estado vigente y no se envía un segundo aviso.
+38. **Hecho.** Se mantienen los canales de plataforma y correo según la preferencia actual de email. Los avisos operativos excluyen a quien realiza la acción; los avisos a suscriptores conservan su funcionamiento actual. No hay recordatorios ni resúmenes. Los enlaces de gestión vuelven a verificar permisos; los avisos no sustituyen las tareas ni conceden acceso.
+
+**Verificación de fase 7:** los tests focalizados de asignaciones, revisión, pertenencia PFI, continuidad y concurrencia pasaron: **54 pruebas y 687 aserciones**. También pasaron PHP lint en los archivos PHP modificados y `git diff --check`. Con autorización del usuario, la suite completa pasó: **484 pruebas y 7053 aserciones**.
 
 **Fase 8: Mesa de trabajo y pendientes de Administración** (*depende de las fases 5 y 7*)
 39. Crear `/panel/mesa` para los integrantes PFI **[Acordado §8]**. Muestra:
@@ -363,7 +360,6 @@ No quedan decisiones bloqueantes. D1 a D8 se resolvieron en las conversaciones p
 - **Devolución desde Administración** (§7): resuelto; no se habilita. Administración edita directamente.
 - **Propuestas de corrección de lo publicado** (§7).
 - **Sugerencias de áreas y filtro por áreas** (§7).
-- **Avisos operativos** (§7): qué admins reciben tareas, recordatorios, resúmenes y deduplicación.
 - **Presentación de fechas** de reporte, validación y publicación (§7).
 - **Objetivo público sin metas públicas:** ¿se muestra igual o se oculta?
 - **Vista previa de objetivos ocultos** en el portal para admins y miembros: hoy existe.

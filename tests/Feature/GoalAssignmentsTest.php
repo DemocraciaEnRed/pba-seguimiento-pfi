@@ -6,6 +6,7 @@ use App\ActionLog;
 use App\Category;
 use App\Goal;
 use App\Objective;
+use App\Notifications\GoalAssignmentNotification;
 use App\PfiCategory;
 use App\Role;
 use App\Services\Goals\GoalAssignments;
@@ -14,6 +15,7 @@ use App\StrategicObjective;
 use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class GoalAssignmentsTest extends TestCase
@@ -45,6 +47,7 @@ class GoalAssignmentsTest extends TestCase
         $this->reporter = $this->createUser('Rosa', 'Reportera', 'reportera@example.com');
         $this->other = $this->createUser('Omar', 'Otro', 'otro@example.com');
         $this->category = PfiCategory::create(['name' => 'Territorio']);
+        Notification::fake();
     }
 
     public function test_admin_can_assign_both_roles_and_remove_them_independently(): void
@@ -177,10 +180,12 @@ class GoalAssignmentsTest extends TestCase
 
         $this->assertSame(1, $firstGoal->reporters()->count());
         $this->assertSame(1, $secondGoal->reporters()->count());
+        Notification::assertSentToTimes($this->reporter, GoalAssignmentNotification::class, 2);
         $this->post(route('admin.goal-assignments.objective.reporters.store', [
             'objectiveId' => $objective->id,
             'userId' => $this->reporter->id,
         ]))->assertSessionHas('warning');
+        Notification::assertSentToTimes($this->reporter, GoalAssignmentNotification::class, 2);
         $futureGoal = $this->createGoal($objective, 'Meta futura');
         $this->assertSame(0, $futureGoal->reporters()->count());
         $this->assertDatabaseHas('objective_user', [
@@ -251,6 +256,32 @@ class GoalAssignmentsTest extends TestCase
         $this->assertSame(1, $this->reporter->assignedGoals()->get()->count());
         $goal->forceDelete();
         $this->assertDatabaseMissing('goal_user', ['goal_id' => $goal->id]);
+    }
+
+    public function test_assignment_notices_follow_successful_changes_and_group_roles_on_pfi_removal(): void
+    {
+        $goal = $this->createGoal($this->createObjective());
+        $this->admit($this->reporter);
+        $assignments = app(GoalAssignments::class);
+
+        $this->assertTrue($assignments->assignResponsible($goal, $this->reporter, $this->admin));
+        $this->assertFalse($assignments->assignResponsible($goal, $this->reporter, $this->admin));
+        $this->assertTrue($assignments->assignReporter($goal, $this->reporter, $this->admin));
+        Notification::assertSentToTimes($this->reporter, GoalAssignmentNotification::class, 2);
+        Notification::assertSentTo($this->reporter, GoalAssignmentNotification::class, fn (GoalAssignmentNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'assigned');
+
+        $this->admit($this->admin);
+        $this->assertTrue($assignments->assignReporter($goal, $this->admin, $this->admin));
+        Notification::assertNotSentTo($this->admin, GoalAssignmentNotification::class);
+
+        $this->assertTrue(app(PfiMemberships::class)->remove($this->reporter, $this->admin, []));
+        Notification::assertSentToTimes($this->reporter, GoalAssignmentNotification::class, 3);
+        Notification::assertSentTo(
+            $this->reporter,
+            GoalAssignmentNotification::class,
+            fn (GoalAssignmentNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'removed'
+                && $notice->toDatabase($this->reporter)['roles'] === ['responsible', 'reporter'],
+        );
     }
 
     private function admit(User $user): void

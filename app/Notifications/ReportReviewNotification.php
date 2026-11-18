@@ -16,24 +16,50 @@ class ReportReviewNotification extends Notification implements ShouldQueue
 
     public int $tries = 5;
 
-    /** @var array{type: string, title: string, message: string, url: string, report_id: int, actor_id: int} */
+    /**
+     * @var array{
+     *     type: string,
+     *     title: string,
+     *     message: string,
+     *     url: string,
+     *     report_id: int,
+     *     goal_id: int,
+     *     objective_id: int,
+     *     action: string,
+     *     actor_id: int
+     * }
+     */
     private array $data;
 
     public function __construct(Report $report, string $action, User $actor)
     {
+        $report->loadMissing('goal.objective');
+        $goal = $report->goal;
         $message = match ($action) {
-            'submitted' => 'Hay un nuevo reporte pendiente de revisión.',
-            'resubmitted' => 'Un reporte corregido fue reenviado a revisión.',
-            'validated' => 'Tu reporte fue validado y enviado a Administración. Todavía no fue publicado ni aplicado.',
-            'published' => 'Tu reporte fue publicado y sus cambios fueron aplicados.',
+            'submitted' => 'Hay un nuevo reporte para revisar.',
+            'resubmitted' => 'Un reporte corregido fue reenviado para revisión.',
+            'validated' => 'Un reporte fue validado y requiere resolución de Administración. Todavía no fue publicado ni aplicado.',
+            'published' => 'Un reporte fue publicado y sus cambios fueron aplicados.',
             'closed' => 'Tu reporte interno fue cerrado y consolidado para el seguimiento.',
             'returned' => 'Tu reporte fue devuelto para corrección: '.$report->return_reason,
             default => throw new \InvalidArgumentException("Acción de notificación de revisión desconocida: {$action}"),
         };
+        $url = $action === 'published' && $goal->visibility === 'public' && ! $goal->objective->hidden
+            ? route('reports.index', $report->getKey())
+            : route('objectives.manage.goals.reports.index', [
+                'objectiveId' => $goal->objective_id,
+                'goalId' => $goal->getKey(),
+                'reportId' => $report->getKey(),
+            ]);
+
         $this->data = [
             'type' => 'report-review', 'title' => $report->title, 'message' => $message,
-            'url' => route('objectives.manage.goals.reports.index', ['objectiveId' => $report->goal->objective_id, 'goalId' => $report->goal_id, 'reportId' => $report->id]),
-            'report_id' => $report->id, 'actor_id' => $actor->id,
+            'url' => $url,
+            'report_id' => $report->getKey(),
+            'goal_id' => $goal->getKey(),
+            'objective_id' => $goal->objective_id,
+            'action' => $action,
+            'actor_id' => $actor->getKey(),
         ];
     }
 
@@ -63,7 +89,19 @@ class ReportReviewNotification extends Notification implements ShouldQueue
             ->action('Ver reporte', $this->data['url']);
     }
 
-    /** @return array{type: string, title: string, message: string, url: string, report_id: int, actor_id: int} */
+    /**
+     * @return array{
+     *     type: string,
+     *     title: string,
+     *     message: string,
+     *     url: string,
+     *     report_id: int,
+     *     goal_id: int,
+     *     objective_id: int,
+     *     action: string,
+     *     actor_id: int
+     * }
+     */
     public function toDatabase(object $notifiable): array
     {
         return $this->data;

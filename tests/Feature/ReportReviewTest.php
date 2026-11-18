@@ -81,15 +81,21 @@ class ReportReviewTest extends TestCase
 
     public function test_responsible_validation_has_no_effect_and_administration_publication_applies_once(): void
     {
+        $this->goal->responsibles()->attach($this->other);
         $report = $this->submit(['status' => 'reached', 'progress' => 20.5]);
         $this->assertSame(ReviewStatus::Pending, $report->review_status);
         $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
         $this->assertSame('ongoing', $this->goal->fresh()->status);
-        Notification::assertSentTo($this->admin, ReportReviewNotification::class);
+        Notification::assertSentTo($this->manager, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->manager)['action'] === 'submitted');
+        Notification::assertNotSentTo($this->admin, ReportReviewNotification::class);
         Notification::assertNotSentTo($this->reporter, NewReport::class);
         $this->validateReport($report, $this->manager)->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Validated, $report->fresh()->review_status);
         $this->assertSame($this->manager->id, $report->fresh()->validated_by);
+        Notification::assertSentTo($this->admin, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->admin)['action'] === 'validated');
+        Notification::assertSentTo($this->reporter, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'validated');
+        Notification::assertSentToTimes($this->other, ReportReviewNotification::class, 1);
+        $this->actingAs($this->other)->get($this->panelUrl($report))->assertOk()->assertSee('Validado');
         $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
         $this->assertSame('ongoing', $this->goal->fresh()->status);
         $this->publish($report->fresh())->assertSessionHasNoErrors();
@@ -97,6 +103,8 @@ class ReportReviewTest extends TestCase
         $this->assertSame('reached', $this->goal->fresh()->status);
         $this->assertSame(40.0, $report->fresh()->previous_progress);
         $this->assertSame($this->admin->id, $report->fresh()->reviewed_by);
+        Notification::assertSentTo($this->manager, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->manager)['action'] === 'published'
+            && $notice->toDatabase($this->manager)['url'] === route('reports.index', $report->id));
         $this->publish($report->fresh())->assertForbidden();
         $this->assertSame(60.5, $this->goal->fresh()->indicator_progress);
     }
@@ -106,6 +114,9 @@ class ReportReviewTest extends TestCase
         $report = $this->submit([], $this->admin);
         $this->assertTrue($report->isApproved());
         $this->assertSame(45.0, $this->goal->fresh()->indicator_progress);
+        Notification::assertSentTo($this->manager, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->manager)['action'] === 'published');
+        Notification::assertSentTo($this->manager, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->manager)['url'] === route('reports.index', $report->id));
+        Notification::assertNotSentTo($this->admin, ReportReviewNotification::class);
         $pending = $this->submit();
         foreach ([$this->reporter, $this->manager] as $actor) {
             $this->actingAs($actor)->post(route('reports.review.publish', $pending->id), $this->reviewData($pending))->assertForbidden();
@@ -136,15 +147,19 @@ class ReportReviewTest extends TestCase
     public function test_return_requires_reason_and_only_explicit_resubmit_returns_it_to_pending(): void
     {
         $report = $this->submit();
+        $this->goal->responsibles()->attach($this->other);
         $this->actingAs($this->admin)->post(route('reports.review.return', $report->id), ['review_version' => 1, 'return_reason' => 'Adjuntar evidencia'])->assertForbidden();
         $this->actingAs($this->manager)->post(route('reports.review.return', $report->id), ['review_version' => 1])->assertSessionHasErrors('return_reason');
         $this->actingAs($this->manager)->post(route('reports.review.return', $report->id), ['review_version' => 1, 'return_reason' => 'Adjuntar evidencia'])->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Returned, $report->fresh()->review_status);
+        Notification::assertSentTo($this->reporter, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'returned');
         $this->actingAs($this->reporter)->put($this->panelUrl($report, '.edit.form'), $this->payload(['review_version' => $report->fresh()->review_version]))->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Returned, $report->fresh()->review_status);
         $this->publish($report->fresh())->assertForbidden();
         $this->actingAs($this->manager)->post(route('reports.review.resubmit', $report->id), ['review_version' => $report->fresh()->review_version])->assertSessionHasNoErrors();
         $this->assertSame(ReviewStatus::Pending, $report->fresh()->review_status);
+        Notification::assertSentTo($this->other, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->other)['action'] === 'resubmitted');
+        Notification::assertNotSentTo($this->manager, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->manager)['action'] === 'resubmitted');
         $this->assertSame(40.0, $this->goal->fresh()->indicator_progress);
     }
 
@@ -276,6 +291,12 @@ class ReportReviewTest extends TestCase
         $this->actingAs($this->admin)->get($this->panelUrl($report, '.edit'))->assertForbidden();
         $this->actingAs($this->admin)->delete($this->panelUrl($report, '.delete.form'), ['password' => 'password'])->assertForbidden();
         $this->assertSame(1, (new \App\Services\Indicators\ObjectiveStats())->compute($this->objective, $this->admin)['reports_total']);
+        Notification::assertSentTo($this->reporter, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'closed'
+            && $notice->toDatabase($this->reporter)['url'] === route('objectives.manage.goals.reports.index', [
+                'objectiveId' => $this->objective->id,
+                'goalId' => $this->goal->id,
+                'reportId' => $report->id,
+            ]));
 
         $adminCreated = $this->submit(['progress' => 3], $this->admin);
         $this->assertSame(ReviewStatus::Validated, $adminCreated->review_status);
@@ -283,6 +304,23 @@ class ReportReviewTest extends TestCase
         $this->assertSame(45.0, $this->goal->fresh()->indicator_progress);
         $this->assertNotFoundWhileInternal($adminCreated);
         Notification::assertNotSentTo($this->admin, NewReport::class);
+    }
+
+    public function test_submission_falls_back_to_all_admins_without_responsibles_and_validation_notifies_admin_work(): void
+    {
+        $otherAdmin = \Database\Factories\UserFactory::new()->create(['surname' => 'Otro admin']);
+        $otherAdmin->roles()->attach($this->admin->roles()->where('name', 'admin')->firstOrFail());
+        $this->goal->responsibles()->detach();
+
+        $report = $this->submit();
+        Notification::assertSentTo($this->admin, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->admin)['action'] === 'submitted');
+        Notification::assertSentTo($otherAdmin, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($otherAdmin)['action'] === 'submitted');
+        Notification::assertNotSentTo($this->reporter, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'submitted');
+
+        $this->validateReport($report, $this->admin)->assertSessionHasNoErrors();
+        Notification::assertSentTo($this->reporter, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->reporter)['action'] === 'validated');
+        Notification::assertSentTo($otherAdmin, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($otherAdmin)['action'] === 'validated');
+        Notification::assertNotSentTo($this->admin, ReportReviewNotification::class, fn (ReportReviewNotification $notice): bool => $notice->toDatabase($this->admin)['action'] === 'validated');
     }
 
     public function test_internal_periodic_measurement_counts_only_after_administration_closes_it(): void

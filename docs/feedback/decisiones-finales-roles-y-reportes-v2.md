@@ -215,22 +215,23 @@ Ejemplo acordado: **40 metas en total, 20 públicas y 20 internas**.
 
 ### Notificaciones
 
-Se mantienen los canales **plataforma y correo**. La publicación final de reportes de metas públicas se comunica al autor y a los Responsables correspondientes, con enlace de consulta. En la versión 2 el alcance de los avisos pasa a las **metas asignadas**, no a todo un eje. Un reporte interno no genera un aviso ni un enlace de publicación pública.
+Se mantienen los canales **plataforma y correo**: los avisos de asignación y revisión siempre quedan en la plataforma; el correo respeta la preferencia de cada persona. El alcance se limita a las **metas asignadas**, no a todo un eje. Las publicaciones públicas conservan los avisos existentes a suscriptores cuando se eligieron al publicar. Un reporte interno no genera un aviso para suscriptores ni un enlace público; al cerrar y consolidar, su autor sí recibe un aviso privado.
 
-La lista siguiente es la base de avisos a ajustar al esquema; no implica que todos sus detalles hayan sido confirmados:
+La siguiente matriz incorpora las precisiones operativas confirmadas para la fase 7:
 
 | Evento | Destinatarios / acción |
 | --- | --- |
-| Asignación o retiro como Responsable o Reportero | Persona afectada y alcance de la asignación. |
-| Envío o reenvío a revisión | Responsables asignados a la meta. |
-| Devolución anterior a la validación | Autor o Reportero reasignado que deba atenderla, con comentarios. |
-| Validación del Responsable | Aviso al autor y tarea pendiente para Administración; todavía no hay publicación pública. |
-| Publicación final de un reporte de meta pública | Autor y Responsables de la meta, con enlace público. |
-| Revisión resuelta por otro Responsable | Actualizar el pendiente para quienes recibieron el aviso; no necesita implicar otro correo. |
+| Asignación o retiro como Responsable o Reportero | Persona afectada; identifica la meta y el rol. La baja PFI informa los roles retirados por meta. |
+| Envío o reenvío a revisión | Responsables asignados a esa meta. Si no tiene Responsables, todos los administradores. |
+| Devolución anterior a la validación | Persona que atiende el pendiente o, si no fue reasignado, su autor; incluye el motivo. |
+| Validación de una propuesta | Autor y todos los administradores, que reciben el pendiente de resolución. Aún no se publica ni se aplican los cambios. |
+| Publicación final de un reporte de meta pública | Autor y Responsables de la meta, con enlace público; se conserva aparte el aviso a suscriptores elegido al publicar. |
+| Cierre de un reporte interno | Autor, con enlace de gestión privado; no genera aviso público ni a suscriptores. |
+| Revisión resuelta por otro Responsable | Los avisos ya recibidos se conservan como historial; su enlace abre el reporte con el estado vigente. No se envía otro aviso. |
 | Solicitud de corrección de información publicada | Administración recibe la solicitud; autor y Responsables correspondientes conocen la resolución. |
-| Falta de Responsables disponibles | Administración, como instancia de intervención. |
+| Meta sin Responsable y sin reporte nuevo | No genera un aviso por sí sola. Si se envía o reenvía un reporte que requiere revisión, el aviso va a todos los administradores; las alertas de cobertura de metas sin reportes quedan para la Mesa de la fase 8. |
 
-Administración no necesita copia de cada paso de revisión, pero sí debe conocer las decisiones de publicación y corrección que le corresponden.
+Los avisos operativos no se envían a quien realiza la acción. Una asignación repetida sin cambio no crea otro aviso; cada transición real sí puede generar el suyo. No hay recordatorios ni resúmenes periódicos. Los avisos ya enviados a suscriptores conservan su funcionamiento actual. Una notificación informa un evento y no reemplaza las tareas que se calculan a partir del estado del reporte. Los enlaces de gestión vuelven a comprobar los permisos al abrirse.
 
 ## 6. Evaluación y precisiones necesarias
 
@@ -274,7 +275,7 @@ No reabren las facultades ya definidas. Deben resolverse antes de habilitar los 
 | Organizaciones históricas | ¿Los reportes conservan las organizaciones de su publicación o muestran las actuales? ¿Qué sucede con una organización dada de baja? | **Resuelto:** cada reporte conserva las de su publicación; los anteriores a ese registro no muestran organizaciones. Una organización dada de baja se desactiva y conserva su nombre en el historial. |
 | Sugerencias de organizaciones | ¿Se comunican fuera de la plataforma o necesitan un circuito propio? | El Responsable sugiere; Administración decide. |
 | Filtro y presentación de organizaciones | ¿Dónde se ofrece el filtro? | Se pidió consultar metas por organizaciones participantes y distinguirlas visualmente de la responsable. |
-| Avisos operativos | ¿Qué administradores reciben las tareas? ¿Hay recordatorios o resúmenes? ¿Cómo se evitan duplicados y avisos a quien acaba de actuar? | Plataforma y correo, con destinatarios vinculados al trabajo y avisos de publicación. |
+| Avisos operativos | — | **Resuelto para la fase 7:** todos los administradores reciben reportes validados y, cuando se envía o reenvía un reporte sin Responsable asignado, reciben el aviso para atenderlo. No se avisa por la sola ausencia de Responsable; las alertas de cobertura quedan para la fase 8. No hay recordatorios ni resúmenes; se excluye a quien actuó y se evitan avisos por operaciones sin cambios. Los avisos ya enviados a otros Responsables se conservan como historial. |
 | Fechas | ¿Cómo se muestran las fechas de reporte, validación, publicación y corrección? ¿Cómo se tratan los datos históricos? | Validación y publicación siguen siendo hechos distintos. |
 
 ## 8. Mesa de trabajo y organización de pendientes
