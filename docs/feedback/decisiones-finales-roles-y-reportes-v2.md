@@ -275,7 +275,7 @@ No reabren las facultades ya definidas. Deben resolverse antes de habilitar los 
 | Organizaciones históricas | ¿Los reportes conservan las organizaciones de su publicación o muestran las actuales? ¿Qué sucede con una organización dada de baja? | **Resuelto:** cada reporte conserva las de su publicación; los anteriores a ese registro no muestran organizaciones. Una organización dada de baja se desactiva y conserva su nombre en el historial. |
 | Sugerencias de organizaciones | ¿Se comunican fuera de la plataforma o necesitan un circuito propio? | El Responsable sugiere; Administración decide. |
 | Filtro y presentación de organizaciones | ¿Dónde se ofrece el filtro? | Se pidió consultar metas por organizaciones participantes y distinguirlas visualmente de la responsable. |
-| Avisos operativos | — | **Resuelto para la fase 7:** todos los administradores reciben reportes validados y, cuando se envía o reenvía un reporte sin Responsable asignado, reciben el aviso para atenderlo. No se avisa por la sola ausencia de Responsable; las alertas de cobertura quedan para la fase 8. No hay recordatorios ni resúmenes; se excluye a quien actuó y se evitan avisos por operaciones sin cambios. Los avisos ya enviados a otros Responsables se conservan como historial. |
+| Avisos operativos | — | **Resuelto para la fase 7:** todos los administradores reciben reportes validados y, cuando se envía o reenvía un reporte sin Responsable asignado, reciben el aviso para atenderlo. No se avisa por la sola ausencia de Responsable; esas metas figuran como alertas de cobertura en la Mesa de trabajo (fase 8). No hay recordatorios ni resúmenes; se excluye a quien actuó y se evitan avisos por operaciones sin cambios. Los avisos ya enviados a otros Responsables se conservan como historial. |
 | Fechas | ¿Cómo se muestran las fechas de reporte, validación, publicación y corrección? ¿Cómo se tratan los datos históricos? | Validación y publicación siguen siendo hechos distintos. |
 
 ## 8. Mesa de trabajo y organización de pendientes
@@ -293,10 +293,29 @@ No reabren las facultades ya definidas. Deben resolverse antes de habilitar los 
 
 Las demás filas siguen siendo recomendaciones, no decisiones cerradas sobre pantallas o nuevos permisos.
 
+**Decisiones operativas de la fase 8, implementadas:**
+- **Acceso y ubicación:** la Mesa está en **Mi panel → Mesa de trabajo** para integrantes PFI y Administración. Mi panel muestra sus contadores; el Inicio de Administración suma un atajo con los pendientes y las alertas.
+- **Administración en la misma Mesa:** sus pendientes y alertas aparecen en secciones visibles solo para administradores. Administración resuelve:
+  - los validados de metas públicas (**Publicar**) y de internas (**Cerrar y consolidar**);
+  - los pendientes de metas sin Responsable, que puede validar.
+- **Reasignación:** un pendiente sin revisar que se reasigna a otra persona figura en **Esperando a otra persona**. Solo un devuelto requiere la acción de quien lo tiene a cargo.
+- **Alertas de continuidad:**
+  - metas en progreso sin Responsable;
+  - metas en progreso sin Reporteros;
+  - pendientes o devueltos cuya persona a cargo ya no está asignada a la meta ni es administradora.
+
+  No se asigna a nadie automáticamente.
+- **Filtros y contadores:**
+  - El rol afecta Mis metas y las tareas personales.
+  - El tipo de tarea afecta las listas de reportes.
+  - El eje y el objetivo afectan todas las secciones.
+
+  Los contadores no dependen de los filtros. El orden es por antigüedad del estado actual.
+
 | Propuesta | Comportamiento esperado |
 | --- | --- |
 | **Mis metas** | Una entrada por meta, mostrando los roles que ejerce la persona, el objetivo y eje, y la indicación de interna cuando corresponda. Si tiene ambos roles, no duplicar la meta ni sus contadores. |
-| **Requiere mi acción** | Separar reportes devueltos o pendientes reasignados que debe corregir el Reportero de los reportes por revisar para el Responsable. Ofrecer un acceso directo a la acción permitida. |
+| **Requiere mi acción** | Separar reportes devueltos que debe corregir la persona a cargo de los reportes pendientes por revisar para el Responsable. Un pendiente reasignado a un Reportero sigue en «Esperando a otra persona». Ofrecer un acceso directo a la acción permitida. |
 | **Esperando a otra persona** | Mostrar por separado reportes enviados o validados que ya no requieren acción propia. No contarlos como tareas que esa persona debe resolver. |
 | **Pendientes de Administración** | Reportes validados por resolver, solicitudes de corrección de contenido publicado y necesidades de asignación. Distinguir las metas internas de las públicas, sin llamar «publicar» a la resolución de un reporte interno. |
 | **Estado y próximo paso comprensibles** | Indicar qué falta, quién tiene capacidad para actuar y desde cuándo está pendiente. Mantener separados el estado de revisión y la visibilidad de la meta. |

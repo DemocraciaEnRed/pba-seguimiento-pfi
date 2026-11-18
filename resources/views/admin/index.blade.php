@@ -5,6 +5,19 @@
 @section('adminContent')
 
 <section class="admin-dashboard">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="is-700 mb-0"><i class="fas fa-briefcase fa-fw"></i>&nbsp;Mesa de trabajo</h5>
+    <a href="{{ route('panel.desk') }}" class="text-smaller">Abrir la Mesa<i class="fas fa-arrow-right fa-fw"></i></a>
+  </div>
+  <div class="d-grid grid-cols-2 gap-3 mb-4">
+    @foreach([
+      ['label' => 'Pendientes de Administración', 'icon' => 'fas fa-user-shield', 'value' => $desk['administration'], 'route' => route('panel.desk').'#administracion'],
+      ['label' => 'Alertas de continuidad', 'icon' => 'fas fa-triangle-exclamation', 'value' => $desk['alerts'], 'route' => route('panel.desk').'#alertas'],
+    ] as $item)
+      @include('admin.partials.stat', $item)
+    @endforeach
+  </div>
+
   <h5 class="is-700 mb-3"><i class="fas fa-sitemap fa-fw"></i>&nbsp;Estructura del plan</h5>
   <div class="d-grid grid-cols-2 grid-cols-md-3 grid-cols-lg-5 gap-3 mb-4">
     @foreach([

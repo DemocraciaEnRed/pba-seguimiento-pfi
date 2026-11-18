@@ -26,6 +26,22 @@ $countUnreadNotifications = count(Auth::user()->unreadNotifications);
   </div>
   @endif
 
+  @if($deskSummary)
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="is-700 mb-0"><i class="fas fa-briefcase fa-fw"></i>&nbsp;Mesa de trabajo</h5>
+    <a href="{{ route('panel.desk') }}" class="text-smaller">Abrir la Mesa<i class="fas fa-arrow-right fa-fw"></i></a>
+  </div>
+  <div class="d-grid grid-cols-2 grid-cols-lg-3 gap-3 mb-4">
+    @include('admin.partials.stat', ['label' => 'Requiere mi acción', 'icon' => 'fas fa-hand-point-right', 'value' => $deskSummary['action'], 'route' => route('panel.desk').'#accion'])
+    @include('admin.partials.stat', ['label' => 'Esperando a otra persona', 'icon' => 'far fa-hourglass-half', 'value' => $deskSummary['waiting'], 'route' => route('panel.desk').'#esperando'])
+    @include('admin.partials.stat', ['label' => 'Mis metas', 'icon' => 'fas fa-medal', 'value' => $deskSummary['goals'], 'route' => route('panel.desk').'#metas'])
+    @if($deskSummary['administration'] !== null)
+    @include('admin.partials.stat', ['label' => 'Pendientes de Administración', 'icon' => 'fas fa-user-shield', 'value' => $deskSummary['administration'], 'route' => route('panel.desk').'#administracion'])
+    @include('admin.partials.stat', ['label' => 'Alertas de continuidad', 'icon' => 'fas fa-triangle-exclamation', 'value' => $deskSummary['alerts'], 'route' => route('panel.desk').'#alertas'])
+    @endif
+  </div>
+  @endif
+
   <h5 class="is-700"><i class="far fa-bell"></i>&nbsp;Notificaciones</h5>
   @if($countUnreadNotifications > 0)
   <p>Tenés {{ $countUnreadNotifications }} {{ $countUnreadNotifications > 1 ? 'notificaciones' : 'notificación' }} sin leer. <a href="{{ route('panel.notifications.unread') }}">Ver pendientes<i class="fas fa-arrow-right fa-fw"></i></a></p>

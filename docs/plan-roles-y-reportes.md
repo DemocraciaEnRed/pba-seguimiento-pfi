@@ -59,6 +59,7 @@ Cada punto lleva una etiqueta:
 - **Fase 3, paso 18 implementado tras D4:** la edición de metas rechaza cualquier cambio de visibilidad y la importación exige elegir Pública o Interna para las metas nuevas, sin alterar las existentes. `StructureImportTest` y `GoalConfidentialityTest` pasaron: **18 pruebas y 159 aserciones**. Manual v0.4.6.
 - **Fase 6, pasos 31 a 35 implementados:** Administración asigna en el alta y la edición de cada meta una organización responsable y varias participantes; desactiva organizaciones en lugar de eliminarlas. La ficha pública de la meta, sus reportes publicados y la página del objetivo muestran las organizaciones; el objetivo las reúne desde sus metas dentro de la audiencia. Al publicar, cada reporte guarda una copia. La migración no se aplicó a la base de la aplicación. Manual v0.4.7.
 - **Fase 7, pasos 36 a 38 implementados:** los avisos de asignaciones y de revisión se dirigen a las personas afectadas por meta; al enviar o reenviar un reporte sin Responsable, avisan a todos los administradores. No se avisa por la mera ausencia de Responsable; las alertas de cobertura quedan para fase 8. La validación avisa a Administración y al autor. La publicación notifica a autor y Responsables con enlace público; el cierre interno conserva el aviso privado al autor. Los avisos operativos excluyen a quien actuó, sin cambiar los avisos a suscriptores; no hay recordatorios y los avisos previos de revisión permanecen como historial. Manual v0.4.8.
+- **Fase 8, pasos 39 a 41 implementados:** `/panel/mesa` reúne Mis metas, Requiere mi acción y Esperando a otra persona para integrantes PFI y Administración. Las tareas se derivan del estado de los reportes, no de las notificaciones, y la Mesa no concede permisos. Administración suma sus pendientes, alertas de continuidad y el acceso a la vista pública. Mi panel y el Inicio de Administración muestran contadores. No requiere migraciones. Manual v0.4.9.
 - **Cambio de diseño en la fase 6:** la responsable se guarda en `goals.responsible_organization_id` y `goal_organization` registra solo las participantes. MySQL no admite claves foráneas con `CASCADE` sobre las columnas base de una columna generada, de modo que una tabla con `kind` no podía garantizar una única responsable por meta. Así, el esquema garantiza una sola responsable y la aplicación impide que también figure como participante.
 - El análisis siguiente conserva la línea de base anterior al primer incremento; no describe como pendientes los cambios ya registrados arriba.
 
@@ -314,8 +315,61 @@ Los conteos, porcentajes, indicadores y exportaciones usan el mismo conjunto que
     - las tareas pendientes.
 
     Las tareas se calculan a partir del estado de los reportes, no de las notificaciones **[Propuesta §8]**.
+
+    **Hecho.** El Gate `accessWorkDesk` habilita la Mesa a integrantes PFI y a Administración. Requiere sesión y correo verificado. La entrada **Mesa de trabajo** figura después de **Mi panel** en el menú lateral, y `/panel` muestra sus contadores. El servicio `WorkDesk` deriva todo de `goal_user` y del estado de los reportes. La Mesa no concede permisos: cada enlace vuelve a verificarlos. Leer o borrar un aviso no resuelve una tarea.
 40. Sumar una sección de pendientes de Administración: reportes validados por resolver, que distingue las metas internas de las públicas.
+
+    **Hecho.** La misma Mesa muestra a Administración la sección **Pendientes de Administración**. Allí figuran los validados por resolver, como **Publicar** en metas públicas o **Cerrar y consolidar** en internas, y los pendientes de metas sin Responsable, que Administración puede validar. El Inicio de Administración suma un atajo con los contadores de pendientes y alertas.
 41. Secciones acordadas **[D8 resuelta]**: Mis metas, Requiere mi acción y Esperando a otra persona; filtros por rol, objetivo/eje y tipo de tarea, ordenados por antigüedad. Administración suma validados por resolver, alertas de continuidad y acceso a la vista pública.
+
+    **Hecho:**
+    - **Requiere mi acción** reúne:
+      - los pendientes de las metas donde la persona es Responsable;
+      - los devueltos de sus metas que tiene a cargo, sea por autoría o por reasignación.
+
+      Una revisión compartida representa una única tarea y desaparece para todos al resolverse.
+    - **Esperando a otra persona** reúne:
+      - los pendientes propios o a cargo en metas donde solo es Reportero;
+      - los devueltos que sigue y tiene otra persona a cargo;
+      - para quien no es Administración, los validados que esperan resolución.
+
+      Un pendiente reasignado a otra persona figura como esperando.
+    - **Mis metas** muestra los roles, la visibilidad, el estado y la cantidad de tareas propias de cada meta.
+    - **Alertas de continuidad** reúne:
+      - las metas en progreso (`status = ongoing`) sin Responsable o sin Reporteros;
+      - los pendientes o devueltos cuya persona a cargo ya no tiene asignación en la meta ni rol de administrador.
+
+      No se asigna a nadie automáticamente.
+    - **Filtros:**
+      - rol: solo Mis metas y las tareas personales;
+      - tipo de tarea: las listas de reportes;
+      - eje y objetivo: todas las secciones.
+
+      Quien no es Administración solo ve opciones de su alcance. Los contadores no dependen de los filtros.
+    - **Orden:** por antigüedad del estado actual (envío, devolución o validación) y luego por ID.
+    - **Paginación:** independiente por sección.
+    - **Vista pública:** abre el portal en otra pestaña.
+
+**Verificación de fase 8:** `WorkDeskTest` cubre:
+- acceso;
+- metas únicas;
+- revisión compartida;
+- reasignación;
+- pendientes de Administración;
+- alertas;
+- filtros, orden, contadores y mensajes de alertas sin coincidencias.
+
+Pasaron **8 pruebas y 111 aserciones**. Una medición temporal confirmó que la cantidad de consultas no crece con el volumen de reportes. La regresión focalizada inicial de panel, menú, Inicio de Administración, revisión, asignaciones, continuidad, autorización, pertenencia PFI e indexación pasó **97 pruebas y 1438 aserciones**. También pasaron PHP lint y `git diff --check`. Con autorización del usuario, la suite completa se volvió a ejecutar tras ajustar los mensajes de alertas filtradas y pasó: **492 pruebas y 7164 aserciones**. La fase no agrega migraciones.
+
+**Revisión visual de fase 8:**
+- **Demo:** `WorkDeskDemoSeeder` carga la estructura PBA y un escenario ficticio de ocho personas y nueve metas. Solo corre fuera de producción y no se carga dos veces. Se usa en una base vacía y aislada:
+  ```bash
+  CACHE_STORE=array DB_DATABASE=<base_demo> php artisan migrate:fresh --seed --seeder=WorkDeskDemoSeeder
+  ```
+  `WorkDeskDemoSeederTest` verifica sus contadores y accesos: **2 pruebas y 14 aserciones**.
+- **Recorrido:** se revisó con navegador cada perfil: Responsable, corresponsable, Reporteros, PFI sin metas, persona no PFI y Administración. También los filtros, las fichas a las que lleva cada acción, los equipos por meta y el portal público.
+- **Defecto encontrado:** con títulos largos, la línea truncada «eje · objetivo › meta» ocultaba la meta.
+- **Corrección:** la meta tiene ahora una línea propia, y el eje y el objetivo muestran el texto completo al pasar el cursor. `WorkDeskTest` lo verifica: **8 pruebas y 112 aserciones**.
 
 **Fase 9: cierre**
 42. Realizar la revisión integral final del manual de usuario, sus capturas y recorridos. Los capítulos afectados, el índice y `historial.md` se actualizan durante cada fase, antes de pasar a la siguiente; no se acumulan para este cierre.

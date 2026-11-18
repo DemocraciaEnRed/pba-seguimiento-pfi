@@ -8,6 +8,7 @@ use App\Http\Controllers\PfiCategoryController;
 use App\Http\Controllers\PfiMembershipController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserPanelController;
+use App\Http\Controllers\WorkDeskController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ObjectiveController;
@@ -87,6 +88,8 @@ Route::group([
     'prefix' => 'panel',
     ],function () {
     Route::get('/', [UserPanelController::class, 'index'])->name('index');
+    // Mesa de trabajo
+    Route::get('/mesa', [WorkDeskController::class, 'index'])->name('desk');
     // Mis objetivos
     Route::get('/objetivos', [UserPanelController::class, 'viewListObjectives'])->name('objectives');
     // Mis suscripciones

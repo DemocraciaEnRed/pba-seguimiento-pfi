@@ -35,6 +35,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::define('isAdmin', fn (User $user): bool => $user->hasRole('admin'));
+        Gate::define('accessWorkDesk', fn (User $user): bool => $user->hasRole('admin') || $user->isPfiMember());
         Gate::define('searchPfiCandidates', fn (User $user, ?Goal $goal = null): bool => $user->hasRole('admin')
             || ($goal !== null && $user->can('manageReporters', $goal)));
     }

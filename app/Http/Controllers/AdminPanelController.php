@@ -42,6 +42,7 @@ use Illuminate\Support\Facades\Password;
 use App\Services\Comments\CommentModeration;
 use App\Services\Admin\ActivityRange;
 use App\Services\Admin\AdminDashboardStats;
+use App\Services\Workspace\WorkDesk;
 use App\Services\Csv\CsvDownload;
 use App\Rules\MatchOldPassword;
 use App\Notifications\NewEvent;
@@ -64,7 +65,7 @@ class AdminPanelController extends Controller
         $this->middleware('check_role:admin');
     }
 
-    public function index(Request $request, AdminDashboardStats $dashboardStats, CommentModeration $commentModeration){
+    public function index(Request $request, AdminDashboardStats $dashboardStats, CommentModeration $commentModeration, WorkDesk $workDesk){
         $range = ActivityRange::fromRequest($request->query('rango'));
         $logs = ActionLog::where('context->type','!=','notifications')->orWhereNull('context->type')->orderBy('record_datetime','DESC')->take(3)->get();
 
@@ -74,6 +75,7 @@ class AdminPanelController extends Controller
             'ranges' => ActivityRange::cases(),
             'logs' => $logs,
             'latestComments' => $commentModeration->search(user: $request->user())->take(5)->get(),
+            'desk' => $workDesk->administrationSummary(),
         ]);
     }
 

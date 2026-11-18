@@ -4,6 +4,9 @@ $countUnreadNotifications = count(Auth::user()->unreadNotifications);
 
 <x-side-menu.group>
   <x-side-menu.category label="Mi panel" icon="fas fa-gauge-high" :href="route('panel.index')" :active="request()->routeIs('panel.index')" />
+  @can('accessWorkDesk')
+  <x-side-menu.category label="Mesa de trabajo" icon="fas fa-briefcase" :href="route('panel.desk')" :active="request()->routeIs('panel.desk')" />
+  @endcan
 </x-side-menu.group>
 <x-side-menu.group label="Actividad">
   <x-side-menu.category label="Notificaciones" icon="fas fa-bell">

@@ -11,7 +11,10 @@ use App\Category;
 use App\ImageFile;
 use App\Objective;
 use App\Rules\MatchOldPassword;
+use App\Services\Workspace\WorkDesk;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class UserPanelController extends Controller
 {
@@ -27,8 +30,11 @@ class UserPanelController extends Controller
         $this->middleware('check_role:user');
     }
 
-    public function index(Request $request){
-        return view('panel.index');
+    public function index(Request $request, WorkDesk $workDesk): View
+    {
+        return view('panel.index', [
+            'deskSummary' => Gate::allows('accessWorkDesk') ? $workDesk->summary($request->user()) : null,
+        ]);
     }
 
     public function viewListObjectives(Request $request){
