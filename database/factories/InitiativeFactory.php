@@ -18,7 +18,7 @@ class InitiativeFactory extends Factory
         return [
             'title' => fake()->unique()->sentence(3),
             'subtitle' => fake()->sentence(12),
-            'url' => null,
+            'links' => [],
             'featured_on_home' => false,
             'order' => 0,
         ];
@@ -29,8 +29,8 @@ class InitiativeFactory extends Factory
         return $this->state(fn (): array => ['featured_on_home' => true]);
     }
 
-    public function withUrl(string $url = 'https://example.com'): static
+    public function withLink(string $url = 'https://example.com', string $label = 'Conocé más'): static
     {
-        return $this->state(fn (): array => ['url' => $url]);
+        return $this->state(fn (): array => ['links' => [['label' => $label, 'url' => $url]]]);
     }
 }

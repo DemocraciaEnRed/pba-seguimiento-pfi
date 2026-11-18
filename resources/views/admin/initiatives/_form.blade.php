@@ -18,7 +18,7 @@
 <div class="form-group">
   <label for="initiative-subtitle"><b>Subtítulo</b> <small class="text-danger">*</small></label>
   <textarea id="initiative-subtitle" name="subtitle" class="form-control" rows="3" maxlength="600" required>{{ old('subtitle', $initiative->subtitle) }}</textarea>
-  <small class="text-muted">Breve descripción. En las tarjetas se muestran hasta 3 líneas. Hasta 600 caracteres.</small>
+  <small class="text-muted">Hasta 600 caracteres. La tarjeta muestra hasta 3 líneas; el texto completo se lee al abrir «Ver detalle».</small>
 </div>
 <div class="form-group">
   <label><b>Ejes vinculados</b> <small class="text-danger">*</small></label>
@@ -37,9 +37,12 @@
   <small class="text-muted">La iniciativa se mostrará en la sección de cada eje seleccionado en «El Plan».</small>
 </div>
 <div class="form-group">
-  <label for="initiative-url"><b>Enlace</b> <small class="text-info">Opcional</small></label>
-  <input type="url" id="initiative-url" class="form-control" name="url" value="{{ old('url', $initiative->url) }}" maxlength="500" placeholder="https://">
-  <small class="text-muted">Si se completa, la tarjeta abre este enlace en una pestaña nueva. Si se deja vacío, la tarjeta no es clickeable.</small>
+  <h4 class="h6"><b>Enlaces externos</b> <small class="text-info">Opcional</small></h4>
+  @php
+    $links = old('links', $initiative->links ?? []);
+  @endphp
+  <input-initiative-links :links="{{ \Illuminate\Support\Js::from(is_array($links) ? array_values($links) : []) }}"></input-initiative-links>
+  <small class="text-muted">Se muestran en el detalle, en este orden, y abren una pestaña nueva. Cada enlace debe tener etiqueta y URL completa (http:// o https://).</small>
 </div>
 <div class="form-row">
   <div class="form-group col-md-4">

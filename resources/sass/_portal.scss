@@ -949,13 +949,13 @@
     text-decoration: none;
   }
 
-  &--link:hover,
-  &--link:focus-visible {
+  &--interactive:hover,
+  &--interactive:focus-within {
     box-shadow: 0 .375rem .75rem rgba($black, .12);
     transform: translateY(-2px);
   }
 
-  &--link:focus-visible {
+  &--interactive:focus-within {
     outline: 3px solid var(--initiative-color);
     outline-offset: 4px;
   }
@@ -968,7 +968,7 @@
     transition: transform .7s ease-out;
   }
 
-  &--link:hover &__image {
+  &--interactive:hover &__image {
     transform: scale(1.05);
   }
 
@@ -999,7 +999,7 @@
     transition: transform .3s ease;
   }
 
-  &--link:hover &__corner {
+  &--interactive:hover &__corner {
     transform: translate(2px, -2px);
   }
 
@@ -1075,12 +1075,107 @@
     }
   }
 
-  &--link:hover &__cta {
+  &--interactive:hover &__cta {
     background-color: rgba($white, .9);
 
     .fas {
       transform: translateX(3px);
     }
+  }
+
+  &__trigger {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+}
+
+.initiative-modal {
+  .modal-content {
+    max-height: calc(100vh - 3.5rem);
+    max-height: calc(100dvh - 3.5rem);
+    overflow: hidden;
+    border: 0;
+    border-radius: .75rem;
+  }
+
+  &__content {
+    overflow-y: auto;
+  }
+
+  &__close {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: 50%;
+    color: $body-color;
+    background-color: $white;
+    box-shadow: $box-shadow-sm;
+  }
+
+  &__hero {
+    height: auto;
+    min-height: 12rem;
+    border-radius: 0;
+    box-shadow: none;
+
+    .initiative-card__body {
+      justify-content: flex-end;
+      padding-top: 4rem;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $white;
+    text-shadow: 0 1px 3px rgba($black, .35);
+    overflow-wrap: anywhere;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  &__text {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  &__links {
+    li + li {
+      margin-top: 1rem;
+    }
+
+    a {
+      display: block;
+      color: color-mix(in srgb, var(--initiative-color) 60%, #000);
+      overflow-wrap: anywhere;
+      text-decoration: underline;
+    }
+  }
+
+  &__link-label {
+    font-weight: 600;
+  }
+
+  &__link-url {
+    display: block;
+    font-size: .85rem;
   }
 }
 

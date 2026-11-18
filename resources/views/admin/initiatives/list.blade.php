@@ -37,11 +37,13 @@
           @if($initiative->featured_on_home)
           <span class="badge badge-primary ml-1" title="Destacada en la página de inicio"><i class="fas fa-star"></i> Inicio</span>
           @endif
-          @if($initiative->url)
-          <a href="{{ $initiative->url }}" target="_blank" rel="noopener noreferrer" class="text-smaller ml-1" title="Abrir enlace"><i class="fas fa-arrow-up-right-from-square"></i></a>
-          @endif
         </p>
         <p class="mb-1 text-smaller text-muted text-truncate" title="{{ $initiative->subtitle }}">{{ $initiative->subtitle }}</p>
+        @foreach($initiative->links ?? [] as $link)
+        <a href="{{ $link['url'] }}" target="_blank" rel="noopener noreferrer" class="text-smaller d-inline-block mr-2">
+          {{ $link['label'] }} <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i><span class="sr-only"> (se abre en una pestaña nueva)</span>
+        </a>
+        @endforeach
         <div>
           @foreach($initiative->categories as $category)
           <span class="badge text-white mr-1" style="background-color: {{ $category->color }}">{{ $category->title }}</span>

@@ -38,10 +38,13 @@ class InitiativesSeeder extends Seeder
             }
 
             foreach ($this->initiatives() as $data) {
-                $initiative = Initiative::query()->updateOrCreate(
-                    ['title' => $data['title']],
-                    collect($data)->only(['subtitle', 'url', 'featured_on_home', 'order'])->all()
-                );
+                $initiative = Initiative::query()->firstOrNew(['title' => $data['title']]);
+                if (! $initiative->exists) {
+                    $initiative->links = $data['url']
+                        ? [['label' => 'Conocé más', 'url' => $data['url']]]
+                        : [];
+                }
+                $initiative->fill(collect($data)->only(['subtitle', 'featured_on_home', 'order'])->all())->save();
 
                 $axisIds = collect($data['axes'])
                     ->map(fn (string $icon): ?int => $axesByIcon->get($icon)?->id)

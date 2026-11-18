@@ -4,23 +4,15 @@
   $color = is_string($color) && preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? $color : '#009aae';
   $backgroundUrl = $initiative->backgroundUrl();
   $logoUrl = $initiative->logoUrl();
-  $tag = $initiative->url ? 'a' : 'div';
+  $modalId = 'initiative-detail-'.\Illuminate\Support\Str::random(12);
 @endphp
 
-<{{ $tag }}
-  @if($initiative->url)
-  href="{{ $initiative->url }}" target="_blank" rel="noopener noreferrer"
-  aria-label="{{ $initiative->title }}: {{ $initiative->subtitle }} (se abre en una pestaña nueva)"
-  @endif
-  {{ $attributes->class(['initiative-card', 'initiative-card--link' => $initiative->url, 'initiative-card--has-image' => $backgroundUrl])->style(["--initiative-color: {$color}"]) }}
->
+<article {{ $attributes->class(['initiative-card', 'initiative-card--interactive', 'initiative-card--has-image' => $backgroundUrl])->style(["--initiative-color: {$color}"]) }}>
   @if($backgroundUrl)
   <div class="initiative-card__image" style="background-image: url('{{ $backgroundUrl }}')" aria-hidden="true"></div>
   @endif
   <div class="initiative-card__overlay" aria-hidden="true"></div>
-  @if($initiative->url)
-  <i class="fas fa-arrow-up-right-from-square initiative-card__corner" aria-hidden="true"></i>
-  @endif
+  <i class="fas fa-expand initiative-card__corner" aria-hidden="true"></i>
   <div class="initiative-card__body">
     @if($logoUrl)
     <div class="initiative-card__logo">
@@ -31,8 +23,13 @@
       <h3 class="initiative-card__title" title="{{ $initiative->title }}">{{ $initiative->title }}</h3>
       <p class="initiative-card__subtitle">{{ $initiative->subtitle }}</p>
     </div>
-    @if($initiative->url)
-    <span class="initiative-card__cta">Conocé más <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
-    @endif
+    <span class="initiative-card__cta" aria-hidden="true">Ver detalle <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
   </div>
-</{{ $tag }}>
+  <button type="button" class="initiative-card__trigger" data-toggle="modal" data-target="#{{ $modalId }}" aria-controls="{{ $modalId }}" aria-haspopup="dialog" aria-label="Ver detalle de {{ $initiative->title }}">
+    <span class="sr-only">Ver detalle de {{ $initiative->title }}</span>
+  </button>
+</article>
+
+@push('initiative-modals')
+  <x-initiative-modal :initiative="$initiative" :color="$color" :modal-id="$modalId" />
+@endpush

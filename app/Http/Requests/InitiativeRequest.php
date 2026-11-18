@@ -18,6 +18,7 @@ class InitiativeRequest extends FormRequest
             'remove_background' => $this->boolean('remove_background'),
             'remove_logo' => $this->boolean('remove_logo'),
             'order' => $this->input('order', 0) ?? 0,
+            'links' => $this->input('links') ?? [],
         ]);
     }
 
@@ -29,7 +30,10 @@ class InitiativeRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['required', 'string', 'max:600'],
-            'url' => ['nullable', 'url:http,https', 'max:500'],
+            'links' => ['array'],
+            'links.*' => ['array:label,url'],
+            'links.*.label' => ['required', 'string', 'max:255'],
+            'links.*.url' => ['required', 'url:http,https', 'max:500'],
             'categories' => ['required', 'array', 'min:1'],
             'categories.*' => ['integer', 'distinct', 'exists:categories,id'],
             'featured_on_home' => ['boolean'],
@@ -49,7 +53,9 @@ class InitiativeRequest extends FormRequest
         return [
             'title' => 'título',
             'subtitle' => 'subtítulo',
-            'url' => 'enlace',
+            'links' => 'enlaces',
+            'links.*.label' => 'etiqueta del enlace :position',
+            'links.*.url' => 'URL del enlace :position',
             'categories' => 'ejes',
             'order' => 'orden',
             'background' => 'imagen de fondo',

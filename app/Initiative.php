@@ -19,12 +19,16 @@ class Initiative extends Model
 
     public const string DISK = 'initiatives';
 
-    public const string HOME_CACHE_KEY = 'home.initiatives';
+    public const string HOME_CACHE_KEY = 'home.initiatives.v2';
+
+    protected $attributes = [
+        'links' => '[]',
+    ];
 
     protected $fillable = [
         'title',
         'subtitle',
-        'url',
+        'links',
         'featured_on_home',
         'order',
     ];
@@ -35,6 +39,7 @@ class Initiative extends Model
     protected function casts(): array
     {
         return [
+            'links' => 'array',
             'featured_on_home' => 'boolean',
             'order' => 'integer',
         ];

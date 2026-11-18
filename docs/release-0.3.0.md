@@ -4,7 +4,7 @@ Pasos para actualizar un entorno existente (staging o producción) a la versión
 
 ## Qué incluye
 
-- **Iniciativas:** nuevo módulo en **Administración → Portal → Iniciativas**. Las iniciativas se muestran en el carrusel **Iniciativas destacadas** del inicio y en la sección de cada eje en **El Plan**. Ver [manual de usuario, capítulo 10](./manual-usuario/10-iniciativas.md).
+- **Iniciativas:** nuevo módulo en **Administración → Portal → Iniciativas**. Las iniciativas se muestran en el carrusel **Iniciativas destacadas** del inicio y en la sección de cada eje en **El Plan**. Todas abren un detalle con el texto completo y admiten múltiples enlaces externos etiquetados. Ver [manual de usuario, capítulo 10](./manual-usuario/10-iniciativas.md).
 - **Descripción de los ejes:** campo nuevo en el alta y la edición de ejes, visible en **El Plan**.
 - **Rediseño de El Plan:** una sección por eje con estadísticas, objetivos y metas, últimos reportes e iniciativas vinculadas.
 - **Consulta anual de períodos:** filtro visual por año en la tabla de cada meta periódica, en el portal y en administración. No modifica las tarjetas, alertas ni los cálculos generales. Los períodos que cruzan el año aparecen en ambos años, sin dividir sus resultados.
@@ -16,10 +16,10 @@ Pasos para actualizar un entorno existente (staging o producción) a la versión
 Después de desplegar el código:
 
 ```bash
-# 1. Crear las tablas nuevas (initiatives, category_initiative) y la columna categories.description
+# 1. Aplicar migraciones, incluida la conversión de URLs a listas de enlaces
 php artisan migrate --force
 
-# 2. Poblar las iniciativas del Plan y las descripciones de los ejes
+# 2. Solo para la carga inicial: poblar iniciativas y descripciones de los ejes
 php artisan db:seed --class=InitiativesSeeder --force
 
 # 3. Asegurar el enlace público de storage (para imágenes de fondo y logos)
@@ -36,6 +36,14 @@ El orden importa: el seeder necesita que las migraciones ya estén aplicadas y q
 
 `storage:link` solo es necesario si el enlace `public/storage` todavía no existe en el servidor.
 
+### Entornos que ya tienen iniciativas
+
+Hacé un respaldo de la base antes de migrar. La nueva migración agrega `initiatives.links` y convierte cada URL existente en un enlace con etiqueta **Conocé más**. Las iniciativas sin URL quedan con una lista vacía. **No hace falta volver a ejecutar el seeder** para conservar los enlaces actuales.
+
+La columna `url` se conserva como dato legado, pero la aplicación usa únicamente `links`. Un rollback que elimine `links` pierde los enlaces agregados o editados después de la migración: la columna legada no contiene esas ediciones.
+
+Después de desplegar y migrar, entregá los assets compilados (o corré `npm run build`) y limpiá las cachés. La clave de caché de iniciativas del inicio está versionada para no reutilizar entradas anteriores sin la lista de enlaces.
+
 ### Actualizar la bajada del inicio en cada entorno
 
 En **Administración → Personalizar Home**, editar **Home - Subtitulo** y guardar:
@@ -49,7 +57,8 @@ Recargar el inicio para verificar el texto. El formulario invalida el caché del
 `InitiativesSeeder` carga 61 iniciativas (8 de ellas destacadas en el inicio) y las descripciones de los 7 ejes.
 
 - Es **idempotente**: se puede volver a correr sin duplicar datos. Busca cada iniciativa por su **título**.
-- **Sobrescribe** el subtítulo, enlace, orden, destacado y ejes vinculados de las iniciativas que encuentra por título, y la **descripción** de los ejes. Si después de la primera carga se editan esos datos desde la administración, volver a correrlo los pisa.
+- **Sobrescribe** el subtítulo, orden, destacado y ejes vinculados de las iniciativas que encuentra por título, y la **descripción** de los ejes. Si después de la primera carga se editan esos datos desde la administración, volver a correrlo los pisa.
+- **Conserva los enlaces** de iniciativas existentes, incluso si se quitaron todos. Solo al crear una iniciativa nueva carga el enlace de ejemplo, con la etiqueta **Conocé más**.
 - No borra iniciativas creadas desde la administración ni toca imágenes ni logos.
 
 En una instalación nueva, `php artisan db:seed` ya lo incluye (corre después de `BaseDataAppSeeder`).

@@ -56,7 +56,10 @@ class InitiativeController extends Controller
     public function store(InitiativeRequest $request): RedirectResponse
     {
         $initiative = DB::transaction(function () use ($request): Initiative {
-            $initiative = Initiative::create($request->safe()->only(['title', 'subtitle', 'url', 'featured_on_home', 'order']));
+            $initiative = Initiative::create([
+                ...$request->safe()->only(['title', 'subtitle', 'featured_on_home', 'order']),
+                'links' => array_values($request->validated('links')),
+            ]);
             $initiative->categories()->sync($request->validated('categories'));
 
             return $initiative;
@@ -79,7 +82,10 @@ class InitiativeController extends Controller
     public function update(InitiativeRequest $request, Initiative $initiative): RedirectResponse
     {
         DB::transaction(function () use ($request, $initiative): void {
-            $initiative->update($request->safe()->only(['title', 'subtitle', 'url', 'featured_on_home', 'order']));
+            $initiative->update([
+                ...$request->safe()->only(['title', 'subtitle', 'featured_on_home', 'order']),
+                'links' => array_values($request->validated('links')),
+            ]);
             $initiative->categories()->sync($request->validated('categories'));
         });
 

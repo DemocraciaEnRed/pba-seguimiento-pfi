@@ -9,6 +9,7 @@ use App\Objective;
 use App\StrategicObjective;
 use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -57,22 +58,61 @@ class PortalInitiativesTest extends TestCase
             ->assertDontSee('data-initiatives-carousel', false);
     }
 
-    public function test_initiative_cards_link_externally_only_when_they_have_an_url(): void
+    public function test_all_cards_open_detail_and_external_links_are_inside_the_modal(): void
     {
-        Initiative::factory()->featured()->withUrl('https://ministerioabierto.minfra.gba.gob.ar/')->create([
+        $linked = Initiative::factory()->featured()->create([
             'title' => 'Ministerio Abierto',
-            'subtitle' => 'Portal participativo',
+            'subtitle' => str_repeat('Texto completo de la iniciativa. ', 18),
             'order' => 1,
+            'links' => [
+                ['label' => 'Sitio web', 'url' => 'https://ministerioabierto.minfra.gba.gob.ar/'],
+                ['label' => 'Documentación', 'url' => 'https://example.com/docs'],
+            ],
         ]);
         Initiative::factory()->featured()->create(['title' => 'Código de Ética', 'order' => 2]);
 
         $html = $this->get(route('home'))->assertOk()->getContent();
+        $xpath = $this->xpath($html);
+        $triggers = $xpath->query('//article//button[@data-toggle="modal"]');
+        $this->assertSame(2, $triggers->length);
+        $this->assertSame(0, $xpath->query('//article[contains(@class, "initiative-card")]//a')->length);
+        $this->assertSame(0, $xpath->query('//*[@id="app"]//div[contains(@class, "initiative-modal")]')->length);
 
+        foreach ($triggers as $trigger) {
+            $id = $trigger->getAttribute('aria-controls');
+            $this->assertSame('#'.$id, $trigger->getAttribute('data-target'));
+            $modal = $xpath->query('//*[@id="'.$id.'"]')->item(0);
+            $this->assertNotNull($modal);
+            if (str_contains($trigger->getAttribute('aria-label'), $linked->title)) {
+                $this->assertStringContainsString($linked->subtitle, $modal->textContent);
+                $this->assertSame(2, $xpath->query('.//a[@target="_blank" and @rel="noopener noreferrer"]', $modal)->length);
+                $this->assertStringContainsString('Documentación', $modal->textContent);
+            } else {
+                $this->assertSame(0, $xpath->query('.//a', $modal)->length);
+            }
+        }
         $this->assertStringContainsString('href="https://ministerioabierto.minfra.gba.gob.ar/" target="_blank" rel="noopener noreferrer"', $html);
-        $this->assertStringContainsString('aria-label="Ministerio Abierto: Portal participativo (se abre en una pestaña nueva)"', $html);
-        $this->assertSame(1, substr_count($html, 'initiative-card--link'));
-        $this->assertMatchesRegularExpression('/<div\s+style="[^"]*"\s+class="initiative-card"/', $html);
         $this->assertStringContainsString('--initiative-color: #009aae', $html);
+    }
+
+    public function test_home_cached_attributes_keep_links_and_escape_detail_content(): void
+    {
+        $initiative = Initiative::factory()->featured()->create([
+            'title' => 'Título <script>alert(1)</script>',
+            'subtitle' => 'Texto <b>sin HTML</b>',
+            'links' => [['label' => '<b>Etiqueta</b>', 'url' => 'https://example.com/?a=1&b=2']],
+        ]);
+        Cache::put('home.initiatives', []);
+
+        foreach (range(1, 2) as $request) {
+            $this->get(route('home'))->assertOk()
+                ->assertSee(e($initiative->title), false)
+                ->assertSee(e($initiative->subtitle), false)
+                ->assertSee(e($initiative->links[0]['label']), false)
+                ->assertSee(e($initiative->links[0]['url']), false)
+                ->assertDontSee('<script>alert(1)</script>', false);
+        }
+        $this->assertIsArray(Cache::get(Initiative::HOME_CACHE_KEY));
     }
 
     public function test_initiative_card_renders_background_and_logo(): void
@@ -152,6 +192,36 @@ class PortalInitiativesTest extends TestCase
         $this->seedAxisWithContent(3);
 
         $this->assertSame($baseline, $this->countCatalogQueries());
+    }
+
+    public function test_shared_initiative_has_unique_modals_with_each_axis_color(): void
+    {
+        $integrity = $this->createCategory('Integridad', 'observatorio-integridad', '#003563', 1);
+        $innovation = $this->createCategory('Innovación', 'observatorio-innovacion', '#58c0dc', 2);
+        $initiative = Initiative::factory()->withLink()->create(['subtitle' => str_repeat('Detalle ', 75)]);
+        $initiative->categories()->attach([$integrity->id, $innovation->id]);
+
+        $xpath = $this->xpath($this->get(route('catalog'))->assertOk()->getContent());
+        $ids = [];
+        foreach ([$integrity, $innovation] as $category) {
+            $trigger = $xpath->query('//*[@id="eje-'.$category->id.'"]//button[@data-toggle="modal"]')->item(0);
+            $this->assertNotNull($trigger);
+            $id = $trigger->getAttribute('aria-controls');
+            $ids[] = $id;
+            $modal = $xpath->query('//*[@id="'.$id.'"]')->item(0);
+            $this->assertSame('--initiative-color: '.$category->color, $modal->getAttribute('style'));
+            $this->assertStringContainsString($initiative->subtitle, $modal->textContent);
+            $this->assertSame(1, $xpath->query('.//a[@target="_blank"]', $modal)->length);
+        }
+        $this->assertCount(2, array_unique($ids));
+    }
+
+    private function xpath(string $html): \DOMXPath
+    {
+        $document = new \DOMDocument();
+        $document->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOERROR | LIBXML_NOWARNING);
+
+        return new \DOMXPath($document);
     }
 
     private function countCatalogQueries(): int
