@@ -307,24 +307,22 @@ class PfiMembershipTest extends TestCase
         $this->actingAs($this->other)->getJson($url(['name' => 'Pérez']))->assertForbidden();
     }
 
-    public function test_legacy_objective_coordinators_cannot_search_candidates_or_manage_structure(): void
+    public function test_pfi_members_without_admin_role_cannot_search_candidates_or_manage_structure(): void
     {
         $objective = $this->createObjective();
-        $objective->members()->attach($this->person, ['role' => 'manager']);
         $this->admit($this->other, [$this->academy]);
         $url = route('apiService.pfi.candidates', ['name' => 'Gómez', 'with' => 'user_email']);
 
-        $this->assertFalse($this->person->can('update', $objective));
         $this->actingAs($this->person)->getJson($url)->assertForbidden();
 
         $this->admit($this->person, [$this->territory]);
+        $this->assertFalse($this->person->fresh()->can('update', $objective));
         $this->actingAs($this->person)->getJson($url)->assertForbidden();
     }
 
     public function test_legacy_team_assignment_is_retired(): void
     {
         $objective = $this->createObjective();
-        $objective->members()->attach($this->person, ['role' => 'manager']);
         Notification::fake();
 
         $legacyUrl = route('objectives.manage.team', $objective->id).'/agregar';
@@ -337,12 +335,8 @@ class PfiMembershipTest extends TestCase
             ])
             ->assertNotFound();
 
-        $this->assertDatabaseMissing('objective_user', [
-            'objective_id' => $objective->id,
-            'user_id' => $this->other->id,
-            'role' => 'reporter',
-        ]);
         $this->assertFalse($this->other->fresh()->isPfiMember());
+        Notification::assertNothingSent();
     }
 
     public function test_initial_categories_migration_is_idempotent_and_keeps_categories_in_use(): void

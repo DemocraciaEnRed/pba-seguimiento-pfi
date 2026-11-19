@@ -32,7 +32,6 @@ use App\Exports\ObjectivesExport;
 use App\Exports\CommentsExport;
 use App\Exports\UsersExport;
 use App\Exports\ReportsExport;
-use App\Notifications\RemoveObjectiveTeam;
 use App\Services\Admin\UserDirectory;
 use App\Services\Pfi\PfiMemberships;
 use App\PfiCategory;

@@ -63,8 +63,7 @@ class GoalAssignmentsTest extends TestCase
             ->assertSee('Estas asignaciones delimitan los permisos sobre cada meta.');
         $this->get(route('admin.goal-assignments.objective', ['objectiveId' => $objective->id]))
             ->assertOk()
-            ->assertSee('Estas asignaciones delimitan los permisos sobre cada meta.')
-            ->assertSee('Equipo anterior por objetivo');
+            ->assertSee('Estas asignaciones delimitan los permisos sobre cada meta.');
         $this->post(route('admin.goal-assignments.responsibles.store', [
             'goalId' => $goal->id,
             'userId' => $this->responsible->id,
@@ -167,8 +166,6 @@ class GoalAssignmentsTest extends TestCase
         $objective = $this->createObjective();
         $firstGoal = $this->createGoal($objective);
         $secondGoal = $this->createGoal($objective, 'Meta 2');
-        $legacyMember = $this->createUser('Luz', 'Legado', 'legado@example.com');
-        $objective->members()->attach($legacyMember, ['role' => 'manager']);
         $this->admit($this->reporter);
         $this->actingAs($this->admin);
 
@@ -188,14 +185,10 @@ class GoalAssignmentsTest extends TestCase
         Notification::assertSentToTimes($this->reporter, GoalAssignmentNotification::class, 2);
         $futureGoal = $this->createGoal($objective, 'Meta futura');
         $this->assertSame(0, $futureGoal->reporters()->count());
-        $this->assertDatabaseHas('objective_user', [
-            'objective_id' => $objective->id,
-            'user_id' => $legacyMember->id,
-            'role' => 'manager',
-        ]);
         $this->actingAs($this->admin)->get(route('admin.goal-assignments.objective', ['objectiveId' => $objective->id]))
-            ->assertSee('Legado, Luz')
-            ->assertSee('Coordinaba');
+            ->assertOk()
+            ->assertSee('Rosa')
+            ->assertDontSee('Equipo anterior');
 
         $this->assertSame(1, ActionLog::where('message', 'like', '%ha asignado a [Reportera, Rosa] como Reportero en 2 metas existentes%')->count());
     }

@@ -30,11 +30,11 @@
   <h5 class="font-weight-bold"><i class="far fa-eye"></i> Ocultar objetivo</h5>
   <p>Al ocultar el objetivo, ocurre lo siguiente</p>
   <ul>
-    <li>El objetivo deja de ser visible publicamente</li>
-    <li>Administradores y miembros del equipo pueden acceder al panel de control del objetivo</li>
+    <li>El objetivo, sus metas y sus reportes dejan de ser visibles públicamente</li>
+    <li>Administración y las personas con metas asignadas en el objetivo siguen accediendo al panel de gestión</li>
     <li>Solo Administración puede ocultar o volver a hacer visible el objetivo</li>
-    <li>Miembros del equipo pueden crear reportes, pero los suscriptores no serán notificados</li>
-    <li>Coordinadores pueden seguir creando metas.</li>
+    <li>Responsables y Reporteros pueden seguir cargando reportes en sus metas, pero los suscriptores no serán notificados</li>
+    <li>Administración puede seguir creando metas.</li>
   </ul>
   @can('changeVisibility', $objective)
   <form action="{{ route('objectives.manage.configuration.hide.form',['objectiveId' => $objective->id]) }}" method="POST">

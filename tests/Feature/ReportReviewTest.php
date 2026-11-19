@@ -63,9 +63,6 @@ class ReportReviewTest extends TestCase
         $this->objective->author()->associate($this->admin);
         $this->objective->strategicObjective()->associate($strategic);
         $this->objective->save();
-        $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
-        $this->objective->members()->attach($this->other, ['role' => 'reporter']);
-        $this->objective->members()->attach($this->manager, ['role' => 'manager']);
         $this->goal = new Goal();
         $this->goal->title = 'Meta';
         $this->goal->status = 'ongoing';

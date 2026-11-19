@@ -42,7 +42,6 @@ class ReportReviewConcurrencyTest extends TestCase
         $category = DB::table('categories')->insertGetId(['title' => 'Eje', 'icon' => 'fas fa-circle', 'color' => '#123456', 'order' => 1]);
         $strategic = DB::table('strategic_objectives')->insertGetId(['codigo' => 'OE1', 'title' => 'Estratégico', 'category_id' => $category]);
         DB::table('objectives')->insert(['id' => 1, 'title' => 'Objetivo', 'content' => 'Contenido', 'author_id' => 1, 'strategic_objective_id' => $strategic]);
-        DB::table('objective_user')->insert(['objective_id' => 1, 'user_id' => 2, 'role' => 'reporter']);
         DB::table('goals')->insert(['id' => 1, 'objective_id' => 1, 'title' => 'Meta', 'status' => 'ongoing', 'measurement_mode' => 'simple', 'indicator_goal' => 100, 'indicator_progress' => 40]);
         DB::table('goal_user')->insert(['goal_id' => 1, 'user_id' => 2, 'role' => 'reporter']);
         Notification::fake();

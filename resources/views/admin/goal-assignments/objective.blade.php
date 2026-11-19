@@ -57,19 +57,6 @@
   </div>
   {{ $candidates->links() }}
   @endif
-
-  <h5 class="is-700 mt-4">Equipo anterior por objetivo</h5>
-  <p class="text-smaller text-muted">Referencia histórica de solo lectura de <code>objective_user</code>. No otorga permisos ni se migra automáticamente a las asignaciones por meta.</p>
-  <div class="list-group shadow-sm">
-    @forelse($legacyMembers as $member)
-    <div class="list-group-item d-flex justify-content-between align-items-center">
-      <span>{{ $member->fullname }}</span>
-      <span class="badge badge-secondary">{{ $member->pivot->role === 'manager' ? 'Coordinaba' : 'Reportaba' }}</span>
-    </div>
-    @empty
-    <div class="list-group-item text-center text-muted">No hay integrantes en el equipo anterior.</div>
-    @endforelse
-  </div>
 </section>
 
 @endsection

@@ -166,9 +166,6 @@ class GoalConfidentialityTest extends TestCase
         $this->get($file->path)->assertNotFound();
         $this->getJson(route('apiService.goals.reports', ['goalId' => $goal->id]))->assertNotFound();
         $this->getJson(route('apiService.reports', ['goal' => $goal->id]))->assertJsonPath('meta.total', 0);
-        $legacyMember = UserFactory::new()->create(['surname' => 'Equipo']);
-        $this->objective->members()->attach($legacyMember, ['role' => 'reporter']);
-        $this->actingAs($legacyMember)->get(route('goals.index', ['goalId' => $goal->id]))->assertNotFound();
 
         $this->actingAs($this->assigned)
             ->get(route('goals.index', ['goalId' => $goal->id]))
@@ -223,25 +220,24 @@ class GoalConfidentialityTest extends TestCase
         $goal = $this->goals[20];
         $secondAssigned = UserFactory::new()->create(['surname' => 'Asignado dos']);
         $goal->reporters()->attach($secondAssigned->id, ['assigned_by' => $this->admin->id]);
-        $legacyMember = UserFactory::new()->create(['surname' => 'Equipo anterior']);
-        $this->objective->members()->attach($legacyMember, ['role' => 'reporter']);
+        $formerMember = UserFactory::new()->create(['surname' => 'Ya no asignado']);
         $report = $this->createApprovedReport($goal, 'Reporte con comentarios');
 
         $this->actingAs($secondAssigned)
             ->postJson(route('apiService.reports.comments.create', ['reportId' => $report->id]), ['content' => 'Comentario asignado'])
             ->assertOk();
-        Notification::assertNotSentTo($legacyMember, NewCommentReportForTeamObjective::class);
+        Notification::assertNotSentTo($formerMember, NewCommentReportForTeamObjective::class);
 
         $oldComment = new Comment();
         $oldComment->content = 'Comentario de una persona ya no asignada';
-        $oldComment->user()->associate($legacyMember);
+        $oldComment->user()->associate($formerMember);
         $report->comments()->save($oldComment);
 
         $this->postJson(route('apiService.reports.comments.reply', [
             'reportId' => $report->id,
             'commentId' => $oldComment->id,
         ]), ['content' => 'Respuesta privada'])->assertOk();
-        Notification::assertNotSentTo($legacyMember, NewReplyReport::class);
+        Notification::assertNotSentTo($formerMember, NewReplyReport::class);
     }
 
     private function createApprovedReport(Goal $goal, string $title): Report

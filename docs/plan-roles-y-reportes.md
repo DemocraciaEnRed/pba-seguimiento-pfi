@@ -60,6 +60,7 @@ Cada punto lleva una etiqueta:
 - **Fase 6, pasos 31 a 35 implementados:** Administración asigna en el alta y la edición de cada meta una organización responsable y varias participantes; desactiva organizaciones en lugar de eliminarlas. La ficha pública de la meta, sus reportes publicados y la página del objetivo muestran las organizaciones; el objetivo las reúne desde sus metas dentro de la audiencia. Al publicar, cada reporte guarda una copia. La migración no se aplicó a la base de la aplicación. Manual v0.4.7.
 - **Fase 7, pasos 36 a 38 implementados:** los avisos de asignaciones y de revisión se dirigen a las personas afectadas por meta; al enviar o reenviar un reporte sin Responsable, avisan a todos los administradores. No se avisa por la mera ausencia de Responsable; las alertas de cobertura quedan para fase 8. La validación avisa a Administración y al autor. La publicación notifica a autor y Responsables con enlace público; el cierre interno conserva el aviso privado al autor. Los avisos operativos excluyen a quien actuó, sin cambiar los avisos a suscriptores; no hay recordatorios y los avisos previos de revisión permanecen como historial. Manual v0.4.8.
 - **Fase 8, pasos 39 a 41 implementados:** `/panel/mesa` reúne Mis metas, Requiere mi acción y Esperando a otra persona para integrantes PFI y Administración. Las tareas se derivan del estado de los reportes, no de las notificaciones, y la Mesa no concede permisos. Administración suma sus pendientes, alertas de continuidad y el acceso a la vista pública. Mi panel y el Inicio de Administración muestran contadores. No requiere migraciones. Manual v0.4.9.
+- **Fase 9, pasos 42 y 43 implementados, con aprobación del usuario:** una migración exporta `objective_user` y `objective_organization` a un JSON en el disco privado `archive` (`storage/app/private/archive`) y luego elimina ambas tablas. Si están vacías, no escribe nada. Al revertirla, se recrean vacías; los datos quedan en el archivo. Se retiraron `Objective::members()`, `User::objectives()`, el listado «Equipo anterior por objetivo» y las notificaciones `JoinObjectiveTeam` y `RemoveObjectiveTeam`, que ya no se enviaban; se conservan las vistas que muestran avisos viejos. Los seeders demo antiguos dejan de cargar el equipo por objetivo, sin reemplazo. Como la plataforma no está en producción, se despliega junto con las fases anteriores. La migración no se aplicó a la base de la aplicación. Manual v0.4.10, con revisión integral; la v0.5 queda reservada para las capturas reales.
 - **Cambio de diseño en la fase 6:** la responsable se guarda en `goals.responsible_organization_id` y `goal_organization` registra solo las participantes. MySQL no admite claves foráneas con `CASCADE` sobre las columnas base de una columna generada, de modo que una tabla con `kind` no podía garantizar una única responsable por meta. Así, el esquema garantiza una sola responsable y la aplicación impide que también figure como participante.
 - El análisis siguiente conserva la línea de base anterior al primer incremento; no describe como pendientes los cambios ya registrados arriba.
 
@@ -146,13 +147,13 @@ Cada punto lleva una etiqueta:
 8. **Manual desactualizado.** Los capítulos 02, 05 y 06 describen el modelo por objetivo.
 
 **Migración de datos**
-- **`objective_user`:** no se convierte. Queda intacto y de solo lectura hasta la fase 9.
+- **`objective_user`:** no se convierte. Queda intacto y de solo lectura hasta la fase 9. **Hecho:** archivado y eliminado en la fase 9.
 - **Suscripciones** que generó `formAddTeam`: se conservan.
 - **Universo PFI:** nadie queda marcado automáticamente.
 - **`goals.visibility`:** todas las metas existentes se completan como `public`.
 - **Reportes `approved`**, incluidos los de `LegacyReportApproval`: quedan como publicados, sin inventar una validación del Responsable (`validated_by` queda `null`).
 - **Reportes `pending` y `returned`:** conservan su estado.
-- **`objective_organization`:** su destino depende de D6.
+- **`objective_organization`:** su destino depende de D6. **Hecho:** dejó de leerse en la fase 6 y se archivó y eliminó en la fase 9.
 - **`users.organization`:** se mantiene como texto libre, sin cambios.
 
 ### 2. Regla transversal: confidencialidad
@@ -373,7 +374,28 @@ Pasaron **8 pruebas y 111 aserciones**. Una medición temporal confirmó que la 
 
 **Fase 9: cierre**
 42. Realizar la revisión integral final del manual de usuario, sus capturas y recorridos. Los capítulos afectados, el índice y `historial.md` se actualizan durante cada fase, antes de pasar a la siguiente; no se acumulan para este cierre.
+
+    **Hecho (manual v0.4.10).**
+    - Se retiró la referencia al equipo por objetivo.
+    - Los recorridos se alinearon con los menús laterales (`admin/menu`, el panel del objetivo, la meta, el reporte y Mi panel).
+    - Se corrigieron los rótulos de botones y filtros, y se quitaron afirmaciones desactualizadas (avisos de asignación «no implementados», eliminación de reportes).
+    - Se resolvió la colisión de capturas CAP-INI y se agregaron los recuadros faltantes.
+    - Se verificó que enlaces, anclas e identificadores de captura sean únicos y coincidan con el inventario.
+    - Las capturas reales quedan para la v0.5, con la base demo.
 43. Eliminar `objective_user` y el código que queda sin uso, con aprobación previa y con una migración que primero lo archive.
+
+    **Hecho.** Se aprobó retirar `objective_user` y `objective_organization`. La migración `archive_and_drop_legacy_objective_tables` exporta sus filas a `storage/app/private/archive/legacy-objective-tables-{fecha}.json` en el disco privado `archive` y luego elimina ambas tablas. Con las tablas vacías no escribe archivo; al revertirla, las recrea vacías. Se retiraron `Objective::members()`, `User::objectives()`, el listado «Equipo anterior por objetivo» y las notificaciones `JoinObjectiveTeam` y `RemoveObjectiveTeam`; se conservan las vistas de avisos ya recibidos. Los tests que armaban el equipo por objetivo se adaptaron a asignaciones por meta o dejaron de usarlo.
+
+**Verificación de fase 9:**
+- `LegacyObjectiveTablesMigrationTest` cubre:
+  - archivar con contenido y eliminar;
+  - la instalación vacía, que no escribe archivo;
+  - la reversión idempotente.
+- La regresión de las 23 clases afectadas pasó **221 pruebas y 2594 aserciones**. Las clases son: autorización, asignaciones, confidencialidad, organizaciones, revisión, concurrencia, paneles, exportaciones, búsqueda, sitemap, seeders, Mesa de trabajo y usuarios.
+- También pasaron PHP lint y `git diff --check`.
+- Con el disco real, la migración se aplicó sobre la base demo aislada. Se insertó una fila temporal y se verificó el JSON (permisos 0600, ignorado por Git) y la eliminación de ambas tablas; luego se borró el archivo de prueba.
+- No se aplicó a la base de la aplicación.
+- Con autorización del usuario, la suite completa pasó: **496 pruebas y 7186 aserciones**.
 
 ### 4. Verificación
 - Primer incremento: `AuthorizationPoliciesTest` cubre el gate, la matriz de permisos vigente, el cambio de visibilidad, la precarga sin consultas repetidas, su limpieza ante errores y la revocación antes de modificar reportes. Pasaron 6 pruebas y 178 aserciones.

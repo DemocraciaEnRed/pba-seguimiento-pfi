@@ -70,8 +70,6 @@ class PeriodicGoalReportsTest extends TestCase
 
         $this->manager = $this->createUser('manager@example.com');
         $this->reporter = $this->createUser('reporter@example.com');
-        $this->objective->members()->attach($this->manager, ['role' => 'manager']);
-        $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
     }
 
     public function test_an_admin_creates_a_periodic_goal_and_its_periods_are_generated(): void

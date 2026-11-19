@@ -79,7 +79,7 @@ class ReportsSearchTest extends TestCase
     {
         $hidden = $this->createReport($this->hiddenGoal);
         $this->createReport($this->firstGoal);
-        $this->hiddenGoal->objective->members()->attach($this->author, ['role' => 'reporter']);
+        $this->hiddenGoal->reporters()->attach($this->author);
 
         $this->assertSame([], $this->fetchIds(['objective' => $this->hiddenGoal->objective_id]));
 
@@ -101,7 +101,7 @@ class ReportsSearchTest extends TestCase
     public function test_goal_filter_respects_objective_visibility(): void
     {
         $hidden = $this->createReport($this->hiddenGoal);
-        $this->hiddenGoal->objective->members()->attach($this->author, ['role' => 'reporter']);
+        $this->hiddenGoal->reporters()->attach($this->author);
 
         $this->assertSame([], $this->fetchIds(['goal' => $this->hiddenGoal->id]));
 

@@ -64,7 +64,6 @@ class DemoSeederTest extends TestCase
             $this->assertSame($author->id, $objective->author_id);
             $this->assertSame($strategicObjective->id, $objective->strategic_objective_id);
             $this->assertSame(3, $objective->goals()->count());
-            $this->assertSame(6, $objective->members()->count());
             foreach ($objective->goals as $goal) {
                 $this->assertNotNull($goal->responsible_organization_id);
                 $this->assertSame(2, $goal->participantOrganizations()->count());

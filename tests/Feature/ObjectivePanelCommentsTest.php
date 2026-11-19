@@ -49,8 +49,6 @@ class ObjectivePanelCommentsTest extends TestCase
         $this->citizen = $this->createUser('vecina@example.com', 'Carla', 'Vecina');
 
         $this->objective = $this->createObjective('Reducir emisiones');
-        $this->objective->members()->attach($this->manager, ['role' => 'manager']);
-        $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
         $this->goal = $this->createGoal($this->objective, 'Plantar árboles');
         $this->otherGoal = $this->createGoal($this->objective, 'Sumar ciclovías');
         foreach ([$this->goal, $this->otherGoal] as $goal) {

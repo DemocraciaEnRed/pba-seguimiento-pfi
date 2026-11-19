@@ -24,3 +24,6 @@ Being a PFI member (pfi_memberships) or having a PFI category only makes a perso
 
 ## Per-goal cutover supersedes preparatory rules
 This rule supersedes the earlier 'Phase two assignments before authorization cutover' restriction and the legacy-team-search exception: permissions use goal_user, and objective_user is admin-only historical reference. Assignment candidates must be PFI members. For membership/assignment removal and report writes, lock all participating users (actor, departing member and destinations) by ID before locking goals by ID, then reports; recheck permissions and exact pending destinations inside that transaction. Transfer attendant_id, never author_id. A departing Responsible needs continuity only when losing their last ability to attend; do not require a replacement Responsible.
+
+## Per-objective team and organizations are retired
+Phase 9 archived objective_user and objective_organization to the private `archive` disk (storage/app/private/archive) and dropped both tables; Objective::members() and User::objectives() no longer exist. This supersedes every earlier mention of objective_user as a historical reference. Teams exist only as per-goal assignments in goal_user, and organizations only per goal (goals.responsible_organization_id + goal_organization). Never reintroduce per-objective teams or organizations.

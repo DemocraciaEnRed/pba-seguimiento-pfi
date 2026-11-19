@@ -54,8 +54,6 @@ class AdminUsersTest extends TestCase
 
         $this->objective = $this->createObjective('Reducir emisiones');
         $this->otherObjective = $this->createObjective('Sumar ciclovías');
-        $this->objective->members()->attach($this->member, ['role' => 'manager']);
-        $this->otherObjective->members()->attach($this->member, ['role' => 'reporter']);
         $this->objective->subscribers()->attach($this->member);
 
         $goal = new Goal();
@@ -313,9 +311,7 @@ class AdminUsersTest extends TestCase
         $this->actingAs($this->admin)
             ->put("/admin/usuarios/{$this->member->id}/objetivos/{$this->otherObjective->id}", ['role' => 'manager'])
             ->assertNotFound();
-        $this->assertDatabaseHas('objective_user', [
-            'objective_id' => $this->otherObjective->id, 'user_id' => $this->member->id, 'role' => 'reporter',
-        ]);
+        $this->assertTrue($this->member->hasAssignedGoalInObjective($this->otherObjective->id));
     }
 
     public function test_legacy_objective_team_removal_is_retired(): void
@@ -325,7 +321,6 @@ class AdminUsersTest extends TestCase
         $this->actingAs($this->admin)
             ->delete("/admin/usuarios/{$this->member->id}/objetivos/{$this->objective->id}")
             ->assertNotFound();
-        $this->assertDatabaseHas('objective_user', ['objective_id' => $this->objective->id, 'user_id' => $this->member->id]);
         $this->assertTrue($this->member->hasAssignedGoalInObjective($this->objective->id));
         Notification::assertNothingSent();
     }

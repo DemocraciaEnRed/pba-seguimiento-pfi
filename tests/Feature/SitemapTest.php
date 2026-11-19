@@ -145,7 +145,7 @@ class SitemapTest extends TestCase
     {
         $this->enableIndexing();
         $anonymous = $this->get(route('sitemap'))->assertOk()->getContent();
-        $this->hiddenObjective->members()->attach($this->user, ['role' => 'reporter']);
+        $this->hiddenGoal->reporters()->attach($this->user);
         $this->actingAs($this->user)->get(route('sitemap'))->assertOk()->assertContent($anonymous);
         $this->makeAdmin();
         $this->get(route('sitemap'))->assertOk()->assertContent($anonymous);

@@ -71,9 +71,6 @@ class AuthorizationPoliciesTest extends TestCase
         $this->objective->author()->associate($this->admin);
         $this->objective->strategicObjective()->associate($strategic);
         $this->objective->save();
-        $this->objective->members()->attach($this->manager, ['role' => 'manager']);
-        $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
-        $this->objective->members()->attach($this->otherReporter, ['role' => 'reporter']);
 
         $this->goal = new Goal();
         $this->goal->title = 'Meta';
@@ -161,9 +158,8 @@ class AuthorizationPoliciesTest extends TestCase
         }
     }
 
-    public function test_legacy_roles_and_public_visibility_do_not_grant_reporting_on_other_goals(): void
+    public function test_assignments_and_public_visibility_do_not_grant_reporting_on_other_goals(): void
     {
-        $this->objective->members()->attach($this->outsider, ['role' => 'manager']);
         $goal = new Goal();
         $goal->forceFill(['title' => 'Otra meta pública', 'status' => 'ongoing', 'visibility' => 'public',
             'objective_id' => $this->objective->id])->save();
@@ -194,7 +190,6 @@ class AuthorizationPoliciesTest extends TestCase
     {
         $this->goal->visibility = 'public';
         $this->goal->save();
-        $this->objective->members()->attach($this->outsider, ['role' => 'manager']);
         $report = $this->report(ReviewStatus::Approved);
         $report->save();
         $comment = new Comment();

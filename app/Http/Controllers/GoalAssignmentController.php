@@ -48,12 +48,10 @@ class GoalAssignmentController extends Controller
         $objective = Objective::with([
             'goals.responsibles',
             'goals.reporters',
-            'members',
         ])->findOrFail($objectiveId);
 
         return view('admin.goal-assignments.objective', [
             'objective' => $objective,
-            'legacyMembers' => $objective->members,
             'candidates' => $search === '' ? null : $pfiMemberships->candidates($search)->paginate(10)->withQueryString(),
             'search' => $search,
         ]);

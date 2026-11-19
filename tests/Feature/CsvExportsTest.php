@@ -68,7 +68,6 @@ class CsvExportsTest extends TestCase
         $this->objective->save();
 
         $this->manager = $this->createUser('manager@example.com', 'Mario', 'Gestor');
-        $this->objective->members()->attach($this->manager, ['role' => 'manager']);
 
         $this->goal = new Goal();
         $this->goal->title = 'Emisión de certificados';

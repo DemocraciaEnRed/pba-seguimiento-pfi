@@ -82,9 +82,6 @@ class DemoSeeder extends Seeder
             $objective->communities()->save($community);
 
             $theTeam = $faker->randomElements($users,6);
-            for ($y=0; $y < 6; $y++) {
-                $objective->members()->attach($theTeam[$y], ['role' => $faker->randomElement(['manager','reporter'])]);
-            }
 
             $objective->subscribers()->attach($faker->randomElements($users,4));
 

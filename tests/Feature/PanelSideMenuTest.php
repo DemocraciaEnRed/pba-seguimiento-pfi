@@ -58,7 +58,6 @@ class PanelSideMenuTest extends TestCase
         $this->objective->author()->associate($this->admin);
         $this->objective->strategicObjective()->associate($strategicObjective);
         $this->objective->save();
-        $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
 
         $this->goal = new Goal();
         $this->goal->title = 'Plantar árboles';

@@ -63,8 +63,6 @@ class ObjectivePanelListsTest extends TestCase
         $this->objective->strategicObjective()->associate($strategicObjective);
         $this->objective->save();
 
-        $this->objective->members()->attach($this->manager, ['role' => 'manager']);
-        $this->objective->members()->attach($this->reporter, ['role' => 'reporter']);
     }
 
     public function test_goals_list_shows_counts_and_filters_by_title_status_and_measurement(): void

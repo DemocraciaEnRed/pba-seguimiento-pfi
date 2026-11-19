@@ -15,7 +15,6 @@ use App\User;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class GoalOrganizationsTest extends TestCase
@@ -146,10 +145,8 @@ class GoalOrganizationsTest extends TestCase
         $responsible = $this->createOrganization('Ministerio Responsable');
         $participant = $this->createOrganization('Instituto Participante');
         $internalOnly = $this->createOrganization('Organismo Reservado');
-        $legacy = $this->createOrganization('Asociación Heredada');
         $publicGoal = $this->createGoal('Meta pública', 'public', $responsible, [$participant]);
         $this->createGoal('Meta interna', 'internal', $internalOnly);
-        DB::table('objective_organization')->insert(['objective_id' => $this->objective->id, 'organization_id' => $legacy->id]);
 
         $this->get(route('goals.index', ['goalId' => $publicGoal->id]))
             ->assertOk()
@@ -159,8 +156,7 @@ class GoalOrganizationsTest extends TestCase
             $response = $viewer ? $this->actingAs($viewer)->get(route('objectives.index', ['objectiveId' => $this->objective->id])) : $this->get(route('objectives.index', ['objectiveId' => $this->objective->id]));
             $response->assertOk()
                 ->assertSee(['Ministerio Responsable', 'Instituto Participante'])
-                ->assertDontSee('Organismo Reservado')
-                ->assertDontSee('Asociación Heredada');
+                ->assertDontSee('Organismo Reservado');
         }
     }
 

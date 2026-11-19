@@ -96,6 +96,12 @@ return [
             'visibility' => 'private',
             'throw' => true,
         ],
+        'archive' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/archive'),
+            'visibility' => 'private',
+            'throw' => true,
+        ],
         'events' => [
             'driver' => 'local',
             'root' => storage_path('app/public/events'),

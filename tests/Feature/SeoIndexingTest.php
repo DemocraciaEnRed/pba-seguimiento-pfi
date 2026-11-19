@@ -150,7 +150,6 @@ class SeoIndexingTest extends TestCase
             $this->get($url)->assertNotFound()->assertHeader('X-Robots-Tag', 'noindex, follow');
         }
 
-        $this->objective->members()->attach($this->user, ['role' => 'reporter']);
         $this->goal->reporters()->attach($this->user);
         $this->actingAs($this->user);
         foreach ($this->entityUrls() as $url) {

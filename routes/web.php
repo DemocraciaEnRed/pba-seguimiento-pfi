@@ -125,7 +125,7 @@ Route::group([
     ],function () {
     Route::get('/', [AdminPanelController::class, 'index'])->name('index');
     Route::get('/bitacora', [AdminPanelController::class, 'viewLogs'])->name('logs');
-    // Asignaciones por meta (sin reemplazar todavía el equipo heredado por objetivo)
+    // Asignaciones por meta
     Route::get('/asignaciones-por-meta', [GoalAssignmentController::class, 'index'])->name('goal-assignments');
     Route::get('/objetivos/{objectiveId}/asignaciones', [GoalAssignmentController::class, 'showObjective'])->whereNumber('objectiveId')->name('goal-assignments.objective');
     Route::post('/objetivos/{objectiveId}/reporteros/{userId}/metas-existentes', [GoalAssignmentController::class, 'assignReporterToObjective'])->whereNumber('objectiveId')->whereNumber('userId')->name('goal-assignments.objective.reporters.store');
