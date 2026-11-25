@@ -47,10 +47,15 @@ class GoalController extends Controller
             $reportsFetchUrl = route('apiService.goals.management-reports', ['goalId' => $goalId]);
         }
 
-        $goal->load(['responsibleOrganization', 'participantOrganizations']);
+        $goal->load([
+            'responsibleOrganization',
+            'participantOrganizations',
+            'periods.progressReport',
+            'milestones.report' => fn ($reports) => $reports->consolidated()->visibleIn($goalAudience),
+        ]);
         $objective = Objective::with([
             'strategicObjective.category',
-            'goals' => fn ($goals) => $goals->visibleIn($goalAudience)->orderBy('title'),
+            'goals' => fn ($goals) => $goals->visibleIn($goalAudience)->with('periods.progressReport')->orderBy('title'),
             'communities',
             'cover',
         ])->findOrFail($goal->objective_id);
@@ -59,6 +64,8 @@ class GoalController extends Controller
             'goal' => $goal,
             'objective' => $objective,
             'reportsFetchUrl' => $reportsFetchUrl,
+            'isPublic' => $isPublic,
+            'summary' => $goal->indicatorSummary(),
             'metadata' => $seoMetadata->goal($goal, $objective),
         ];
 

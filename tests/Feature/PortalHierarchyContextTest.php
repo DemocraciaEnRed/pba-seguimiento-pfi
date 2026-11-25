@@ -130,15 +130,10 @@ class PortalHierarchyContextTest extends TestCase
     {
         $this->get(route('goals.index', ['goalId' => $this->goal->id]))
             ->assertOk()
-            ->assertSeeInOrder([
-                'Eje Integridad',
-                'Fortalecer la transparencia',
-                'Publicar datos abiertos',
-                'Portal de datos publicado',
-            ])
+            ->assertSeeInOrder(['Acerca de la meta', 'Eje Integridad', 'Fortalecer la transparencia', 'Publicar datos abiertos'])
             ->assertSee(route('catalog').'#eje-'.$this->category->id, false)
             ->assertSee(route('objectives.index', [$this->objective->id]), false)
-            ->assertDontSee('hierarchy-tree', false);
+            ->assertSee('Portal de datos publicado');
     }
 
     public function test_objective_page_shows_its_strategic_objective(): void

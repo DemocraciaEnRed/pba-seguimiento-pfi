@@ -57,6 +57,16 @@ class ObjectiveController extends Controller
         }
         $objective->load(['strategicObjective.category', 'goals' => fn ($goals) => $goals
             ->visibleIn($goalAudience)
+            ->with([
+                'periods.progressReport',
+                'reports' => fn ($reports) => $reports->approved()
+                    ->visibleIn($goalAudience)
+                    ->orderByDesc('date')
+                    ->orderByDesc('id')
+                    ->limit(1)
+                    ->select(['id', 'goal_id', 'title', 'date']),
+            ])
+            ->withCount(['reports' => fn ($reports) => $reports->approved()->visibleIn($goalAudience)])
             ->orderBy('title'), 'communities', 'cover', 'files']);
         $organizations = Organization::query()
             ->associatedWithGoals((clone $goalAudience)->where('goals.objective_id', $objective->id))

@@ -148,9 +148,19 @@ class GoalOrganizationsTest extends TestCase
         $publicGoal = $this->createGoal('Meta pública', 'public', $responsible, [$participant]);
         $this->createGoal('Meta interna', 'internal', $internalOnly);
 
-        $this->get(route('goals.index', ['goalId' => $publicGoal->id]))
+        $html = $this->get(route('goals.index', ['goalId' => $publicGoal->id]))
             ->assertOk()
-            ->assertSeeInOrder(['Organización responsable', 'Ministerio Responsable', 'Organizaciones participantes', 'Instituto Participante']);
+            ->assertSeeInOrder(['Organización responsable', 'Ministerio Responsable', 'Organizaciones participantes', 'Instituto Participante'])
+            ->getContent();
+        $dom = new \DOMDocument();
+        @$dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        $xpath = new \DOMXPath($dom);
+        $hero = $xpath->query('//section[contains(@class, "goal-hero")]')->item(0);
+        $organizations = $xpath->query('//section[@aria-labelledby="goal-organizations"]')->item(0);
+        $this->assertStringNotContainsString('Ministerio Responsable', $hero->textContent);
+        $this->assertStringNotContainsString('Instituto Participante', $hero->textContent);
+        $this->assertStringContainsString('Ministerio Responsable', $organizations->textContent);
+        $this->assertStringContainsString('Instituto Participante', $organizations->textContent);
 
         foreach ([null, $this->admin] as $viewer) {
             $response = $viewer ? $this->actingAs($viewer)->get(route('objectives.index', ['objectiveId' => $this->objective->id])) : $this->get(route('objectives.index', ['objectiveId' => $this->objective->id]));

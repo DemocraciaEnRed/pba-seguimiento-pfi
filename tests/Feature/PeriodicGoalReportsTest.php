@@ -544,10 +544,13 @@ class PeriodicGoalReportsTest extends TestCase
         $this->objective->hidden = false;
         $this->objective->save();
         $goal = $this->createPeriodicGoal();
+        $goal->indicator_formula = 'Promedio de días <sin HTML>';
+        $goal->save();
         $report = $this->createProgressReport($goal, $goal->periods->firstWhere('number', 1), 26);
 
         $response = $this->get(route('goals.index', ['goalId' => $goal->id]))
             ->assertOk()
+            ->assertSeeInOrder(['Indicador y seguimiento', 'Fórmula de cálculo', e($goal->indicator_formula)], false)
             ->assertSee('href="'.route('reports.index', ['reportId' => $report->id]).'"', false);
 
         // Only period 1 was reported; the other three show a dash in the report column.

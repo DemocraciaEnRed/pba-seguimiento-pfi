@@ -1,7 +1,7 @@
 <template>
   <section v-if="!isLoading" class="objective-stats">
     <div class="row">
-      <div class="col-4 mb-3">
+      <div class="col-12 col-sm-4 mb-3">
         <div class="card rounded shadow-sm h-100">
           <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="fas fa-medal text-reached"></i>&nbsp;{{ goalsTotal }}</p>
@@ -10,7 +10,7 @@
           </div>
         </div>
       </div>
-      <div class="col-4 mb-3">
+      <div class="col-12 col-sm-4 mb-3">
         <div class="card rounded shadow-sm h-100">
           <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h3 is-700 mb-1"><i class="far fa-file-lines text-primary"></i>&nbsp;{{ reportsTotal }}</p>
@@ -18,7 +18,7 @@
           </div>
         </div>
       </div>
-      <div class="col-4 mb-3">
+      <div class="col-12 col-sm-4 mb-3">
         <div class="card rounded shadow-sm h-100">
           <div class="card-body text-center d-flex flex-column justify-content-around">
             <p class="h5 is-700 mb-1"><i class="far fa-calendar text-info"></i>&nbsp;{{ lastReportLabel }}</p>

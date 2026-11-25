@@ -1273,6 +1273,16 @@
   }
 }
 
+.objective-cards {
+  @include media-breakpoint-up(md) { --initiatives-per-view: 2; }
+  @include media-breakpoint-up(lg) { --initiatives-per-view: 3; }
+
+  .card-body {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .initiative-card,
   .initiative-card__image,
